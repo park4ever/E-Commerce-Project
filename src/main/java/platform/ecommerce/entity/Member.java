@@ -28,6 +28,7 @@ public class Member extends BaseTimeEntity {
     @Column(nullable = false, unique = true)
     private String email;
 
+    @JsonIgnore
     @Column(nullable = false)
     private String password;
 
@@ -38,4 +39,13 @@ public class Member extends BaseTimeEntity {
     @JsonIgnore //양방향 연관 관계 무한 루프 방지
     @OneToMany(mappedBy = "member", cascade = ALL)
     private List<Order> orders = new ArrayList<>();
+
+    public void updateMemberInfo(String username, String email) {
+        this.username = username;
+        this.email = email;
+    }
+
+    public void changePassword(String newPassword) {
+        this.password = newPassword;
+    }
 }

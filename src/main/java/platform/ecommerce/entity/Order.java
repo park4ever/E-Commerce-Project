@@ -47,6 +47,13 @@ public class Order extends BaseTimeEntity {
         }
     }
 
+    public void updateStatus(OrderStatus status) {
+        if (status == null) {
+            throw new IllegalArgumentException("주문 상태가 null 값일 수 없습니다.");
+        }
+        this.orderStatus = status;
+    }
+
     public void addOrderItem(OrderItem orderItem) {
         orderItems.add(orderItem);
         orderItem.associateOrder(this);
@@ -54,7 +61,7 @@ public class Order extends BaseTimeEntity {
 
     /* == 비즈니스 로직 == */
     public void cancel() {
-        if (orderStatus == COMPLETED) {
+        if (orderStatus == DELIVERED || orderStatus == SHIPPED) {
             throw new IllegalStateException("이미 배송이 완료된 상품은 취소가 불가능합니다.");
         }
 

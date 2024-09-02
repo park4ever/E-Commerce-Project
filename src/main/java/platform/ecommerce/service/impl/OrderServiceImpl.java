@@ -28,7 +28,6 @@ public class OrderServiceImpl implements OrderService {
     private final OrderRepository orderRepository;
     private final MemberRepository memberRepository;
     private final ItemRepository itemRepository;
-    private final CartService cartService;
 
     @Override
     public Long createOrder(OrderSaveRequestDto orderSaveRequestDto) {
@@ -38,12 +37,10 @@ public class OrderServiceImpl implements OrderService {
         Order order = Order.builder()
                 .member(member)
                 .orderDate(LocalDateTime.now())
-                .orderStatus(OrderStatus.PENDING)
+                .orderStatus(OrderStatus.PROCESSED)
                 .build();
 
         processOrderItems(order, orderSaveRequestDto.getOrderItems());
-        //주문 생성 후, 장바구니 비우기
-        cartService.clearCartAfterOrder(orderSaveRequestDto.getMemberId());
 
         log.info("Order successfully saved to the database : {}", order);
         return orderRepository.save(order).getId();
@@ -60,6 +57,29 @@ public class OrderServiceImpl implements OrderService {
         return orders.stream()
                 .map(OrderResponseDto::new)
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public void updateOrderStatus(Long orderId, OrderStatus status) {
+        log.info("Updating order ID : {} to status : {}", orderId, status);
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new IllegalArgumentException("주문을 찾을 수 없습니다."));
+
+        order.updateStatus(status);
+        orderRepository.save(order);
+
+        log.info("Order status updated successfully.");
+    }
+
+    @Override
+    public void cancelOrder(Long orderId) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new IllegalArgumentException("주문을 찾을 수 없습니다."));
+
+        order.cancel();
+        orderRepository.save(order);
+
+        log.info("Order [{}] has been cancelled", orderId);
     }
 
     private Member getMemberInfo(Long memberId) {

@@ -27,6 +27,8 @@ public class CheckoutServiceImpl implements CheckoutService {
         CartCheckoutDto cartCheckoutDto = cartService.prepareCheckout(memberId);
 
         OrderSaveRequestDto orderSaveRequestDto = convertToOrderSaveRequestDto(cartCheckoutDto);
+        //장바구니 비우기
+        cartService.clearCartAfterOrder(memberId);
 
         return orderService.createOrder(orderSaveRequestDto);
     }

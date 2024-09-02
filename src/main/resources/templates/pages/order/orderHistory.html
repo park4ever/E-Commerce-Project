@@ -20,6 +20,8 @@
                 <th>주문 날짜</th>
                 <th>주문 상태</th>
                 <th>주문 상품</th>
+                <th>주문 수량</th>
+                <th>주문 취소</th>
             </tr>
             </thead>
             <tbody>
@@ -28,10 +30,14 @@
                 <td th:if="${order.orderDate != null}" th:text="${#temporals.format(order.orderDate, 'yyyy-MM-dd')}"></td>
                 <td th:if="${order.orderDate == null}">날짜 정보 없음</td>
                 <td th:text="${order.orderStatus}"></td>
+                <td th:each="item : ${order.orderItems}" th:text="${item.itemName}"></td>
+                <td th:each="item : ${order.orderItems}" th:text="${item.count}"></td>
                 <td>
-                    <ul>
-                        <li th:each="item : ${order.orderItems}" th:text="${item.itemName} + ' (' + ${item.count} + ')'"></li>
-                    </ul>
+                    <form th:action="@{/order/cancel}" method="post">
+                        <input type="hidden" name="orderId" th:value="${order.orderId}"/>
+                        <button type="submit" th:if="${order.orderStatus != 'CANCELLED'}">취소</button>
+                        <span th:if="${order.orderStatus == 'CANCELLED'}">주문 취소</span>
+                    </form>
                 </td>
             </tr>
             </tbody>

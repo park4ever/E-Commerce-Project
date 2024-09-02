@@ -9,11 +9,9 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.*;
 import platform.ecommerce.dto.*;
+import platform.ecommerce.entity.OrderStatus;
 import platform.ecommerce.service.*;
 
 import java.util.List;
@@ -101,5 +99,20 @@ public class OrderController {
     @GetMapping("/success")
     public String orderSuccess() {
         return "/pages/order/success";
+    }
+
+    @PostMapping("/updateStatus")
+    public String updateOrderStatus(@RequestParam("orderId") Long orderId,
+                                    @RequestParam("status") OrderStatus status) {
+        log.info("Updating order status : orderId = {}, status = {}", orderId, status);
+        orderService.updateOrderStatus(orderId, status);
+        return "redirect:/order/history";
+    }
+
+    @PostMapping("/cancel")
+    public String cancelOrder(@RequestParam("orderId") Long orderId) {
+        log.info("Cancelling order : orderId = {}", orderId);
+        orderService.cancelOrder(orderId);
+        return "redirect:/order/history";
     }
 }
