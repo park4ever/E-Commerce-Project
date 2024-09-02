@@ -1,0 +1,36 @@
+spring:
+  datasource:
+    url: jdbc:h2:tcp://localhost/~/ecommerce
+    username: sa
+    password:
+    driver-class-name: org.h2.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: create
+    properties:
+      hibernate:
+        #        show_sql: true
+        format_sql: true
+        use_sql_comment: true
+
+  thymeleaf:
+    enable: true #thymeleaf 사용 활성화
+    cache: false #개발 환경에서는 소스변경이 자주 일어나서 false, 캐시가 켜져있으면 소스를 변경할 때마다 캐시를 삭제해줘야 새로운 소스 반영
+    prefix: classpath:/templates/ #thymeleaf 파일 경로 지정 prefix
+    suffix: .html #thymeleaf 파일 경로 지정 suffix
+    mode: HTML
+    encoding: UTF-8
+    check-template-location: true #templates 디렉토리에 파일이 있는지 체크 후, 없으면 에러 발생.
+
+logging.level:
+  org.hibernate.SQL: debug
+  org.springframework.security: debug
+  org.springframework.web.bind: debug
+#  org.hibernate.type: trace
+
+server:
+  servlet:
+    session:
+      tracking-modes: cookie
+      timeout: 1800

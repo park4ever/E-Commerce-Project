@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title th:text="${title}">E-Commerce Platform</title>
+</head>
+<body>
+
+<!-- header -->
+<div th:replace="~{fragments/header :: header}"></div>
+
+<!-- navbar -->
+<div th:replace="~{fragments/nav :: nav}"></div>
+
+<!-- content -->
+<main role="main" class="container mt-4" layout:fragment="content">
+    <!-- contents... -->
+</main>
+
+<!-- footer -->
+<div th:replace="~{fragments/footer :: footer}"></div>
+
+</body>
+</html>

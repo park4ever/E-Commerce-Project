@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      layout:decorate="~{layout/layout}">
+<head>
+    <title th:text="${title}">E-Commerce Platform</title>
+</head>
+<body>
+
+<div layout:fragment="content">
+
+    <div class="container">
+        <div class="header">
+            <h1>My Application</h1>
+        </div>
+
+        <!-- 로그인한 사용자용 내용 -->
+        <div class="welcome" sec:authorize="isAuthenticated()">
+            <h2>Welcome, <span sec:authentication="name">User</span>!</h2>
+            <p>We are glad to have you here. Explore our site and enjoy!</p>
+            <div class="links">
+                <a href="/profile">Profile</a>
+                <a href="/item/new">상품 등록</a>
+                <a href="/item/list">상품 목록</a>
+                <a href="/order/new">상품 주문</a>
+                <a href="/order/history">주문 조회</a>
+                <a href="/cart">장바구니</a>
+                <form action="/logout" method="post">
+                    <button type="submit">Logout</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- 비로그인 사용자용 내용 -->
+        <div class="welcome" sec:authorize="isAnonymous()">
+            <h2>Welcome to Our Site!</h2>
+            <p>You are not logged in. Please log in or sign up to access more features.</p>
+            <div class="links">
+                <a href="/login">Login</a>
+                <a href="/signup">Sign Up</a>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+</body>
+</html>

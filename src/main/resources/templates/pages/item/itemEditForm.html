@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/layout}">
+<head>
+    <meta charset="UTF-8">
+    <title>상품 수정</title>
+</head>
+<body>
+
+<div layout:fragment="content">
+    <h2>상품 수정</h2>
+
+    <form th:action="@{/item/edit/{id}(id=${id})}" th:object="${item}" method="POST">
+        <!-- 숨겨진 필드로 ID 전달 -->
+        <input type="hidden" name="id" th:value="${id}" />
+        <div>
+            <label for="itemName">상품명:</label>
+            <input type="text" id="itemName" th:field="*{itemName}" />
+        </div>
+        <div>
+            <label for="description">설명:</label>
+            <input type="text" id="description" th:field="*{description}" />
+        </div>
+        <div>
+            <label for="price">가격:</label>
+            <input type="number" id="price" th:field="*{price}" />
+        </div>
+        <div>
+            <label for="stockQuantity">재고:</label>
+            <input type="number" id="stockQuantity" th:field="*{stockQuantity}" />
+        </div>
+        <button type="submit">수정하기</button>
+    </form>
+
+    <a href="/item/list">목록으로 돌아가기</a>
+</div>
+
+</body>
+</html>

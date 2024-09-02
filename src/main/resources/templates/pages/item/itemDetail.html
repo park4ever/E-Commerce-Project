@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/layout}">
+<head>
+    <meta charset="UTF-8">
+    <title>상품 상세정보</title>
+</head>
+<body>
+
+<div layout:fragment="content">
+    <h2>상품 상세정보</h2>
+
+    <div>
+        <p><strong>상품명:</strong> <span th:text="${item.itemName}"></span></p>
+        <p><strong>설명:</strong> <span th:text="${item.description}"></span></p>
+        <p><strong>가격:</strong> <span th:text="${item.price}"></span></p>
+        <p><strong>재고:</strong> <span th:text="${item.stockQuantity}"></span></p>
+    </div>
+
+    <h3>장바구니에 추가</h3>
+    <form th:action="@{/cart/add}" method="post">
+        <input type="hidden" name="itemId" th:value="${item.id}"/>
+        <label for="quantity">수량:</label>
+        <input type="number" id="quantity" name="quantity" min="1" max="${item.stockQuantity}" required/>
+        <button type="submit">장바구니에 추가</button>
+    </form>
+
+    <a th:href="@{/item/edit/{id}(id=${item.id})}">수정하기</a>
+    <a href="/item/list">목록으로 돌아가기</a>
+</div>
+
+</body>
+</html>

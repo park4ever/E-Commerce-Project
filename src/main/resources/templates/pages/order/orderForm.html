@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      layout:decorate="~{layout/layout}">
+<head>
+    <meta charset="UTF-8">
+    <title>주문 생성</title>
+</head>
+<body>
+
+<div layout:fragment="content">
+
+    <div class="container">
+        <h2>주문 생성</h2>
+
+        <form th:action="@{/order/new}" th:object="${orderSaveRequestDto}" method="post">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+
+            <!-- 주문 아이템 -->
+            <div id="orderItems">
+                <h4>주문 아이템</h4>
+                <div class="order-item">
+                    <div class="form-group">
+                        <label for="itemId">상품</label>
+                        <select id="itemId" name="orderItems[0].itemId" class="form-control">
+                            <option th:each="item : ${items}" th:value="${item.id}" th:text="${item.itemName}"></option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="orderPrice">주문 가격</label>
+                        <input type="number" id="orderPrice" name="orderItems[0].orderPrice" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="count">수량</label>
+                        <input type="number" id="count" name="orderItems[0].count" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="totalPrice">총 가격</label>
+                        <input type="number" id="totalPrice" class="form-control" readonly>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 추가 버튼 및 제출 버튼 -->
+            <button type="button" class="btn btn-primary" onclick="addOrderItem()">추가 아이템</button>
+            <button type="submit" class="btn btn-success">주문 생성</button>
+        </form>
+    </div>
+
+</div>
+
+<script>
+    let itemCount = 1;
+
+    function addOrderItem() {
+        const container = document.getElementById('orderItems');
+        const div = document.createElement('div');
+        div.classList.add('order-item');
+        div.innerHTML = `
+            <div class="form-group">
+                <label for="itemId">상품</label>
+                <select id="itemId" name="orderItems[${itemCount}].itemId" class="form-control" onchange="updatePrice(this)">
+                    <option th:each="item : ${items}" th:value="${item.id}" th:text="${item.itemName}"></option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="orderPrice">주문 가격</label>
+                <input type="number" id="orderPrice" name="orderItems[${itemCount}].orderPrice" class="form-control" readonly>
+            </div>
+            <div class="form-group">
+                <label for="count">수량</label>
+                <input type="number" id="count" name="orderItems[${itemCount}].count" class="form-control" oninput="calculateTotalPrice(this)">
+            </div>
+            <div class="form-group">
+                <label for="totalPrice">총 가격</label>
+                <input type="number" id="totalPrice" class="form-control" readonly>
+            </div>
+        `;
+        container.appendChild(div);
+        itemCount++;
+    }
+
+    function updatePrice(selectElement) {
+    let selectedItemId = $(selectElement).val();
+    $.get(`/item/${selectedItemId}`, function(item) {
+        let priceInput = $(selectElement).closest('.order-item').find('input[name$=".orderPrice"]');
+        priceInput.val(item.price);
+        // 수량이 입력된 경우 총 가격을 다시 계산합니다.
+        let countInput = $(selectElement).closest('.order-item').find('input[name$=".count"]');
+        calculateTotalPrice(countInput[0]);
+    }).fail(function() {
+        alert("가격을 불러오는 데 실패했습니다.");
+    });
+}
+
+function calculateTotalPrice(countInput) {
+    let orderItemDiv = $(countInput).closest('.order-item');
+    let price = orderItemDiv.find('#orderPrice').val();
+    let count = $(countInput).val();
+    let totalPrice = price * count;
+    orderItemDiv.find('#totalPrice').val(totalPrice);
+}
+
+    $('form').on('submit', function() {
+    $('.order-item').each(function(index, element) {
+        console.log($(element).find('input[name$=".orderPrice"]').val()); // 값 확인
+    });
+});
+</script>
+</body>
+</html>

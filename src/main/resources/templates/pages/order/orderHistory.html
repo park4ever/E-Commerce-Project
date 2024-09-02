@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      layout:decorate="~{layout/layout}">
+<head>
+    <meta charset="UTF-8">
+    <title>주문 내역</title>
+</head>
+<body>
+
+<div layout:fragment="content">
+
+    <div class="container">
+        <h2>주문 내역</h2>
+        <table class="table">
+            <thead>
+            <tr>
+                <th>주문 번호</th>
+                <th>주문 날짜</th>
+                <th>주문 상태</th>
+                <th>주문 상품</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="order : ${orders}">
+                <td th:text="${order.orderId}"></td>
+                <td th:if="${order.orderDate != null}" th:text="${#temporals.format(order.orderDate, 'yyyy-MM-dd')}"></td>
+                <td th:if="${order.orderDate == null}">날짜 정보 없음</td>
+                <td th:text="${order.orderStatus}"></td>
+                <td>
+                    <ul>
+                        <li th:each="item : ${order.orderItems}" th:text="${item.itemName} + ' (' + ${item.count} + ')'"></li>
+                    </ul>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+
+</div>
+
+</body>
+</html>
