@@ -61,7 +61,7 @@ public class SecurityConfig {
                 )
                 .authorizeHttpRequests(authz -> authz
                         .dispatcherTypeMatchers(DispatcherType.FORWARD).permitAll()
-                        .requestMatchers("/", "/home" ,"/signup", "/login", "/item/**", "/resources/**").permitAll()
+                        .requestMatchers("/" ,"/signup", "/login", "/item/**", "/resources/**").permitAll()
 //                        .requestMatchers("/admin/**").hasRole("ADMIN")
 //                        .requestMatchers("/user/**").hasRole("USER")
                         .anyRequest().authenticated()
@@ -81,10 +81,6 @@ public class SecurityConfig {
                         .clearAuthentication(true)
                         .deleteCookies("JSESSIONID")
                         .permitAll()
-                )
-                .sessionManagement(session -> session
-                        .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
-                        .invalidSessionUrl("/login?sessionExpired=true")
                 )
                 .addFilterBefore(new LoggingFilter(), UsernamePasswordAuthenticationFilter.class)
         ;
