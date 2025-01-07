@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/layout}">
+<head>
+    <title>회원 정보 수정</title>
+    <!-- Kakao API Script -->
+    <script src="https://developers.kakao.com/sdk/js/kakao.js"></script>
+    <script src="https://t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
+    <script src="/js/addressSearch.js"></script>
+</head>
+<body>
+
+<div layout:fragment="content">
+    <h1>회원 정보 수정</h1>
+    <form th:action="@{/member/update}" th:object="${updateMemberRequestDto}" method="post">
+        <div>
+            <label for="username">이름:</label>
+            <input type="text" th:field="*{username}" id="username" required />
+        </div>
+        <div>
+            <label for="phoneNumber">전화번호:</label>
+            <input type="text" th:field="*{phoneNumber}" id="phoneNumber" required />
+        </div>
+        <div>
+            <label for="city">도시:</label>
+            <input type="text" th:field="*{address.city}" id="city" required />
+        </div>
+        <div>
+            <label for="street">거리:</label>
+            <input type="text" th:field="*{address.street}" id="street" required />
+        </div>
+        <div>
+            <label for="zipcode">우편번호:</label>
+            <input type="text" th:field="*{address.zipcode}" id="zipcode" required />
+        </div>
+        <div>
+            <label for="additionalInfo">상세주소:</label>
+            <input type="text" th:field="*{address.additionalInfo}" id="additionalInfo" required />
+        </div>
+        <div>
+            <button type="button" onclick="openAddressSearch()">주소 검색</button>
+        </div>
+        <div>
+            <label for="dateOfBirth">생년월일:</label>
+            <input type="date" id="dateOfBirth" th:value="${formattedDateOfBirth}" />
+        </div>
+        <div>
+            <label for="newPassword">새 비밀번호:</label>
+            <input type="password" th:field="*{newPassword}" id="newPassword" />
+        </div>
+        <div>
+            <button type="submit">수정하기</button>
+        </div>
+    </form>
+</div>
+
+</body>
+</html>

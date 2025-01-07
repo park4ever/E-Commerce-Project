@@ -3,17 +3,17 @@ package platform.ecommerce.service.impl;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import platform.ecommerce.dto.ChangePasswordRequestDto;
-import platform.ecommerce.dto.MemberResponseDto;
-import platform.ecommerce.dto.UpdateMemberRequestDto;
+import platform.ecommerce.dto.member.MemberDetailsDto;
+import platform.ecommerce.dto.member.MemberProfileDto;
+import platform.ecommerce.dto.member.MemberResponseDto;
+import platform.ecommerce.dto.member.UpdateMemberRequestDto;
+import platform.ecommerce.entity.Address;
 import platform.ecommerce.entity.Member;
 import platform.ecommerce.repository.MemberRepository;
 import platform.ecommerce.service.MemberService;
-
-import java.util.Optional;
 
 @Slf4j
 @Service
@@ -22,7 +22,7 @@ import java.util.Optional;
 public class MemberServiceImpl implements MemberService {
 
     private final MemberRepository memberRepository;
-    private final BCryptPasswordEncoder passwordEncoder;
+    private final PasswordEncoder passwordEncoder;
 
     @Override
     @Transactional(readOnly = true)
@@ -38,32 +38,37 @@ public class MemberServiceImpl implements MemberService {
     }
 
     @Override
-    public Long updateMember(Long memberId, UpdateMemberRequestDto dto) {
-        Member member = memberRepository.findById(memberId)
+    @Transactional(readOnly = true)
+    public MemberDetailsDto findMemberDetails(String email) {
+        Member member = memberRepository.findByEmail(email)
                 .orElseThrow(() -> new UsernameNotFoundException("회원을 찾을 수 없습니다."));
-        member.updateMemberInfo(dto.getUsername(), dto.getEmail());
-        Member updatedMember = memberRepository.save(member);
 
-        log.info("Member [{}] updated successfully", updatedMember.getId());
-        return updatedMember.getId();
+        return MemberDetailsDto.builder()
+                .username(member.getUsername())
+                .phoneNumber(member.getPhoneNumber())
+                .address(member.getAddress())
+                .build();
     }
 
     @Override
-    public Long changePassword(Long memberId, ChangePasswordRequestDto dto) {
+    public Long updateMemberWithPasswordCheck(Long memberId, UpdateMemberRequestDto dto, String currentPassword) {
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new UsernameNotFoundException("회원을 찾을 수 없습니다."));
-
         //현재 비밀번호 검증
-        if (!passwordEncoder.matches(dto.getCurrentPassword(), member.getPassword())) {
+        if (!passwordEncoder.matches(currentPassword, member.getPassword())) {
             throw new IllegalArgumentException("현재 비밀번호가 일치하지 않습니다.");
         }
 
-        String encodedPassword = passwordEncoder.encode(dto.getNewPassword());
-        member.changePassword(encodedPassword);
-        Member updatedMember = memberRepository.save(member);
+        //회원 정보 업데이트
+        member.updateMemberInfo(dto.getUsername(), dto.getPhoneNumber(), dto.getAddress(), dto.getDateOfBirth());
 
-        log.info("Password for Member [{}] updated successfully", updatedMember.getId());
-        return updatedMember.getId();
+        if (dto.getNewPassword() != null && !dto.getNewPassword().isEmpty()) {
+            String encodedPassword = passwordEncoder.encode(dto.getNewPassword());
+            member.changePassword(encodedPassword);
+        }
+
+        log.info("Member [{}] updated successfully", member.getId());
+        return memberRepository.save(member).getId();
     }
 
     @Override
@@ -73,5 +78,36 @@ public class MemberServiceImpl implements MemberService {
         memberRepository.delete(member);
 
         log.info("Member [{}] deleted successfully", memberId);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public UpdateMemberRequestDto toUpdateDto(Long memberId) {
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new UsernameNotFoundException("회원을 찾을 수 없습니다."));
+
+        UpdateMemberRequestDto memberDto = new UpdateMemberRequestDto();
+        memberDto.setUsername(member.getUsername());
+        memberDto.setPhoneNumber(member.getPhoneNumber());
+        memberDto.setAddress(member.getAddress());
+        memberDto.setDateOfBirth(member.getDateOfBirth());
+
+        return memberDto;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public MemberProfileDto toProfileDto(Long memberId) {
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new UsernameNotFoundException("회원을 찾을 수 없습니다."));
+
+        return MemberProfileDto.builder()
+                .email(member.getEmail())
+                .username(member.getUsername())
+                .phoneNumber(member.getPhoneNumber())
+                .address(member.getAddress())
+                .dateOfBirth(member.getDateOfBirth())
+                .defaultShippingAddress(member.getDefaultShippingAddress())
+                .build();
     }
 }

@@ -1,7 +1,9 @@
 package platform.ecommerce.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
+import platform.ecommerce.dto.order.OrderSaveRequestDto;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -22,6 +24,7 @@ public class Order extends BaseTimeEntity {
     @Column(name = "order_id")
     private Long id;
 
+    @JsonIgnore
     @ManyToOne(fetch = LAZY)
     @JoinColumn(name = "member_id")
     private Member member;
@@ -31,15 +34,26 @@ public class Order extends BaseTimeEntity {
     @Enumerated(EnumType.STRING)
     private OrderStatus orderStatus;
 
-    @OneToMany(mappedBy = "order", cascade = ALL)
+    @OneToMany(mappedBy = "order", cascade = ALL, orphanRemoval = true)
     private List<OrderItem> orderItems = new ArrayList<>();
+
+    @Embedded
+    private Address shippingAddress;
+
+    @Enumerated(EnumType.STRING)
+    private PaymentMethod paymentMethod;
+
+    private String modificationReason;
 
     /* == 연관관계 편의 메서드 == */
     @Builder
-    public Order(Member member, LocalDateTime orderDate, OrderStatus orderStatus, List<OrderItem> orderItems) {
+    public Order(Member member, LocalDateTime orderDate, OrderStatus orderStatus, List<OrderItem> orderItems, Address shippingAddress, PaymentMethod paymentMethod, String modificationReason) {
         this.member = member;
         this.orderDate = orderDate;
         this.orderStatus = orderStatus;
+        this.shippingAddress = shippingAddress;
+        this.paymentMethod = paymentMethod;
+        this.modificationReason = modificationReason;
         if (orderItems != null) {
             for (OrderItem orderItem : orderItems) {
                 this.addOrderItem(orderItem);
@@ -60,19 +74,47 @@ public class Order extends BaseTimeEntity {
     }
 
     /* == 비즈니스 로직 == */
+    //배송 전 상태에서 취소
     public void cancel() {
-        if (orderStatus == DELIVERED || orderStatus == SHIPPED) {
-            throw new IllegalStateException("이미 배송이 완료된 상품은 취소가 불가능합니다.");
+        if (orderStatus == PENDING || orderStatus == PROCESSED) {
+            orderStatus = CANCELLED;
+            for (OrderItem orderItem : orderItems) {
+                orderItem.cancel();
+            }
+        } else {
+            throw new IllegalStateException("배송 준비중인 경우에만 주문 취소가 가능합니다.");
         }
+    }
 
-        orderStatus = CANCELLED;
-        for (OrderItem orderItem : orderItems) {
-            orderItem.cancel();
+    //배송 전 상태에서 주소 변경
+    public void updateShippingAddress(Address newAddress) {
+        if (orderStatus == PENDING || orderStatus == PROCESSED) {
+            this.shippingAddress = newAddress;
+        } else {
+            throw new IllegalStateException("배송 준비 중인 경우에만 주소 변경이 가능합니다.");
+        }
+    }
+
+    //교환 및 환불 요청
+    public void requestRefund(String reason) {
+        if (orderStatus == DELIVERED) {
+            this.modificationReason = reason;
+            this.orderStatus = REFUND_REQUESTED;
+        } else {
+            throw new IllegalStateException("배송 완료 후에만 환불 요청이 가능합니다.");
+        }
+    }
+
+    public void requestExchange(String reason) {
+        if (orderStatus == DELIVERED) {
+            this.modificationReason = reason;
+            this.orderStatus = EXCHANGE_REQUESTED;
+        } else {
+            throw new IllegalStateException("배송 완료 후에만 교환 요청이 가능합니다.");
         }
     }
 
     /* == 조회 로직 == */
-
     public int getTotalPrice() {
         int totalPrice = 0;
         for (OrderItem orderItem : orderItems) {

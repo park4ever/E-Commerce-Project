@@ -1,0 +1,98 @@
+@font-face {
+    font-family: 'BMHANNAPro';
+    src: url('../fonts/BMHANNAPro.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'BMHANNAAir';
+    src: url('../fonts/BMHANNAAir_ttf.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+}
+
+/* 헤더 제목 스타일 */
+.header-title a {
+    font-family: 'BMHANNAPro', sans-serif;
+    font-size: 1rem;
+    color: #222;
+    text-decoration: none;
+}
+
+/* 헤더 제목 수평 및 수직 정렬 */
+.header-title {
+    display: flex;              /* Flexbox 레이아웃 사용 */
+    align-items: center;        /* 수직 정렬 */
+    justify-content: center;    /* 수평 정렬 */
+}
+
+/* 네비게이션 메뉴 스타일 */
+.nav-link {
+    font-family: 'BMHANNAAir', sans-serif;
+    font-size: 0.8rem;
+    color: #222 !important;
+    text-decoration: none;
+}
+
+.nav-link:hover {
+    color: #444 !important;
+    background-color: transparent !important;
+}
+
+/* 드롭다운 메뉴 스타일 */
+.dropdown-item {
+    font-family: 'BMHANNAAir', sans-serif;
+    font-size: 0.7rem;
+    color: #222 !important;
+}
+
+.dropdown-item:hover {
+    color: #444 !important;
+    background-color: transparent;
+}
+
+/* 검색창 스타일 */
+.search-box {
+    position: absolute;
+    top: 55px;
+    right: 0;
+    align-items: center;        /* 수직 정렬 */
+    width: auto;               /* 검색창의 최대 너비 */
+    max-width: 100%;
+    background-color: white;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    padding: 5px;
+    display: none;
+    flex-wrap: nowrap;
+}
+
+/* 검색 입력창 스타일 */
+.search-box input {
+    flex-grow: 1;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    margin-right: 5px;
+    width: auto;
+}
+
+/* 검색 버튼 스타일 */
+.search-box button {
+    padding: 5px 10px;          /* 버튼 크기 조정 */
+    background-color: none;  /* 버튼 배경색 */
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+/* 검색 버튼 호버 상태 */
+.search-box button:hover {
+    background-color: none; /* 호버 시 배경색 변경 */
+}
+
+/* 검색 아이콘 크기 및 정렬 */
+.search-box button i {
+    font-size: 1rem;   /* 아이콘 크기 조정 */
+}

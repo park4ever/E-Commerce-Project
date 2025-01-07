@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/layout}">
+<head>
+    <meta charset="UTF-8">
+    <title>회원 프로필</title>
+</head>
+<body>
+
+<div layout:fragment="content">
+
+    <div class="container">
+        <h2>회원 프로필</h2>
+
+        <div class="profile-section">
+            <h3>기본 정보</h3>
+            <p><strong>이름:</strong> <span th:text="${member.username}"></span></p>
+            <p><strong>이메일:</strong> <span th:text="${member.email}"></span></p>
+            <p><strong>전화번호:</strong> <span th:text="${member.phoneNumber}"></span></p>
+            <p><strong>생년월일:</strong> <span th:text="${#temporals.format(member.dateOfBirth, 'yyyy-MM-dd')}"></span></p>
+        </div>
+
+        <div class="profile-section">
+            <h3>주소 정보</h3>
+            <p><strong>도시:</strong> <span th:text="${member.address.city}"></span></p>
+            <p><strong>거리:</strong> <span th:text="${member.address.street}"></span></p>
+            <p><strong>우편번호:</strong> <span th:text="${member.address.zipcode}"></span></p>
+        </div>
+
+        <div class="profile-section">
+            <h3>기본 배송지</h3>
+            <p><span th:text="${member.defaultShippingAddress}"></span></p>
+        </div>
+
+        <div>
+            <a href="/member/update" class="btn btn-primary">프로필 수정</a>
+        </div>
+    </div>
+
+</div>
+
+</body>
+</html>

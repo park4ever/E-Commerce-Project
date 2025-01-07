@@ -30,6 +30,9 @@ public class OrderItem extends  BaseTimeEntity {
 
     private int count;
 
+    @Column(name = "image_url")
+    private String imageUrl; //이미지 경로
+
     /* == 연관관계 편의 메서드 == */
     public void associateOrder(Order order) {
         this.order = order;
@@ -39,13 +42,14 @@ public class OrderItem extends  BaseTimeEntity {
     }
 
     @Builder
-    public OrderItem(Item item, int orderPrice, int count, Order order) {
+    public OrderItem(Item item, int orderPrice, int count, Order order, String imageUrl) {
         this.item = item;
         this.orderPrice = orderPrice;
         this.count = count;
         if (order != null) {
             this.associateOrder(order);
         }
+        this.imageUrl = imageUrl;
     }
 
     /* == 비즈니스 로직 == */

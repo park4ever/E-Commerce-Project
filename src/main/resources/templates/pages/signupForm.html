@@ -3,76 +3,149 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sign Up Form</title>
+    <title>회원가입</title>
+    <link href="/css/shop-homepage.css" rel="stylesheet" />
+    <!-- Kakao API Script -->
+    <script src="https://developers.kakao.com/sdk/js/kakao.js"></script>
+    <script src="https://t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
+    <script src="/js/addressSearch.js"></script>
+    <script src="/js/profileValidation.js"></script>
     <style>
         body {
-            font-family: Arial, sans-serif;
-            background-color: #f4f4f4;
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100vh;
+            min-height: 100vh; /* 화면 높이에 맞춰 중앙 정렬 */
             margin: 0;
+            background-color: #f8f9fa; /* 배경색 */
         }
-        .signup-container {
+
+        .card {
+            width: 100%; /* 화면 크기에 맞춰 카드 너비 설정 */
+            max-width: 400px; /* 카드의 최대 너비 */
+            padding: 2rem; /* 카드 내부 여백 */
             background-color: #fff;
-            padding: 20px;
-            border-radius: 5px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-            width: 300px;
+            border-radius: 0.5rem;
+            box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.1);
+            margin: 2rem 0; /* 위아래 여백 추가 */
         }
-        .signup-container h2 {
-            margin-bottom: 20px;
+
+        h2 {
+            font-size: 1.5rem;
+            font-weight: bold;
             text-align: center;
+            margin-bottom: 1.5rem;
         }
-        .signup-container label {
-            display: block;
-            margin-bottom: 5px;
+
+        .form-control {
+            border-radius: 0.25rem;
+            padding: 0.75rem;
+            font-size: 1rem;
+        }
+
+        .form-control.error {
+            border-color: red; /* 빨간색 테두리 */
+            box-shadow: 0 0 5px rgba(255, 0, 0, 0.5); /* 약간의 그림자 효과 추가 */
+        }
+
+        .form-label {
             font-weight: bold;
         }
-        .signup-container input[type="text"],
-        .signup-container input[type="email"],
-        .signup-container input[type="password"] {
-            width: 100%;
-            padding: 10px;
-            margin-bottom: 15px;
-            border: 1px solid #ccc;
-            border-radius: 3px;
+
+        /* 비밀번호 필드만 기본 글꼴 적용 */
+        input[type="password"] {
+            font-family: Arial, sans-serif; /* 기본 글꼴 */
+            color: #000; /* 검정 텍스트 */
         }
-        .signup-container button {
+
+        .btn {
+            padding: 0.75rem 1rem;
+            font-size: 1rem;
             width: 100%;
-            padding: 10px;
-            background-color: #28a745;
-            border: none;
-            border-radius: 3px;
+            background-color: #343a40;
             color: #fff;
-            font-size: 16px;
-            cursor: pointer;
         }
-        .signup-container button:hover {
-            background-color: #218838;
+
+        .text-danger {
+            font-size: 0.875rem;
         }
     </style>
 </head>
 <body>
-<div class="signup-container">
-    <h2>Sign Up</h2>
-    <form action="/signup" method="POST" th:object="${memberSaveRequestDto}">
-        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
-        <label for="username">Username</label>
-        <input type="text" id="username" th:field="*{username}">
 
-        <label for="email">Email</label>
-        <input type="email" id="email" th:field="*{email}">
-
-        <label for="password">Password</label>
-        <input type="password" id="password" th:field="*{password}">
-
-<!--        <label for="confirm-password">Confirm Password</label>-->
-<!--        <input type="password" id="confirm-password" name="confirm-password">-->
-
-        <button type="submit">Sign Up</button>
-    </form>
+<div class="card shadow-sm">
+    <div class="card-body">
+        <form action="/signup" method="POST" th:object="${memberSaveRequestDto}">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+            <!-- 사용자 이름 -->
+            <div class="mb-3">
+                <label for="username" class="form-label">회원명</label>
+                <input type="text" class="form-control" id="username" th:field="*{username}" placeholder="이름을 입력하세요" th:classappend="${#fields.hasErrors('username')} ? 'error' : ''">
+                <div class="text-danger" th:if="${#fields.hasErrors('username')}" th:errors="*{username}"></div>
+            </div>
+            <!-- 이메일 -->
+            <div class="mb-3">
+                <label for="email" class="form-label">이메일</label>
+                <input type="email" class="form-control" id="email" th:field="*{email}" placeholder="이메일을 입력하세요" th:classappend="${#fields.hasErrors('email')} ? 'error' : ''">
+                <div class="text-danger" th:if="${#fields.hasErrors('email')}" th:errors="*{email}"></div>
+            </div>
+            <!-- 비밀번호 -->
+            <div class="mb-3">
+                <label for="password" class="form-label">비밀번호</label>
+                <input type="password" class="form-control" id="password" th:field="*{password}" placeholder="비밀번호를 입력하세요" th:classappend="${#fields.hasErrors('password')} ? 'error' : ''">
+                <div class="text-danger" th:if="${#fields.hasErrors('password')}" th:errors="*{password}"></div>
+            </div>
+            <!-- 비밀번호 확인 -->
+            <div class="mb-3">
+                <label for="passwordConfirm" class="form-label">비밀번호 확인</label>
+                <input type="password" class="form-control" id="passwordConfirm" th:field="*{passwordConfirm}" placeholder="비밀번호를 다시 입력하세요" th:classappend="${#fields.hasErrors('passwordConfirm')} ? 'error' : ''">
+                <div class="text-danger" th:if="${#fields.hasErrors('passwordConfirm')}" th:errors="*{passwordConfirm}"></div>
+            </div>
+            <!-- 전화번호 -->
+            <div class="mb-3">
+                <label for="phoneNumber" class="form-label">전화번호</label>
+                <input type="text" class="form-control" id="phoneNumber" th:field="*{phoneNumber}" placeholder="전화번호를 입력하세요" th:classappend="${#fields.hasErrors('phoneNumber')} ? 'error' : ''">
+                <div class="text-danger" th:if="${#fields.hasErrors('phoneNumber')}" th:errors="*{phoneNumber}"></div>
+            </div>
+            <!-- 주소 검색 -->
+            <div class="mb-3">
+                <label for="street" class="form-label">주소</label>
+                <input type="text" class="form-control" id="street" th:field="*{address.street}" placeholder="주소를 검색하세요" th:classappend="${#fields.hasErrors('address.street')} ? 'error' : ''">
+                <input type="text" class="form-control mt-2" id="additionalInfo" th:field="*{address.additionalInfo}" placeholder="상세 주소를 입력하세요" th:classappend="${#fields.hasErrors('address.additionalInfo')} ? 'error' : ''">
+                <div class="text-danger" th:if="${#fields.hasErrors('address')}" th:errors="*{address.street}"></div>
+                <button type="button" class="btn btn-secondary mt-2" onclick="openAddressSearch()">주소 검색</button>
+            </div>
+            <!-- Zipcode -->
+            <div class="mb-3">
+                <label for="zipcode" class="form-label">우편번호</label>
+                <input type="text" class="form-control" id="zipcode" th:field="*{address.zipcode}" th:classappend="${#fields.hasErrors('address.zipcode')} ? 'error' : ''">
+                <div class="text-danger" th:if="${#fields.hasErrors('address.zipcode')}" th:errors="*{address.zipcode}"></div>
+            </div>
+            <!-- City -->
+            <div class="mb-3">
+                <label for="city" class="form-label">도시</label>
+                <input type="text" class="form-control" id="city" th:field="*{address.city}" th:classappend="${#fields.hasErrors('address.city')} ? 'error' : ''">
+                <div class="text-danger" th:if="${#fields.hasErrors('address.city')}" th:errors="*{address.city}"></div>
+            </div>
+            <!-- 생년월일 -->
+            <div class="mb-3">
+                <label for="dateOfBirth" class="form-label">생년월일</label>
+                <input type="date" class="form-control" id="dateOfBirth" th:field="*{dateOfBirth}" th:classappend="${#fields.hasErrors('dateOfBirth')} ? 'error' : ''">
+                <div class="text-danger" th:if="${#fields.hasErrors('dateOfBirth')}" th:errors="*{dateOfBirth}"></div>
+            </div>
+            <!-- 기본 배송지 -->
+            <div class="mb-4">
+                <label for="defaultShippingAddress" class="form-label">기본배송지</label>
+                <input type="text" class="form-control" id="defaultShippingAddress" th:field="*{defaultShippingAddress}" placeholder="기본 배송지를 입력하세요" th:classappend="${#fields.hasErrors('defaultShippingAddress')} ? 'error' : ''">
+                <div class="text-danger" th:if="${#fields.hasErrors('defaultShippingAddress')}" th:errors="*{defaultShippingAddress}"></div>
+            </div>
+            <!-- 제출 버튼 -->
+            <div class="d-grid">
+                <button type="submit" class="btn btn-primary">회원가입</button>
+            </div>
+        </form>
+    </div>
 </div>
+
 </body>
 </html>

@@ -7,13 +7,11 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
-import platform.ecommerce.dto.CartItemDto;
-import platform.ecommerce.dto.MemberResponseDto;
+import platform.ecommerce.dto.cart.CartItemDto;
+import platform.ecommerce.dto.member.MemberResponseDto;
 import platform.ecommerce.service.CartService;
-import platform.ecommerce.service.CheckoutService;
 import platform.ecommerce.service.MemberService;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @Slf4j

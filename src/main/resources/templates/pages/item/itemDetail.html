@@ -5,6 +5,23 @@
 <head>
     <meta charset="UTF-8">
     <title>상품 상세정보</title>
+    <script defer>
+        function changeQuantity(amount, button) {
+            const quantityInput = button.parentNode.querySelector('input[name="quantity"]');
+            const currentQuantity = parseInt(quantityInput.value, 10);
+            const newQuantity = currentQuantity + amount;
+
+            if (newQuantity > 0) {
+                quantityInput.value = newQuantity;
+            } else {
+                console.log('Invalid Quantity:', newQuantity);
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM fully loaded and parsed');
+        });
+    </script>
 </head>
 <body>
 
@@ -12,19 +29,66 @@
     <h2>상품 상세정보</h2>
 
     <div>
+        <img th:src="@{${item.imageUrl}}" alt="상품 이미지" style="max-width: 300px; height: auto;"/>
+
         <p><strong>상품명:</strong> <span th:text="${item.itemName}"></span></p>
         <p><strong>설명:</strong> <span th:text="${item.description}"></span></p>
-        <p><strong>가격:</strong> <span th:text="${item.price}"></span></p>
-        <p><strong>재고:</strong> <span th:text="${item.stockQuantity}"></span></p>
+        <p><strong>가격:</strong> <span th:text="${item.price}"></span> 원</p>
+        <p><strong>재고:</strong> <span th:text="${item.stockQuantity}"></span> 개</p>
     </div>
 
     <h3>장바구니에 추가</h3>
     <form th:action="@{/cart/add}" method="post">
         <input type="hidden" name="itemId" th:value="${item.id}"/>
-        <label for="quantity">수량:</label>
-        <input type="number" id="quantity" name="quantity" min="1" max="${item.stockQuantity}" required/>
-        <button type="submit">장바구니에 추가</button>
+        <!-- 기본 수량으로 장바구니에 추가 -->
+        <input type="hidden" name="quantity" value="1"/>
+        <button type="submit" class="btn btn-primary mt-2">장바구니에 추가</button>
     </form>
+
+    <h3>주문하기</h3>
+    <form th:action="@{/order/new}" method="get">
+        <input type="hidden" name="itemId" th:value="${item.id}"/>
+        <label for="orderQuantity">수량:</label>
+        <button type="button" onclick="changeQuantity(-1, this)">-</button>
+        <input type="number" id="orderQuantity" name="quantity" min="1" max="${item.stockQuantity}" value="1" required/>
+        <button type="button" onclick="changeQuantity(1, this)">+</button>
+        <button type="submit" class="btn btn-success mt-2">주문하기</button>
+    </form>
+
+    <h3>리뷰 목록(<span th:text="${reviewCount}"></span>개)</h3>
+    <p><strong>평균 별점:</strong> <span th:text="${#numbers.formatDecimal(ratingAverage, 1, 1)}"></span></p>
+
+    <!-- 필터링 및 정렬 기준 선택 -->
+    <div>
+        <form th:action="@{/item/{itemId}(itemId=${item.id})}" method="get">
+            <select name="sortBy" onchange="this.form.submit()">
+                <option value="" th:selected="${reviewSearchCondition.sortBy == null}">정렬 기준 선택</option>
+                <option value="ratingDesc" th:selected="${reviewSearchCondition.sortBy == 'ratingDesc'}">별점 높은 순</option>
+                <option value="ratingAsc" th:selected="${reviewSearchCondition.sortBy == 'ratingAsc'}">별점 낮은 순</option>
+                <option value="dateDesc" th:selected="${reviewSearchCondition.sortBy == 'dateDesc'}">최신순</option>
+                <option value="dateAsc" th:selected="${reviewSearchCondition.sortBy == 'dateAsc'}">오래된순</option>
+            </select>
+        </form>
+    </div>
+
+    <div id="reviewList">
+        <div th:each="review : ${reviews}">
+            <p><strong th:text="${review.memberName}"></strong> (<span th:text="${review.rating}"></span>점)</p>
+            <p th:text="${review.content}"></p>
+            <!-- 리뷰 이미지가 있는 경우 이미지 표시 -->
+            <div th:if="${review.imageUrl}">
+                <img th:src="@{${review.imageUrl}}" alt="리뷰 이미지" style="max-width: 200px; height: auto;" />
+            </div>
+            <!-- 수정 및 삭제 버튼 -->
+            <div th:if="${review.memberId == member.getMemberId()}">
+                <a th:href="@{/review/edit/{reviewId}(reviewId=${review.reviewId})}" class="btn btn-warning">수정하기</a>
+                <form th:action="@{/review/delete/{reviewId}(reviewId=${review.reviewId})}" method="post" style="display:inline;" onsubmit="return confirm('정말로 삭제하시겠습니까?');">
+                    <button type="submit" class="btn btn-danger">삭제하기</button>
+                </form>
+
+            </div>
+        </div>
+    </div>
 
     <a th:href="@{/item/edit/{id}(id=${item.id})}">수정하기</a>
     <a href="/item/list">목록으로 돌아가기</a>

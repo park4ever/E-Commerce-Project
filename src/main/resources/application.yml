@@ -8,11 +8,14 @@ spring:
   jpa:
     hibernate:
       ddl-auto: create
+    show-sql: true
     properties:
       hibernate:
-        #        show_sql: true
         format_sql: true
         use_sql_comment: true
+        dialect: org.hibernate.dialect.H2Dialect
+        ejb:
+          interceptor: org.hibernate.EmptyInterceptor
 
   thymeleaf:
     enable: true #thymeleaf 사용 활성화
@@ -22,6 +25,16 @@ spring:
     mode: HTML
     encoding: UTF-8
     check-template-location: true #templates 디렉토리에 파일이 있는지 체크 후, 없으면 에러 발생.
+    message:
+      basename: messages #메시지 리소스 파일의 기본 이름
+      encoding: UTF-8 #메시지 리소스 파일의 인코딩
+
+  # 정적 리소스 경로 추가
+  resources:
+    static-locations: classpath:/static/  # 정적 자원 위치 지정
+
+file:
+  upload-dir: /Users/y0vngwxn/projects/upload/shop/item #이미지 파일 저장 경로
 
 logging.level:
   org.hibernate.SQL: debug

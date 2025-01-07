@@ -1,7 +1,6 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org"
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
-      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
       layout:decorate="~{layout/layout}">
 <head>
     <meta charset="UTF-8">
@@ -13,25 +12,72 @@
 
     <div class="container">
         <h2>주문 내역</h2>
-        <table class="table">
+
+        <!-- 검색 폼 -->
+        <form th:action="@{/order/history}" method="get" th:object="${searchCondition}">
+            <div class="form-group">
+                <label for="startDate">시작 날짜</label>
+                <input type="date" id="startDate" class="form-control" th:field="*{startDate}" />
+            </div>
+            <div class="form-group">
+                <label for="endDate">종료 날짜</label>
+                <input type="date" id="endDate" class="form-control" th:field="*{endDate}" />
+            </div>
+            <div class="form-group">
+                <label for="status">상태</label>
+                <select id="status" class="form-control" th:field="*{status}">
+                    <option value="" th:text="#{all}">전체</option>
+                    <option th:value="${T(platform.ecommerce.entity.OrderStatus).PENDING}" th:text="#{pending}">주문 대기중</option>
+                    <option th:value="${T(platform.ecommerce.entity.OrderStatus).PROCESSED}" th:text="#{processed}">주문 처리중</option>
+                    <option th:value="${T(platform.ecommerce.entity.OrderStatus).SHIPPED}" th:text="#{shipped}">배송중</option>
+                    <option th:value="${T(platform.ecommerce.entity.OrderStatus).DELIVERED}" th:text="#{delivered}">배송 완료</option>
+                    <option th:value="${T(platform.ecommerce.entity.OrderStatus).CANCELLED}" th:text="#{cancelled}">주문 취소</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="sortBy">정렬 기준</label>
+                <select id="sortBy" class="form-control" th:field="*{sortBy}">
+                    <option value="orderDate" th:text="#{date}">주문 날짜</option>
+                    <option value="orderStatus" th:text="#{status}">주문 상태</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="ascending">정렬 순서</label>
+                <select id="ascending" class="form-control" th:field="*{ascending}">
+                    <option value="true" th:text="#{ascending}">오름차순</option>
+                    <option value="false" th:text="#{descending}">내림차순</option>
+                </select>
+            </div>
+            <button type="submit" class="btn btn-primary">검색</button>
+        </form>
+
+        <!-- 주문 목록 테이블 -->
+        <table class="table mt-4">
             <thead>
             <tr>
-                <th>주문 번호</th>
-                <th>주문 날짜</th>
-                <th>주문 상태</th>
+                <th><a th:href="@{/order/history(sortBy='orderId', ascending=${searchCondition.sortBy == 'orderId' ? !searchCondition.ascending : true})}" th:text="#{orderId}">주문 번호</a></th>
+                <th><a th:href="@{/order/history(sortBy='orderDate', ascending=${searchCondition.sortBy == 'orderDate' ? !searchCondition.ascending : true})}" th:text="#{orderDate}">주문 날짜</a></th>
+                <th><a th:href="@{/order/history(sortBy='orderStatus', ascending=${searchCondition.sortBy == 'orderStatus' ? !searchCondition.ascending : true})}" th:text="#{orderStatus}">주문 상태</a></th>
+                <th>상품 이미지</th>
                 <th>주문 상품</th>
                 <th>주문 수량</th>
+                <th>주문 상세</th>
                 <th>주문 취소</th>
             </tr>
             </thead>
             <tbody>
             <tr th:each="order : ${orders}">
                 <td th:text="${order.orderId}"></td>
-                <td th:if="${order.orderDate != null}" th:text="${#temporals.format(order.orderDate, 'yyyy-MM-dd')}"></td>
-                <td th:if="${order.orderDate == null}">날짜 정보 없음</td>
+                <td th:text="${#temporals.format(order.orderDate, 'yyyy-MM-dd')}"></td>
                 <td th:text="${order.orderStatus}"></td>
+                <td th:each="item : ${order.orderItems}">
+                    <img th:src="@{/images/{imageUrl}(imageUrl=${item.imageUrl})}" alt="상품 이미지" style="width: 100px; height: 100px;">
+                </td>
+
                 <td th:each="item : ${order.orderItems}" th:text="${item.itemName}"></td>
                 <td th:each="item : ${order.orderItems}" th:text="${item.count}"></td>
+                <td><a th:href="@{/order/detail/{orderId}(orderId=${order.orderId})}" class="btn btn-info btn-sm">상세보기</a></td>
+
                 <td>
                     <form th:action="@{/order/cancel}" method="post">
                         <input type="hidden" name="orderId" th:value="${order.orderId}"/>
@@ -39,9 +85,37 @@
                         <span th:if="${order.orderStatus == 'CANCELLED'}">주문 취소</span>
                     </form>
                 </td>
+
+                <td th:each="item : ${order.orderItems}">
+                    <a th:if="${order.orderStatus == 'DELIVERED'}"
+                       th:href="@{/review/new(itemId=${item.itemId}, orderId=${order.orderId})}"
+                       class="btn btn-primary btn-sm">후기 작성</a>
+                </td>
+
             </tr>
             </tbody>
         </table>
+
+        <!-- 페이지 네비게이션 -->
+        <div class="pagination mt-4">
+            <ul class="pagination">
+                <li class="page-item" th:if="${orders.hasPrevious()}">
+                    <a class="page-link" th:href="@{/order/history(page=${orders.number - 1}, size=${orders.size}, sortBy=${searchCondition.sortBy}, ascending=${searchCondition.ascending})}">
+                        이전
+                    </a>
+                </li>
+                <li class="page-item" th:each="pageNum : ${#numbers.sequence(0, orders.totalPages - 1)}"
+                    th:classappend="${pageNum == orders.number} ? 'active' : ''">
+                    <a class="page-link" th:href="@{/order/history(page=${pageNum}, size=${orders.size}, sortBy=${searchCondition.sortBy}, ascending=${searchCondition.ascending})}"
+                       th:text="${pageNum + 1}"></a>
+                </li>
+                <li class="page-item" th:if="${orders.hasNext()}">
+                    <a class="page-link" th:href="@{/order/history(page=${orders.number + 1}, size=${orders.size}, sortBy=${searchCondition.sortBy}, ascending=${searchCondition.ascending})}">
+                        다음
+                    </a>
+                </li>
+            </ul>
+        </div>
     </div>
 
 </div>

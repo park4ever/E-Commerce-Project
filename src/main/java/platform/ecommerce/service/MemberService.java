@@ -1,19 +1,21 @@
 package platform.ecommerce.service;
 
-import platform.ecommerce.dto.ChangePasswordRequestDto;
-import platform.ecommerce.dto.MemberResponseDto;
-import platform.ecommerce.dto.UpdateMemberRequestDto;
-import platform.ecommerce.entity.Member;
-
-import java.util.Optional;
+import platform.ecommerce.dto.member.MemberDetailsDto;
+import platform.ecommerce.dto.member.MemberProfileDto;
+import platform.ecommerce.dto.member.MemberResponseDto;
+import platform.ecommerce.dto.member.UpdateMemberRequestDto;
 
 public interface MemberService {
 
     MemberResponseDto findMember(String email);
 
-    Long updateMember(Long memberId, UpdateMemberRequestDto dto);
+    MemberDetailsDto findMemberDetails(String email);
 
-    Long changePassword(Long memberId, ChangePasswordRequestDto dto);
+    Long updateMemberWithPasswordCheck(Long memberId, UpdateMemberRequestDto dto, String currentPassword);
 
     void deleteMember(Long memberId);
+
+    UpdateMemberRequestDto toUpdateDto(Long memberId);
+
+    MemberProfileDto toProfileDto(Long memberId);
 }

@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/layout}">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+
+<div layout:fragment="content">
+
+    <div class="container mt-5">
+        <h2>리뷰 수정</h2>
+        <form th:action="@{/review/edit/{reviewId}(reviewId=${reviewRequestDto.reviewId})}" method="post" enctype="multipart/form-data" th:object="${reviewRequestDto}">
+            <input type="hidden" th:field="*{itemId}" />
+            <div class="form-group">
+                <label for="content">리뷰 내용</label>
+                <textarea class="form-control" id="content" th:field="*{content}" rows="3" required></textarea>
+                <div class="invalid-feedback" th:if="${#fields.hasErrors('content')}" th:errors="*{content}"></div>
+            </div>
+
+            <div class="form-group">
+                <label for="rating">평점</label>
+                <select class="form-control" id="rating" th:field="*{rating}" required>
+                    <option value="" disabled>평점을 선택하세요</option>
+                    <option value="1" th:selected="${reviewRequestDto.rating == 1}">1</option>
+                    <option value="2" th:selected="${reviewRequestDto.rating == 2}">2</option>
+                    <option value="3" th:selected="${reviewRequestDto.rating == 3}">3</option>
+                    <option value="4" th:selected="${reviewRequestDto.rating == 4}">4</option>
+                    <option value="5" th:selected="${reviewRequestDto.rating == 5}">5</option>
+                </select>
+                <div class="invalid-feedback" th:if="${#fields.hasErrors('rating')}" th:errors="*{rating}"></div>
+            </div>
+
+            <div class="form-group">
+                <label for="image">이미지 업로드</label>
+                <input type="file" class="form-control-file" id="image" th:field="*{image}">
+            </div>
+
+            <button type="submit" class="btn btn-primary">수정하기</button>
+            <a href="#" class="btn btn-secondary" th:href="@{/item/{itemId}(itemId=${reviewRequestDto.itemId})}">취소</a>
+        </form>
+    </div>
+
+</div>
+
+</body>
+</html>

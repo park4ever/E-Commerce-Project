@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/layout}">
+<head>
+    <meta charset="UTF-8">
+    <title>배송지 변경</title>
+    <!-- Kakao API Script -->
+    <script src="https://developers.kakao.com/sdk/js/kakao.js"></script>
+    <script src="https://t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
+    <script>
+        // Kakao API 초기화
+        Kakao.init('fcb06fd71e67da6f5f16237578814762');
+
+        // 주소 검색 창 열기
+        function openAddressSearch() {
+            new daum.Postcode({
+                oncomplete: function(data) {
+                    var roadAddr = data.roadAddress;
+                    var jibunAddr = data.jibunAddress;
+                    var address = roadAddr || jibunAddr;
+
+                    // 배송지 정보 입력 필드에 값 설정
+                    document.getElementById('street').value = address;
+                    document.getElementById('zipcode').value = data.zonecode;
+                    document.getElementById('city').value = data.sido;
+                }
+            }).open();
+        }
+
+        // 페이지 로드 후 실행되는 코드
+        window.onload = function() {
+            // 주소 검색 버튼에 이벤트 리스너 추가
+            document.getElementById('openAddressSearchBtn').addEventListener('click', openAddressSearch);
+        }
+    </script>
+</head>
+<body>
+
+<div layout:fragment="content" class="container mt-5">
+    <h2 class="mb-4">배송지 변경</h2>
+
+    <h6 class="mt-4">주문 상품 목록</h6>
+    <table class="table">
+        <thead>
+        <tr>
+            <th>상품 이미지</th>
+            <th>상품명</th>
+            <th>수량</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="item : ${orderItems}">
+            <td><img th:src="@{'/images/' + ${item.imageUrl}}" alt="상품 이미지" style="width: 100px; height: 100px;"></td>
+            <td th:text="${item.itemName}"></td>
+            <td th:text="${item.count}"></td>
+        </tr>
+        </tbody>
+    </table>
+
+
+    <div class="card">
+        <div class="card-body">
+            <form th:action="@{/order/updateShippingAddress}" method="post" th:object="${orderModificationDto}">
+                <input type="hidden" th:field="*{orderId}" />
+
+                <label for="zipcode">우편번호:</label>
+                <input type="text" id="zipcode" name="newAddress.zipcode" th:field="*{newAddress.zipcode}" />
+
+                <label for="city">도시:</label>
+                <input type="text" id="city" name="newAddress.city" th:field="*{newAddress.city}" />
+
+                <label for="street">도로명 주소:</label>
+                <input type="text" id="street" name="newAddress.street" th:field="*{newAddress.street}" />
+
+                <label for="additionalInfo">추가 정보:</label>
+                <input type="text" id="additionalInfo" name="newAddress.additionalInfo" th:field="*{newAddress.additionalInfo}" />
+
+                <button type="button" id="openAddressSearchBtn" class="btn btn-outline-secondary mb-3">주소 검색</button>
+
+                <button type="submit" class="btn btn-primary mt-3">배송지 변경</button>
+            </form>
+        </div>
+    </div>
+</div>
+</body>
+</html>

@@ -11,25 +11,50 @@
 <div layout:fragment="content">
     <h2>상품 수정</h2>
 
-    <form th:action="@{/item/edit/{id}(id=${id})}" th:object="${item}" method="POST">
+    <!-- 기존 상품 이미지 표시 -->
+    <div>
+        <img th:src="@{${item.imageUrl}}" alt="상품 이미지" style="max-width: 200px; height: auto;"/>
+    </div>
+
+    <form th:action="@{/item/edit/{id}(id=${id})}" th:object="${item}" method="POST" enctype="multipart/form-data">
         <!-- 숨겨진 필드로 ID 전달 -->
         <input type="hidden" name="id" th:value="${id}" />
+
         <div>
             <label for="itemName">상품명:</label>
             <input type="text" id="itemName" th:field="*{itemName}" />
         </div>
+
         <div>
             <label for="description">설명:</label>
             <input type="text" id="description" th:field="*{description}" />
         </div>
+
         <div>
             <label for="price">가격:</label>
             <input type="number" id="price" th:field="*{price}" />
         </div>
+
         <div>
             <label for="stockQuantity">재고:</label>
             <input type="number" id="stockQuantity" th:field="*{stockQuantity}" />
         </div>
+
+<!--        <div>-->
+<!--            <label for="category">카테고리:</label>-->
+<!--            <select id="category" th:field="*{category}">-->
+<!--                <option th:each="category : ${T(platform.ecommerce.entity.Category).values()}"-->
+<!--                        th:value="${category}"-->
+<!--                        th:text="${category}"></option>-->
+<!--            </select>-->
+<!--        </div>--> <!-- TODO DELETE -->
+
+        <!-- 이미지 업로드 -->
+        <div>
+            <label for="image">새 이미지 업로드:</label>
+            <input type="file" id="image" name="image"/>
+        </div>
+
         <button type="submit">수정하기</button>
     </form>
 

@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/layout}">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+
+<div layout:fragment="content">
+
+    <div class="container mt-5">
+        <h2>리뷰 작성</h2>
+
+        <!-- 상품 정보 -->
+        <div class="card mb-3">
+            <div class="row g-0">
+                <div class="col-md-4">
+                    <img th:src="@{{imageUrl}(imageUrl=${item.imageUrl})}" class="img-fluid rounded-start" alt="상품 이미지">
+                </div>
+                <div class="col-md-8">
+                    <div class="card-body">
+                        <h5 class="card-title" th:text="${item.itemName}">상품 이름</h5>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 리뷰 작성 폼 -->
+        <form th:action="@{/review/new}" method="post" th:object="${reviewRequestDto}" enctype="multipart/form-data">
+            <input type="hidden" name="orderId" th:value="*{orderId}"/>
+            <input type="hidden" name="itemId" th:value="*{itemId}" />
+            <div class="mb-3">
+                <label for="content" class="form-label">내용 : </label>
+                <textarea id="content" class="form-control" th:field="*{content}" rows="5" placeholder="후기를 입력하세요"></textarea>
+            </div>
+
+            <!-- 별점 선택 -->
+            <div class="mb-3">
+                <label for="rating" class="form-label">별점 : </label>
+                <div class="star-rating">
+                    <input type="radio" name="rating" th:field="*{rating}" id="star5" value="5">
+                    <label for="star5" title="5 stars">★</label>
+                    <input type="radio" name="rating" th:field="*{rating}" id="star4" value="4">
+                    <label for="star4" title="4 stars">★</label>
+                    <input type="radio" name="rating" th:field="*{rating}" id="star3" value="3">
+                    <label for="star3" title="3 stars">★</label>
+                    <input type="radio" name="rating" th:field="*{rating}" id="star2" value="2">
+                    <label for="star2" title="2 stars">★</label>
+                    <input type="radio" name="rating" th:field="*{rating}" id="star1" value="1">
+                    <label for="star1" title="1 star">★</label>
+                </div>
+            </div>
+
+            <label for="image">이미지 첨부 : </label>
+            <input type="file" id="image" name="image"/>
+
+            <button type="submit" class="btn btn-primary">리뷰 등록</button>
+        </form>
+    </div>
+
+</div>
+
+</body>
+</html>

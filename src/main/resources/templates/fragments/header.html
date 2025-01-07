@@ -1,5 +1,59 @@
 <div layout:fragment="header">
-    <header>
-        <h1>Header Area</h1>
+    <header class="container-fluid border-bottom py-2">
+        <div class="container d-flex justify-content-between align-items-center">
+            <h1 class="header-title">
+                <a href="/" class="text-decoration-none text-dark">Live Young Forever</a>
+            </h1>
+            <nav>
+                <ul class="nav">
+                    <li class="nav-item dropdown">
+                        <a href="#" class="nav-link dropdown-toggle" id="shopDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            SHOP
+                        </a>
+                        <ul class="dropdown-menu" aria-labelledby="shopDropdown">
+                            <li><a href="#!" class="dropdown-item">New Arrivals</a></li>
+                            <li><a href="#!" class="dropdown-item">Outer</a></li>
+                            <li><a href="#!" class="dropdown-item">Knit</a></li>
+                            <li><a href="#!" class="dropdown-item">Sweat</a></li>
+                            <li><a href="#!" class="dropdown-item">Shirts</a></li>
+                            <li><a href="#!" class="dropdown-item">Tees</a></li>
+                            <li><a href="#!" class="dropdown-item">Pants</a></li>
+                            <li><a href="#!" class="dropdown-item">Headwear</a></li>
+                            <li><a href="#!" class="dropdown-item">Accessories</a></li>
+                        </ul>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a href="#" class="nav-link dropdown-toggle" id="supportDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            SUPPORT
+                        </a>
+                        <ul class="dropdown-menu" aria-labelledby="supportDropdown">
+                            <li><a href="#!" class="dropdown-item">Customer Service</a></li>
+                            <li><a href="/member/profile" class="dropdown-item">Account</a></li>
+                            <li><a href="/order/history" class="dropdown-item">Shipping & Returns</a></li>
+                            <li><a href="#!" class="dropdown-item">Board</a></li>
+                        </ul>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link" id="searchToggle">SEARCH</a>
+                        <div id="searchBox" class="search-box" style="display: none;">
+                            <input type="text" id="searchInput" placeholder="검색어를 입력해주세요." class="form-control">
+                            <button id="searchButton"><i class="fas fa-search"></i></button>
+                        </div>
+                    </li>
+                    <li class="nav-item" sec:authorize="isAnonymous()">
+                        <a href="/login" class="nav-link">LOGIN</a>
+                    </li>
+                    <li class="nav-item" sec:authorize="isAuthenticated()">
+                        <form action="/logout" method="post" class="d-inline">
+                            <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}" />
+                            <button type="submit" class="nav-link btn-link">LOGOUT</button>
+                        </form>
+                    </li>
+                    <li class="nav-item" sec:authorize="isAuthenticated()">
+                        <a href="/cart" class="nav-link">CART</a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
     </header>
 </div>

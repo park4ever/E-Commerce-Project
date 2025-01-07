@@ -6,22 +6,15 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import platform.ecommerce.dto.CartCheckoutDto;
-import platform.ecommerce.dto.CartItemDto;
-import platform.ecommerce.dto.OrderItemDto;
-import platform.ecommerce.dto.OrderSaveRequestDto;
-import platform.ecommerce.entity.Cart;
-import platform.ecommerce.entity.CartItem;
-import platform.ecommerce.entity.Item;
-import platform.ecommerce.entity.Member;
+import platform.ecommerce.dto.cart.CartCheckoutDto;
+import platform.ecommerce.dto.cart.CartItemDto;
+import platform.ecommerce.entity.*;
 import platform.ecommerce.repository.CartItemRepository;
 import platform.ecommerce.repository.CartRepository;
 import platform.ecommerce.repository.ItemRepository;
 import platform.ecommerce.repository.MemberRepository;
 import platform.ecommerce.service.CartService;
-import platform.ecommerce.service.OrderService;
 
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -101,7 +94,8 @@ public class CartServiceImpl implements CartService {
                         cartItem.getItem().getId(),
                         cartItem.getItem().getItemName(),
                         cartItem.getItem().getPrice(),
-                        cartItem.getQuantity()
+                        cartItem.getQuantity(),
+                        cartItem.getItem().getImageUrl()
                 ))
                 .collect(Collectors.toList());
     }
@@ -149,12 +143,13 @@ public class CartServiceImpl implements CartService {
                         cartItem.getItem().getId(),
                         cartItem.getItem().getItemName(),
                         cartItem.getItem().getPrice(),
-                        cartItem.getQuantity()))
+                        cartItem.getQuantity(),
+                        cartItem.getItem().getImageUrl()))
                 .collect(Collectors.toList());
     }
 
     @Override
-    public CartCheckoutDto prepareCheckout(Long memberId) {
+    public CartCheckoutDto prepareCheckout(Long memberId, CartCheckoutDto cartCheckoutDto) {
         Cart cart = cartRepository.findByMemberId(memberId)
                 .orElseThrow(() -> new IllegalArgumentException("장바구니를 찾을 수 없습니다."));
 
@@ -168,10 +163,22 @@ public class CartServiceImpl implements CartService {
                         cartItem.getItem().getId(),
                         cartItem.getItem().getItemName(),
                         cartItem.getItem().getPrice(),
-                        cartItem.getQuantity()))
+                        cartItem.getQuantity(),
+                        cartItem.getItem().getImageUrl()))
                 .collect(Collectors.toList());
 
-        return new CartCheckoutDto(memberId, cartItemDtos);
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new UsernameNotFoundException("회원을 찾을 수 없습니다."));
+
+        return new CartCheckoutDto(
+                memberId,
+                cartItemDtos,
+                member.getUsername(),
+                member.getPhoneNumber(),
+                member.getAddress().fullAddress(),
+                cartCheckoutDto.getShippingAddress(),
+                cartCheckoutDto.getPaymentMethod(),
+                cartCheckoutDto.getQuantity());
     }
 
     @Override
@@ -198,6 +205,13 @@ public class CartServiceImpl implements CartService {
         em.clear();
 
         log.info("Cart cleared successfully!");
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public int getCartItemCount(Long memberId) {
+        Cart cart = cartRepository.findByMemberId(memberId).orElseThrow(() -> new UsernameNotFoundException("회원을 찾을 수 없습니다."));
+        return (cart != null) ? cart.getCartItems().size() : 0;
     }
 
     private void validateItemQuantity(int quantity) {

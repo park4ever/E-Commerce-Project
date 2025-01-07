@@ -1,8 +1,7 @@
 package platform.ecommerce.service;
 
-import platform.ecommerce.dto.CartCheckoutDto;
-import platform.ecommerce.dto.CartItemDto;
-import platform.ecommerce.entity.Cart;
+import platform.ecommerce.dto.cart.CartCheckoutDto;
+import platform.ecommerce.dto.cart.CartItemDto;
 
 import java.util.List;
 
@@ -20,9 +19,11 @@ public interface CartService {
 
     List<CartItemDto> findCartItems(Long memberId);
 
-    CartCheckoutDto prepareCheckout(Long memberId);
+    CartCheckoutDto prepareCheckout(Long memberId, CartCheckoutDto cartCheckoutDto);
 
     void clearCartAfterOrder(Long memberId);
 
     void clearCart(Long memberId);
+
+    int getCartItemCount(Long memberId);
 }

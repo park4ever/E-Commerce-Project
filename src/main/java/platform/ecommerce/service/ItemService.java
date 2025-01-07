@@ -1,8 +1,11 @@
 package platform.ecommerce.service;
 
-import platform.ecommerce.dto.ItemResponseDto;
-import platform.ecommerce.dto.ItemSaveRequestDto;
-import platform.ecommerce.dto.ItemUpdateDto;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import platform.ecommerce.dto.item.ItemResponseDto;
+import platform.ecommerce.dto.item.ItemSaveRequestDto;
+import platform.ecommerce.dto.item.ItemSearchCondition;
+import platform.ecommerce.dto.item.ItemUpdateDto;
 
 import java.util.List;
 
@@ -12,7 +15,11 @@ public interface ItemService {
 
     List<ItemResponseDto> findItems();
 
+    Page<ItemResponseDto> findItemsWithPageable(ItemSearchCondition cond, Pageable pageable);
+
     ItemResponseDto findItem(Long id);
 
     void updateItem(Long id, ItemUpdateDto itemUpdateDto);
+
+    ItemUpdateDto convertToUpdateDto(ItemResponseDto itemResponseDto);
 }

@@ -1,8 +1,8 @@
 package platform.ecommerce.service;
 
-import platform.ecommerce.dto.OrderSaveRequestDto;
+import platform.ecommerce.dto.cart.CartCheckoutDto;
 
 public interface CheckoutService {
 
-    Long checkoutCart(Long memberId);
+    Long checkoutCart(CartCheckoutDto cartCheckoutDto);
 }
