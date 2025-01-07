@@ -1,4 +1,4 @@
-package platform.ecommerce.Exception;
+package platform.ecommerce.exception;
 
 public class NotEnoughStockException extends RuntimeException {
     public NotEnoughStockException() {

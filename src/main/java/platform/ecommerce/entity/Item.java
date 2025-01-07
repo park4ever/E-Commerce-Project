@@ -2,13 +2,12 @@ package platform.ecommerce.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
-import platform.ecommerce.Exception.NotEnoughStockException;
+import platform.ecommerce.exception.NotEnoughStockException;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import static jakarta.persistence.CascadeType.*;
-import static jakarta.persistence.EnumType.*;
 
 @Entity
 @Getter
