@@ -57,11 +57,11 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(csrf -> csrf
-                        .ignoringRequestMatchers("/logout", "/order/new")
+                        .ignoringRequestMatchers("/login", "/logout", "/order/new")
                 )
                 .authorizeHttpRequests(authz -> authz
                         .dispatcherTypeMatchers(DispatcherType.FORWARD).permitAll()
-                        .requestMatchers("/" ,"/signup", "/login", "/item/**", "/resources/**").permitAll()
+                        .requestMatchers("/" ,"/signup", "/login", "/item/**", "/resources/**", "/home").permitAll()
 //                        .requestMatchers("/admin/**").hasRole("ADMIN")
 //                        .requestMatchers("/user/**").hasRole("USER")
                         .anyRequest().authenticated()
@@ -76,25 +76,18 @@ public class SecurityConfig {
                 )
                 .logout(logout -> logout
                         .logoutUrl("/logout")
-                        .logoutSuccessUrl("/")
-                        .invalidateHttpSession(false)
+                        .logoutSuccessUrl("/login")
+                        .invalidateHttpSession(true)
                         .clearAuthentication(true)
                         .deleteCookies("JSESSIONID")
                         .permitAll()
                 )
-                .addFilterBefore(new LoggingFilter(), UsernamePasswordAuthenticationFilter.class)
+                .sessionManagement(session -> session
+                        .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
+                        .sessionFixation().migrateSession()
+                )
         ;
 
         return http.build();
-    }
-
-    public class LoggingFilter extends OncePerRequestFilter {
-        @Override
-        protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
-                throws ServletException, IOException {
-            log.info("Request URI : {}", request.getRequestURI());
-            filterChain.doFilter(request, response);
-
-        }
     }
 }

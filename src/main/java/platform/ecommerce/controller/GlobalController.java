@@ -1,6 +1,7 @@
 package platform.ecommerce.controller;
 
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -30,14 +31,23 @@ public class GlobalController {
     private final GlobalService globalService;
 
     @GetMapping("/")
-    public String home() {
+    public String home(HttpServletRequest request) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        HttpSession session = request.getSession(false);
+
         if (authentication != null) {
-            log.info("!!! Authenticated user : {}", authentication.getName());
-            log.info("!!! Authentication Class : {}", authentication.getClass().getName());
-            log.info("!!! Authentication is anonymous = {}", authentication instanceof AnonymousAuthenticationToken);
+            log.info("Home - Authenticated user : {}", authentication.getName());
+            log.info("Home - Authentication Class : {}", authentication.getClass().getName());
+            log.info("Home - Authorities : {}", authentication.getAuthorities());
+            log.info("Home - Is Anonymous : {}", authentication instanceof AnonymousAuthenticationToken);
         } else {
-            log.info("No authentication information available");
+            log.info("Home - No Authentication information");
+        }
+
+        if (session != null) {
+            log.info("Home - Session ID : {}", session.getId());
+        } else {
+            log.info("Home - No Session available");
         }
 
         /*//상품 목록 가져오기
@@ -109,15 +119,11 @@ public class GlobalController {
         }
         if (authentication != null
                 && authentication.isAuthenticated()
-                && !(authentication instanceof AnonymousAuthenticationToken)) {
+                && !(authentication instanceof AnonymousAuthenticationToken)
+                && request.getSession(false) != null) {
             log.info("User is already authenticated, redirecting to home.");
-            return "redirect:/";
+            return "redirect:/home";
         }
         return "pages/loginForm";
-    }
-
-    @GetMapping("/logout")
-    public String logout() {
-        return "redirect:/";
     }
 }

@@ -76,7 +76,7 @@
 
 <div class="card shadow-sm">
     <div class="card-body">
-        <form action="/signup" method="POST" th:object="${memberSaveRequestDto}">
+        <form action="/signup" method="post" th:object="${memberSaveRequestDto}">
             <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
             <!-- 사용자 이름 -->
             <div class="mb-3">
