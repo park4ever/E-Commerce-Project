@@ -11,7 +11,7 @@ import org.springframework.stereotype.Component;
 import java.io.IOException;
 
 @Slf4j
-@Component
+//@Component
 public class CustomLogoutSuccessHandler implements LogoutSuccessHandler {
 
     @Override

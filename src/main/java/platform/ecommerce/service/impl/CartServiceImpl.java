@@ -210,8 +210,11 @@ public class CartServiceImpl implements CartService {
     @Override
     @Transactional(readOnly = true)
     public int getCartItemCount(Long memberId) {
-        Cart cart = cartRepository.findByMemberId(memberId).orElseThrow(() -> new UsernameNotFoundException("회원을 찾을 수 없습니다."));
-        return (cart != null) ? cart.getCartItems().size() : 0;
+        /*Cart cart = cartRepository.findByMemberId(memberId).orElseThrow(() -> new UsernameNotFoundException("회원을 찾을 수 없습니다."));
+        return (cart != null) ? cart.getCartItems().size() : 0;*/
+        return cartRepository.findByMemberId(memberId)
+                .map(cart -> cart.getCartItems().size())
+                .orElse(0); //예외 대신 기본값 0을 반환
     }
 
     private void validateItemQuantity(int quantity) {

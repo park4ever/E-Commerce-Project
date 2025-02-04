@@ -6,6 +6,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.DefaultRedirectStrategy;
 import org.springframework.security.web.RedirectStrategy;
@@ -26,37 +27,16 @@ public class CustomAuthenticationSuccessHandler extends SimpleUrlAuthenticationS
 
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException, ServletException {
-
-        //SecurityContext에 인증 정보 명확히 저장
-        SecurityContextHolder.getContext().setAuthentication(authentication);
+        SecurityContext securityContext = SecurityContextHolder.getContext();
+        securityContext.setAuthentication(authentication);
 
         //세션에 SecurityContext 저장
-        HttpSession session = request.getSession();
-        session.setAttribute("SPRING_SECURITY_CONTEXT", SecurityContextHolder.getContext());
+        HttpSession session = request.getSession(true);
+        session.setAttribute("SPRING_SECURITY_CONTEXT", securityContext);
 
-        //SavedRequest 가져오기
-        SavedRequest savedRequest = requestCache.getRequest(request, response);
+        log.info("✅ Authentication success for user : {}. Redirecting to /home", authentication.getName());
+        log.info("✅ SecurityContext after login : {}", SecurityContextHolder.getContext().getAuthentication());
 
-        if (savedRequest != null) {
-            String redirectUrl = savedRequest.getRedirectUrl();
-
-            //로그인 및 회원가입 페이지로 리디렉션 방지
-            if (redirectUrl.contains("/login") || redirectUrl.contains("signup")) {
-                redirectStrategy.sendRedirect(request, response, "/home");
-                log.info("Redirecting to home to prevent redirect loop.");
-            } else {
-                redirectStrategy.sendRedirect(request, response, redirectUrl);
-                log.info("Redirecting to originally requested URL : {}", redirectUrl);
-            }
-
-            //SavedRequest 삭제
-            requestCache.removeRequest(request, response);
-        } else {
-            //SavedRequest가 없으면 기본 페이지로 Redirection
-            redirectStrategy.sendRedirect(request, response, "/home");
-            log.info("No SavedRequest found. Redirecting to home");
-        }
-
-        log.info("Authentication success for user : {}", authentication.getName());
+        redirectStrategy.sendRedirect(request, response, "/home");
     }
 }

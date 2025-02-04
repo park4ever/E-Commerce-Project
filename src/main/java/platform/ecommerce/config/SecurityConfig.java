@@ -13,12 +13,14 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
 import org.springframework.security.config.annotation.web.configurers.LogoutConfigurer;
+import org.springframework.security.config.annotation.web.configurers.RequestCacheConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.authentication.preauth.AbstractPreAuthenticatedProcessingFilter;
+import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
 import org.springframework.security.web.context.SecurityContextPersistenceFilter;
 import org.springframework.web.filter.OncePerRequestFilter;
 import platform.ecommerce.controller.CustomLogoutSuccessHandler;
@@ -30,14 +32,11 @@ import java.io.IOException;
 @EnableWebSecurity
 public class SecurityConfig {
 
-    private final CustomLogoutSuccessHandler customLogoutSuccessHandler;
     private final CustomAuthenticationSuccessHandler customAuthenticationSuccessHandler;
     private final CustomAuthenticationFailureHandler customAuthenticationFailureHandler;
 
-    public SecurityConfig(CustomLogoutSuccessHandler customLogoutSuccessHandler,
-                          CustomAuthenticationSuccessHandler customAuthenticationSuccessHandler,
+    public SecurityConfig(CustomAuthenticationSuccessHandler customAuthenticationSuccessHandler,
                           CustomAuthenticationFailureHandler customAuthenticationFailureHandler) {
-        this.customLogoutSuccessHandler = customLogoutSuccessHandler;
         this.customAuthenticationSuccessHandler = customAuthenticationSuccessHandler;
         this.customAuthenticationFailureHandler = customAuthenticationFailureHandler;
     }
@@ -59,24 +58,28 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf
                         .ignoringRequestMatchers("/login", "/logout", "/order/new")
                 )
+                .requestCache(RequestCacheConfigurer::disable)
+                .securityContext(securityContext -> securityContext
+                        .securityContextRepository(new HttpSessionSecurityContextRepository()))
                 .authorizeHttpRequests(authz -> authz
                         .dispatcherTypeMatchers(DispatcherType.FORWARD).permitAll()
-                        .requestMatchers("/" ,"/signup", "/login", "/item/**", "/resources/**", "/home").permitAll()
-//                        .requestMatchers("/admin/**").hasRole("ADMIN")
-//                        .requestMatchers("/user/**").hasRole("USER")
+                        .requestMatchers("/", "/signup", "/login", "/item/**", "/resources/**").permitAll()
+                        .requestMatchers("/admin/**").hasRole("ADMIN")
+                        .requestMatchers("/user/**").hasRole("USER")
                         .anyRequest().authenticated()
                 )
                 .formLogin(formLogin -> formLogin
                         .loginPage("/login")
                         .successHandler(customAuthenticationSuccessHandler)
                         .failureHandler(customAuthenticationFailureHandler)
+                        .defaultSuccessUrl("/")
                         .usernameParameter("email")
                         .passwordParameter("password")
                         .permitAll()
                 )
                 .logout(logout -> logout
                         .logoutUrl("/logout")
-                        .logoutSuccessUrl("/login")
+                        .logoutSuccessUrl("/")
                         .invalidateHttpSession(true)
                         .clearAuthentication(true)
                         .deleteCookies("JSESSIONID")
@@ -84,8 +87,9 @@ public class SecurityConfig {
                 )
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
-                        .sessionFixation().migrateSession()
+                        .sessionFixation().none()
                 )
+                .httpBasic(Customizer.withDefaults())
         ;
 
         return http.build();

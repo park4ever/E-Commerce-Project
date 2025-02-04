@@ -36,18 +36,18 @@ public class GlobalController {
         HttpSession session = request.getSession(false);
 
         if (authentication != null) {
-            log.info("Home - Authenticated user : {}", authentication.getName());
-            log.info("Home - Authentication Class : {}", authentication.getClass().getName());
-            log.info("Home - Authorities : {}", authentication.getAuthorities());
-            log.info("Home - Is Anonymous : {}", authentication instanceof AnonymousAuthenticationToken);
+            log.info("🏠 Home - Authenticated user : {}", authentication.getName());
+            log.info("🏠 Home - Authentication Class : {}", authentication.getClass().getName());
+            log.info("🏠 Home - Authorities : {}", authentication.getAuthorities());
+            log.info("🏠 Home - Is Anonymous : {}", authentication instanceof AnonymousAuthenticationToken);
         } else {
-            log.info("Home - No Authentication information");
+            log.info("🏠 Home - No Authentication information");
         }
 
         if (session != null) {
-            log.info("Home - Session ID : {}", session.getId());
+            log.info("🏠 Home - Session ID : {}", session.getId());
         } else {
-            log.info("Home - No Session available");
+            log.info("🏠 Home - No Session available");
         }
 
         /*//상품 목록 가져오기
@@ -110,18 +110,22 @@ public class GlobalController {
     @GetMapping("/login")
     public String loginPage(HttpServletRequest request) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        HttpSession session = request.getSession(true);
+
         log.info("!!! Authentication : {}", authentication);
         if (authentication != null) {
-            log.info("!!! Authenticated : {}", authentication.isAuthenticated());
-            log.info("!!! Principal : {}", authentication.getPrincipal());
-            log.info("!!! Authentication Class : {}", authentication.getClass().getName());
-            log.info("!!! Is Anonymous : {}", authentication instanceof AnonymousAuthenticationToken);
+            log.info("Login - Authenticated : {}", authentication.isAuthenticated());
+            log.info("Login - Principal : {}", authentication.getPrincipal());
+            log.info("Login - Authentication Class : {}", authentication.getClass().getName());
+            log.info("Login - Is Anonymous : {}", authentication instanceof AnonymousAuthenticationToken);
+            log.info("Login - Session ID : {}", session.getId());
         }
         if (authentication != null
                 && authentication.isAuthenticated()
                 && !(authentication instanceof AnonymousAuthenticationToken)
                 && request.getSession(false) != null) {
-            log.info("User is already authenticated, redirecting to home.");
+            log.info("Login - User is already authenticated, redirecting to home.");
+            log.info("Login - Session ID : {}", session.getId());
             return "redirect:/home";
         }
         return "pages/loginForm";
