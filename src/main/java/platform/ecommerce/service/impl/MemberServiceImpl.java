@@ -27,8 +27,7 @@ public class MemberServiceImpl implements MemberService {
     @Override
     @Transactional(readOnly = true)
     public MemberResponseDto findMember(String email) {
-        Member member = memberRepository.findByEmail(email)
-                .orElseThrow(() -> new UsernameNotFoundException("회원을 찾을 수 없습니다."));
+        Member member = findMemberByEmail(email);
 
         return MemberResponseDto.builder()
                 .memberId(member.getId())
@@ -40,8 +39,7 @@ public class MemberServiceImpl implements MemberService {
     @Override
     @Transactional(readOnly = true)
     public MemberDetailsDto findMemberDetails(String email) {
-        Member member = memberRepository.findByEmail(email)
-                .orElseThrow(() -> new UsernameNotFoundException("회원을 찾을 수 없습니다."));
+        Member member = findMemberByEmail(email);
 
         return MemberDetailsDto.builder()
                 .username(member.getUsername())
@@ -51,40 +49,15 @@ public class MemberServiceImpl implements MemberService {
     }
 
     @Override
-    public Long updateMemberWithPasswordCheck(Long memberId, UpdateMemberRequestDto dto, String currentPassword) {
-        Member member = memberRepository.findById(memberId)
-                .orElseThrow(() -> new UsernameNotFoundException("회원을 찾을 수 없습니다."));
-        //현재 비밀번호 검증
-        if (!passwordEncoder.matches(currentPassword, member.getPassword())) {
-            throw new IllegalArgumentException("현재 비밀번호가 일치하지 않습니다.");
-        }
-
-        //회원 정보 업데이트
-        member.updateMemberInfo(dto.getUsername(), dto.getPhoneNumber(), dto.getAddress(), dto.getDateOfBirth());
-
-        if (dto.getNewPassword() != null && !dto.getNewPassword().isEmpty()) {
-            String encodedPassword = passwordEncoder.encode(dto.getNewPassword());
-            member.changePassword(encodedPassword);
-        }
-
-        log.info("Member [{}] updated successfully", member.getId());
-        return memberRepository.save(member).getId();
-    }
-
-    @Override
     public void deleteMember(Long memberId) {
-        Member member = memberRepository.findById(memberId)
-                .orElseThrow(() -> new UsernameNotFoundException("회원을 찾을 수 없습니다."));
-        memberRepository.delete(member);
-
+        memberRepository.delete(findMemberById(memberId));
         log.info("Member [{}] deleted successfully", memberId);
     }
 
     @Override
     @Transactional(readOnly = true)
     public UpdateMemberRequestDto toUpdateDto(Long memberId) {
-        Member member = memberRepository.findById(memberId)
-                .orElseThrow(() -> new UsernameNotFoundException("회원을 찾을 수 없습니다."));
+        Member member = findMemberById(memberId);
 
         UpdateMemberRequestDto memberDto = new UpdateMemberRequestDto();
         memberDto.setUsername(member.getUsername());
@@ -98,8 +71,7 @@ public class MemberServiceImpl implements MemberService {
     @Override
     @Transactional(readOnly = true)
     public MemberProfileDto toProfileDto(Long memberId) {
-        Member member = memberRepository.findById(memberId)
-                .orElseThrow(() -> new UsernameNotFoundException("회원을 찾을 수 없습니다."));
+        Member member = findMemberById(memberId);
 
         return MemberProfileDto.builder()
                 .email(member.getEmail())
@@ -109,5 +81,31 @@ public class MemberServiceImpl implements MemberService {
                 .dateOfBirth(member.getDateOfBirth())
                 .defaultShippingAddress(member.getDefaultShippingAddress())
                 .build();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public boolean checkPassword(Long memberId, String inputPassword) {
+        return passwordEncoder.matches(inputPassword, findMemberById(memberId).getPassword());
+    }
+
+    @Override
+    public void updateMember(Long memberId, UpdateMemberRequestDto dto) {
+        Member member = findMemberById(memberId);
+
+        member.updateMemberInfo(dto.getUsername(), dto.getPhoneNumber(), dto.getAddress(), dto.getDateOfBirth());
+
+        memberRepository.save(member);
+        log.info("Member [{}] updated successfully!", member.getId());
+    }
+
+    private Member findMemberById(Long memberId) {
+        return memberRepository.findById(memberId)
+                .orElseThrow(() -> new UsernameNotFoundException("회원을 찾을 수 없습니다."));
+    }
+
+    private Member findMemberByEmail(String email) {
+        return memberRepository.findByEmail(email)
+                .orElseThrow(() -> new UsernameNotFoundException("회원을 찾을 수 없습니다."));
     }
 }

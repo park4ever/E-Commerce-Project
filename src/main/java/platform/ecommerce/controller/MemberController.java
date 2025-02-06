@@ -4,6 +4,8 @@ import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -39,86 +41,109 @@ public class MemberController {
         return "/pages/member/profile";
     }
 
+    /**
+     * 프로필 수정 전에 비밀번호 확인 페이지로 이동
+     */
     @GetMapping("/update")
-    public String profileForm(Model model, Authentication authentication) {
+    public String redirectToPasswordVerification() {
+        return "redirect:/member/check-password";
+    }
+
+    /**
+     * 비밀번호 확인 페이지
+     */
+    @GetMapping("/check-password")
+    public String showPasswordCheckForm(Model model) {
+        model.addAttribute("confirmPasswordDto", new ConfirmPasswordDto());
+        return "/pages/member/checkPassword";
+    }
+
+    /**
+     * 비밀번호 확인 후 수정 페이지로 이동
+     */
+    @PostMapping("/check-password")
+    public String verifyPassword(
+            @Valid @ModelAttribute("confirmPasswordDto") ConfirmPasswordDto passwordDto,
+            BindingResult bindingResult, Authentication authentication,
+            HttpSession session, Model model) {
+        if (bindingResult.hasErrors() || passwordDto.getCurrentPassword() == null) {
+            model.addAttribute("passwordError", "비밀번호를 입력하세요.");
+            return "/pages/member/checkPassword";
+        }
+
+        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+        MemberResponseDto member = memberService.findMember(userDetails.getUsername());
+
+        boolean isPasswordValid = memberService.checkPassword(member.getMemberId(), passwordDto.getCurrentPassword());
+
+        if (!isPasswordValid) {
+            model.addAttribute("passwordError", "비밀번호가 일치하지 않습니다.");
+            return "/pages/member/checkPassword";
+        }
+
+        //인증 성공 -> 세선에 저장
+        session.setAttribute("passwordVerified", true);
+
+        return "redirect:/member/update-form";
+    }
+
+    /**
+     * 프로실 수정 폼(비밀번호 확인 후 접근 가능)
+     */
+    @GetMapping("/update-form")
+    public String profileForm(HttpSession session, Model model, Authentication authentication) {
+        //비밀번호 확인이 된 상태가 아니라면 redirect
+        Boolean isVerified = (Boolean) session.getAttribute("passwordVerified");
+
+        if (isVerified == null || !isVerified) {
+            model.addAttribute("passwordError", "세션이 만료되었습니다. 다시 인증해주세요.");
+            return "redirect:/member/check-password";
+        }
+
         UserDetails userDetails = (UserDetails) authentication.getPrincipal();
         MemberResponseDto member = memberService.findMember(userDetails.getUsername());
 
         UpdateMemberRequestDto memberDto = memberService.toUpdateDto(member.getMemberId());
 
-        //포맷팅된 생년월일 문자열을 설정
-        String formattedDateOfBirth = "";
-        if (memberDto.getDateOfBirth() != null) {
-            formattedDateOfBirth = memberDto.getDateOfBirth().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
-        }
-
-        model.addAttribute("formattedDateOfBirth", formattedDateOfBirth);
         model.addAttribute("updateMemberRequestDto", memberDto);
+
         return "/pages/member/profileForm";
     }
 
+    /**
+     * 최종 프로필 수정 요청 처리
+     */
     @PostMapping("/update")
     public String submitProfileUpdate(
             @Valid @ModelAttribute("updateMemberRequestDto") UpdateMemberRequestDto memberDto,
-            BindingResult bindingResult, HttpSession session, Model model) {
+            BindingResult bindingResult, HttpSession session, Model model, Authentication authentication) {
         if (bindingResult.hasErrors()) {
             return "/pages/member/profileForm";
         }
 
-        session.setAttribute("updateMemberRequestDto", memberDto);
-
-        return "redirect:/member/confirm-password";
-    }
-
-    @GetMapping("/confirm-password")
-    public String confirmPasswordForm(Model model) {
-        model.addAttribute("confirmPasswordDto", new ConfirmPasswordDto());
-        return "pages/member/confirmPasswordForm";
-    }
-
-    @PostMapping("/confirm-password")
-    public String confirmPasswordAndUpdate(
-            @Valid @ModelAttribute("confirmPasswordDto") ConfirmPasswordDto passwordDto,
-            BindingResult bindingResult, Authentication authentication,
-            HttpSession session, SessionStatus sessionStatus, Model model) {
-        if (bindingResult.hasErrors()) {
-            return "/pages/member/confirmPasswordForm";
-        }
-
         UserDetails userDetails = (UserDetails) authentication.getPrincipal();
         MemberResponseDto member = memberService.findMember(userDetails.getUsername());
 
-        //세션에서 dto 가져오기
-        UpdateMemberRequestDto memberDto = (UpdateMemberRequestDto) session.getAttribute("updateMemberRequestDto");
+        memberService.updateMember(member.getMemberId(), memberDto);
 
-        //null 체크
-        if (memberDto == null) {
-            model.addAttribute("error", "세션이 만료되었습니다. 다시 시도해주세요.");
-            return "redirect:/member/update";
-        }
+        //인증 완료 후, 세션 제거
+        session.removeAttribute("passwordVerified");
 
-        //비밀번호 확인 및 회원 정보 업데이트
-        memberService.updateMemberWithPasswordCheck(member.getMemberId(), memberDto, passwordDto.getCurrentPassword());
-
-        //세션에서 dto 제거
-        session.removeAttribute("updateMemberRequestDto");
-        sessionStatus.setComplete();
-
-        return "redirect:/member/profile?success"; //성공 메시지 추가 기능
+        return "redirect:/member/profile?success";
     }
 
     @PostMapping("/delete")
-    public String deleteMember(@RequestParam("memberId") Long memberId, Authentication authentication) {
+    public ResponseEntity<?> deleteMember(@RequestParam("memberId") Long memberId, Authentication authentication) {
         UserDetails userDetails = (UserDetails) authentication.getPrincipal();
         MemberResponseDto member = memberService.findMember(userDetails.getUsername());
 
         if (!member.getMemberId().equals(memberId)) {
-            throw new IllegalArgumentException("권한이 없습니다.");
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("권한이 없습니다.");
         }
 
         memberService.deleteMember(memberId);
         SecurityContextHolder.clearContext();
 
-        return "redirect:/logout";
+        return ResponseEntity.ok().body("회원 탈퇴가 완료되었습니다.");
     }
 }

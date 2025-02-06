@@ -11,11 +11,13 @@ public interface MemberService {
 
     MemberDetailsDto findMemberDetails(String email);
 
-    Long updateMemberWithPasswordCheck(Long memberId, UpdateMemberRequestDto dto, String currentPassword);
-
     void deleteMember(Long memberId);
 
     UpdateMemberRequestDto toUpdateDto(Long memberId);
 
     MemberProfileDto toProfileDto(Long memberId);
+
+    boolean checkPassword(Long memberId, String inputPassword);
+
+    void updateMember(Long memberId, UpdateMemberRequestDto dto);
 }
