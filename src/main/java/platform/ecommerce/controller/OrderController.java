@@ -44,10 +44,10 @@ public class OrderController {
                             @RequestParam(value = "quantity", required = false) Integer quantity,
                             Model model, Authentication authentication) {
         log.info("itemId : {}, quantity : {}", itemId, quantity);
+
         //상품 정보 모델에 추가
         ItemResponseDto item = itemService.findItem(itemId);
         model.addAttribute("item", item);
-
         log.info("item.id : {}, item.itemName = {}", item.getId(), item.getItemName());
 
         //사용자 정보 불러오기
@@ -58,7 +58,9 @@ public class OrderController {
         //주문 생성
         OrderSaveRequestDto orderSaveRequestDto = orderService.createOrderSaveRequestDto(memberDetails, itemId, quantity);
         orderSaveRequestDto.setMemberId(member.getMemberId());
+
         model.addAttribute("orderSaveRequestDto", orderSaveRequestDto);
+        model.addAttribute("memberDetails", memberDetails);
 
         log.info("OrderSaveRequestDto created : {}", orderSaveRequestDto);
 

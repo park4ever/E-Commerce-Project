@@ -49,7 +49,7 @@ public class ItemController {
         }
         itemService.saveItem(itemSaveRequestDto);
 
-        return "redirect:/";
+        return "redirect:/item/list";
     }
 
     @GetMapping("/list")
@@ -92,7 +92,8 @@ public class ItemController {
         model.addAttribute("defaultQuantity", 1); //기본 수량
         model.addAttribute("customerName", memberDetails.getUsername());
         model.addAttribute("customerPhone", memberDetails.getPhoneNumber());
-        model.addAttribute("customerAddress", memberDetails.getAddress());
+        //TODO getAddress() -> getFullAddress() 수정했는데, 추후 문제있을 경우 확인!
+        model.addAttribute("customerAddress", memberDetails.getFullAddress());
 
         return "/pages/item/itemDetail";
     }

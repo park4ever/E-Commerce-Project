@@ -9,12 +9,26 @@ public class MemberDetailsDto {
 
     private String username;
     private String phoneNumber;
-    private Address address;
+    private String street;
+    private String city;
+    private String zipcode;
 
     @Builder
     public MemberDetailsDto(String username, String phoneNumber, Address address) {
         this.username = username;
         this.phoneNumber = phoneNumber;
-        this.address = address;
+
+        if (address != null) {
+            this.street = address.getStreet();
+            this.city = address.getCity();
+            this.zipcode = address.getZipcode();
+        }
+    }
+
+    public String getFullAddress() {
+        return String.format("%s, %s, %s",
+                city != null ? city : "",
+                street != null ? street : "",
+                zipcode != null ? zipcode : "").trim();
     }
 }

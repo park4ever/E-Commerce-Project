@@ -102,7 +102,7 @@ public class OrderServiceImpl implements OrderService {
                 .orderItems(new ArrayList<>())
                 .customerName(member.getUsername())
                 .customerPhone(member.getPhoneNumber())
-                .customerAddress(member.getAddress().fullAddress())
+                .customerAddress(member.getFullAddress())
                 .quantity(quantity)
                 .build();
 
