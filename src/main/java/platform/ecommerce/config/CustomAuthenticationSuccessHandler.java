@@ -22,21 +22,27 @@ import java.io.IOException;
 @Component
 public class CustomAuthenticationSuccessHandler extends SimpleUrlAuthenticationSuccessHandler {
 
-    private final RequestCache requestCache = new HttpSessionRequestCache();
     private final RedirectStrategy redirectStrategy = new DefaultRedirectStrategy();
 
     @Override
-    public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException, ServletException {
+    public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
+                                        Authentication authentication) throws IOException, ServletException {
+        log.info("✅ Authentication success for user: {}", authentication.getName());
+
+        // ✅ 현재 SecurityContext 가져오기
         SecurityContext securityContext = SecurityContextHolder.getContext();
         securityContext.setAuthentication(authentication);
 
-        //세션에 SecurityContext 저장
-        HttpSession session = request.getSession(true);
-        session.setAttribute("SPRING_SECURITY_CONTEXT", securityContext);
+        // ✅ 기존 세션 유지 (새로운 세션을 만들지 않도록 함)
+        HttpSession session = request.getSession(false);
+        if (session != null) {
+            session.setAttribute("SPRING_SECURITY_CONTEXT", securityContext);
+            log.info("✅ SecurityContext stored in session. Session ID: {}", session.getId());
+        } else {
+            log.warn("⚠️ No active session found after login.");
+        }
 
-        log.info("✅ Authentication success for user : {}. Redirecting to /home", authentication.getName());
-        log.info("✅ SecurityContext after login : {}", SecurityContextHolder.getContext().getAuthentication());
-
+        // ✅ 로그인 성공 후 홈으로 리다이렉트
         redirectStrategy.sendRedirect(request, response, "/home");
     }
 }

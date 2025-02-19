@@ -48,24 +48,22 @@ public class SecurityConfig {
 
     @Bean
     public WebSecurityCustomizer webSecurityCustomizer() {
-        //정적 리소스가 보안 필터를 거치지 않기 위함.
         return (web) -> web.ignoring().requestMatchers("/assets/**", "/css/**", "/js/**", "/images/**", "/fonts/**");
     }
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        log.info("=== [SecurityConfig] Spring Security 설정 시작 ===");
         http
-                .csrf(csrf -> csrf
-                        .ignoringRequestMatchers("/login", "/logout", "/order/new")
-                )
+                .csrf(csrf -> csrf.ignoringRequestMatchers("/login", "/logout", "/order/new"))
                 .requestCache(RequestCacheConfigurer::disable)
                 .securityContext(securityContext -> securityContext
                         .securityContextRepository(new HttpSessionSecurityContextRepository()))
                 .authorizeHttpRequests(authz -> authz
                         .dispatcherTypeMatchers(DispatcherType.FORWARD).permitAll()
                         .requestMatchers("/", "/signup", "/login", "/item/**", "/resources/**").permitAll()
-                        .requestMatchers("/admin/**").hasRole("ADMIN")
-                        .requestMatchers("/user/**").hasRole("USER")
+                        .requestMatchers("/member/check-password").permitAll()
+                        .requestMatchers("/member/update-form").authenticated()
                         .anyRequest().authenticated()
                 )
                 .formLogin(formLogin -> formLogin
@@ -86,12 +84,12 @@ public class SecurityConfig {
                         .permitAll()
                 )
                 .sessionManagement(session -> session
-                        .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
-                        .sessionFixation().none()
+                        .sessionCreationPolicy(SessionCreationPolicy.ALWAYS)
+                        .sessionFixation().changeSessionId()
                 )
-                .httpBasic(Customizer.withDefaults())
-        ;
+                .httpBasic(Customizer.withDefaults());
 
+        log.info("=== [SecurityConfig] Spring Security 설정 완료 ===");
         return http.build();
     }
 }

@@ -64,8 +64,11 @@ public class Member extends BaseTimeEntity {
         this.dateOfBirth = dateOfBirth;
     }
 
-    public void changePassword(String newPassword) {
-        this.password = newPassword;
+    public void changePassword(String encodedPassword) {
+        if (encodedPassword == null || encodedPassword.isBlank()) {
+            throw new IllegalArgumentException("비밀번호는 공백일 수 없습니다.");
+        }
+        this.password = encodedPassword;
     }
 
     /*== 연관관계 편의 메서드 ==*/

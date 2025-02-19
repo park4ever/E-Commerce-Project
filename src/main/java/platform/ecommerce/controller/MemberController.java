@@ -1,12 +1,16 @@
 package platform.ecommerce.controller;
 
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
@@ -21,6 +25,9 @@ import platform.ecommerce.dto.member.UpdateMemberRequestDto;
 import platform.ecommerce.service.MemberService;
 
 import java.time.format.DateTimeFormatter;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.Map;
 
 @Slf4j
 @Controller
@@ -41,61 +48,56 @@ public class MemberController {
         return "/pages/member/profile";
     }
 
-    /**
-     * 프로필 수정 전에 비밀번호 확인 페이지로 이동
-     */
     @GetMapping("/update")
     public String redirectToPasswordVerification() {
         return "redirect:/member/check-password";
     }
 
-    /**
-     * 비밀번호 확인 페이지
-     */
     @GetMapping("/check-password")
     public String showPasswordCheckForm(Model model) {
         model.addAttribute("confirmPasswordDto", new ConfirmPasswordDto());
         return "/pages/member/checkPassword";
     }
 
-    /**
-     * 비밀번호 확인 후 수정 페이지로 이동
-     */
     @PostMapping("/check-password")
-    public String verifyPassword(
-            @Valid @ModelAttribute("confirmPasswordDto") ConfirmPasswordDto passwordDto,
-            BindingResult bindingResult, Authentication authentication,
-            HttpSession session, Model model) {
+    public String verifyPassword(@Valid @ModelAttribute("confirmPasswordDto") ConfirmPasswordDto passwordDto,
+                                 BindingResult bindingResult, Authentication authentication, HttpSession session, Model model) {
         if (bindingResult.hasErrors() || passwordDto.getCurrentPassword() == null) {
             model.addAttribute("passwordError", "비밀번호를 입력하세요.");
             return "/pages/member/checkPassword";
+        }
+
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return "redirect:/login";
         }
 
         UserDetails userDetails = (UserDetails) authentication.getPrincipal();
         MemberResponseDto member = memberService.findMember(userDetails.getUsername());
 
         boolean isPasswordValid = memberService.checkPassword(member.getMemberId(), passwordDto.getCurrentPassword());
-
         if (!isPasswordValid) {
             model.addAttribute("passwordError", "비밀번호가 일치하지 않습니다.");
             return "/pages/member/checkPassword";
         }
 
-        //인증 성공 -> 세선에 저장
+        UsernamePasswordAuthenticationToken newAuth =
+                new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+        SecurityContextHolder.getContext().setAuthentication(newAuth);
+        session.setAttribute("SPRING_SECURITY_CONTEXT", SecurityContextHolder.getContext());
         session.setAttribute("passwordVerified", true);
 
+        log.info("✅ 비밀번호 확인 완료. SecurityContext 및 세션 업데이트 완료.");
         return "redirect:/member/update-form";
     }
 
-    /**
-     * 프로실 수정 폼(비밀번호 확인 후 접근 가능)
-     */
     @GetMapping("/update-form")
     public String profileForm(HttpSession session, Model model, Authentication authentication) {
-        //비밀번호 확인이 된 상태가 아니라면 redirect
         Boolean isVerified = (Boolean) session.getAttribute("passwordVerified");
+        log.info("=== [profileForm] passwordVerified: {}", isVerified);
 
         if (isVerified == null || !isVerified) {
+            log.warn("=== [profileForm] 세션이 만료되었거나 인증되지 않음. 다시 인증 필요.");
+            session.removeAttribute("passwordVerified");
             model.addAttribute("passwordError", "세션이 만료되었습니다. 다시 인증해주세요.");
             return "redirect:/member/check-password";
         }
@@ -104,15 +106,11 @@ public class MemberController {
         MemberResponseDto member = memberService.findMember(userDetails.getUsername());
 
         UpdateMemberRequestDto memberDto = memberService.toUpdateDto(member.getMemberId());
-
         model.addAttribute("updateMemberRequestDto", memberDto);
 
         return "/pages/member/profileForm";
     }
 
-    /**
-     * 최종 프로필 수정 요청 처리
-     */
     @PostMapping("/update")
     public String submitProfileUpdate(
             @Valid @ModelAttribute("updateMemberRequestDto") UpdateMemberRequestDto memberDto,
@@ -121,13 +119,16 @@ public class MemberController {
             return "/pages/member/profileForm";
         }
 
-        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
-        MemberResponseDto member = memberService.findMember(userDetails.getUsername());
+        try {
+            UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+            MemberResponseDto member = memberService.findMember(userDetails.getUsername());
 
-        memberService.updateMember(member.getMemberId(), memberDto);
-
-        //인증 완료 후, 세션 제거
-        session.removeAttribute("passwordVerified");
+            memberService.updateMember(member.getMemberId(), memberDto);
+            session.removeAttribute("passwordVerified");
+        } catch (IllegalArgumentException e) {
+            model.addAttribute("passwordError", e.getMessage());
+            return "/pages/member/profileForm";
+        }
 
         return "redirect:/member/profile?success";
     }

@@ -15,6 +15,9 @@ import platform.ecommerce.entity.Member;
 import platform.ecommerce.repository.MemberRepository;
 import platform.ecommerce.service.MemberService;
 
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -63,7 +66,8 @@ public class MemberServiceImpl implements MemberService {
         memberDto.setUsername(member.getUsername());
         memberDto.setPhoneNumber(member.getPhoneNumber());
         memberDto.setAddress(member.getAddress());
-        memberDto.setDateOfBirth(member.getDateOfBirth());
+
+        memberDto.setDateOfBirth(UpdateMemberRequestDto.formatLocalDate(member.getDateOfBirth()));
 
         return memberDto;
     }
@@ -93,7 +97,17 @@ public class MemberServiceImpl implements MemberService {
     public void updateMember(Long memberId, UpdateMemberRequestDto dto) {
         Member member = findMemberById(memberId);
 
-        member.updateMemberInfo(dto.getUsername(), dto.getPhoneNumber(), dto.getAddress(), dto.getDateOfBirth());
+        member.updateMemberInfo(dto.getUsername(), dto.getPhoneNumber(), dto.getAddress(), dto.getDateOfBirthAsLocalDate());
+
+        //새 비밀번호가 입력된 경우에만 비밀번호 변경
+        if (dto.getNewPassword() != null && !dto.getNewPassword().isEmpty()) {
+            if (!dto.getNewPassword().equalsIgnoreCase(dto.getConfirmNewPassword())) {
+                throw new IllegalArgumentException("새 비밀번호가 일치하지 않습니다.");
+            }
+
+            String encodedPassword = passwordEncoder.encode(dto.getNewPassword());
+            member.changePassword(encodedPassword);
+        }
 
         memberRepository.save(member);
         log.info("Member [{}] updated successfully!", member.getId());

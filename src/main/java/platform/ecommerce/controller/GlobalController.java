@@ -35,31 +35,16 @@ public class GlobalController {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         HttpSession session = request.getSession(false);
 
-        if (authentication != null) {
-            log.info("🏠 Home - Authenticated user : {}", authentication.getName());
-            log.info("🏠 Home - Authentication Class : {}", authentication.getClass().getName());
-            log.info("🏠 Home - Authorities : {}", authentication.getAuthorities());
-            log.info("🏠 Home - Is Anonymous : {}", authentication instanceof AnonymousAuthenticationToken);
+        if (authentication != null && authentication.isAuthenticated() && !(authentication instanceof AnonymousAuthenticationToken)) {
+            log.info("🏠 홈 - 인증된 사용자 : {}", authentication.getName());
         } else {
-            log.info("🏠 Home - No Authentication information");
+            log.info("🏠 홈 - 인증되지 않은 사용자");
         }
 
         if (session != null) {
-            log.info("🏠 Home - Session ID : {}", session.getId());
-        } else {
-            log.info("🏠 Home - No Session available");
+            log.info("🏠 홈 - 세션 유지 중, ID: {}", session.getId());
         }
 
-        /*//상품 목록 가져오기
-        List<ItemResponseDto> items = itemService.findItems();
-
-        //각 상품의 평균 평점 가져오기
-        for (ItemResponseDto item : items) {
-            double averageRating = reviewService.calculateAverageRating(item.getId());
-            item.setAverageRating(averageRating);
-        }
-
-        model.addAttribute("items", items);*/
         return "home";
     }
 
@@ -85,49 +70,19 @@ public class GlobalController {
         return "redirect:/";
     }
 
-//    @GetMapping("/login")
-//    public String login(HttpServletRequest request, Model model) {
-//        //이메일 입력 값 가져오기
-//        String email = request.getParameter("email");
-//
-//        //이메일 존재 여부 확인
-//        boolean emailError = email != null && !globalService.emailExists(email); //이메일이 존재하지 않으면 오류 발생
-//
-//        //비밀번호 에러 상태 가져오기
-//        Boolean passwordError = (Boolean) request.getSession().getAttribute("passwordError");
-//
-//        //모델에 에러 상태 추가
-//        model.addAttribute("emailError", emailError);
-//        model.addAttribute("passwordError", passwordError != null && passwordError);
-//
-//        //세션에서 에러 정보 제거
-//        request.getSession().removeAttribute("emailError");
-//        request.getSession().removeAttribute("passwordError");
-//
-//        return "pages/loginForm";
-//    } //TODO
-
     @GetMapping("/login")
     public String loginPage(HttpServletRequest request) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        HttpSession session = request.getSession(true);
+        HttpSession session = request.getSession(false);
 
-        log.info("!!! Authentication : {}", authentication);
-        if (authentication != null) {
-            log.info("Login - Authenticated : {}", authentication.isAuthenticated());
-            log.info("Login - Principal : {}", authentication.getPrincipal());
-            log.info("Login - Authentication Class : {}", authentication.getClass().getName());
-            log.info("Login - Is Anonymous : {}", authentication instanceof AnonymousAuthenticationToken);
-            log.info("Login - Session ID : {}", session.getId());
+        if (authentication != null && authentication.isAuthenticated() && !(authentication instanceof AnonymousAuthenticationToken)) {
+            log.info("🔐 로그인 페이지 - 이미 로그인된 사용자 : {}", authentication.getName());
+            log.info("🔐 로그인 페이지 - 세션 유지됨, ID: {}", session != null ? session.getId() : "세션 없음");
+            return "redirect:/";
         }
-        if (authentication != null
-                && authentication.isAuthenticated()
-                && !(authentication instanceof AnonymousAuthenticationToken)
-                && request.getSession(false) != null) {
-            log.info("Login - User is already authenticated, redirecting to home.");
-            log.info("Login - Session ID : {}", session.getId());
-            return "redirect:/home";
-        }
+
+        log.info("🔐 로그인 페이지 - 인증되지 않은 사용자");
         return "pages/loginForm";
     }
 }
+

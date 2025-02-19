@@ -9,6 +9,7 @@ import lombok.NoArgsConstructor;
 import platform.ecommerce.entity.Address;
 
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 
 @Data
 @AllArgsConstructor
@@ -22,7 +23,25 @@ public class UpdateMemberRequestDto {
 
     private Address address;
 
-    private LocalDate dateOfBirth;
+    private String dateOfBirth;
 
     private String newPassword;
+
+    private String confirmNewPassword;
+
+    //LocalDate -> String 변환 메서드
+    public static String formatLocalDate(LocalDate date) {
+        if (date == null) {
+            return null;
+        }
+        return date.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+    }
+
+    //String -> LocalDate 변환 메서드
+    public LocalDate getDateOfBirthAsLocalDate() {
+        if (this.dateOfBirth == null || this.dateOfBirth.isEmpty()) {
+            return null;
+        }
+        return LocalDate.parse(this.dateOfBirth, DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+    }
 }
