@@ -12,6 +12,7 @@ public class MemberDetailsDto {
     private String street;
     private String city;
     private String zipcode;
+    private String additionalInfo;
 
     @Builder
     public MemberDetailsDto(String username, String phoneNumber, Address address) {
@@ -22,6 +23,7 @@ public class MemberDetailsDto {
             this.street = address.getStreet();
             this.city = address.getCity();
             this.zipcode = address.getZipcode();
+            this.additionalInfo = address.getAdditionalInfo();
         }
     }
 

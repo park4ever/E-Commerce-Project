@@ -5,27 +5,18 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.web.PageableDefault;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
-import platform.ecommerce.dto.cart.CartCheckoutDto;
 import platform.ecommerce.dto.item.ItemResponseDto;
 import platform.ecommerce.dto.member.MemberDetailsDto;
 import platform.ecommerce.dto.member.MemberResponseDto;
 import platform.ecommerce.dto.order.*;
-import platform.ecommerce.entity.Address;
-import platform.ecommerce.entity.Member;
-import platform.ecommerce.entity.Order;
 import platform.ecommerce.entity.OrderStatus;
 import platform.ecommerce.service.*;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Controller
@@ -37,28 +28,37 @@ public class OrderController {
     private final MemberService memberService;
     private final ItemService itemService;
     private final CartService cartService;
-    private final CheckoutService checkoutService;
 
     @GetMapping("/new")
     public String orderForm(@RequestParam(value = "itemId", required = false) Long itemId,
                             @RequestParam(value = "quantity", required = false) Integer quantity,
+                            @RequestParam(value = "fromCart", required = false, defaultValue = "false") boolean fromCart,
                             Model model, Authentication authentication) {
-        log.info("itemId : {}, quantity : {}", itemId, quantity);
 
-        //상품 정보 모델에 추가
-        ItemResponseDto item = itemService.findItem(itemId);
-        model.addAttribute("item", item);
-        log.info("item.id : {}, item.itemName = {}", item.getId(), item.getItemName());
+        log.info("itemId : {}, quantity : {}, fromCart : {}", itemId, quantity, fromCart);
 
-        //사용자 정보 불러오기
+        //사용자 정보 가져오기
         UserDetails userDetails = (UserDetails) authentication.getPrincipal();
         MemberResponseDto member = memberService.findMember(userDetails.getUsername());
         MemberDetailsDto memberDetails = memberService.findMemberDetails(userDetails.getUsername());
 
-        //주문 생성
-        OrderSaveRequestDto orderSaveRequestDto = orderService.createOrderSaveRequestDto(memberDetails, itemId, quantity);
-        orderSaveRequestDto.setMemberId(member.getMemberId());
+        OrderSaveRequestDto orderSaveRequestDto;
 
+        if (fromCart) {
+            //장바구니 주문인 경우, prepareOrderFromCart() 호출
+            log.info("장바구니 기반 주문");
+            orderSaveRequestDto = cartService.prepareOrderFromCart(member.getMemberId());
+        } else {
+            //단일 상품 주문인 경우
+            log.info("단일 상품 주문");
+            ItemResponseDto item = itemService.findItem(itemId);
+            log.info("상품 정보 - itemId : {}, iteName : {}, imageUrl : {}", item.getId(), item.getItemName(), item.getImageUrl());
+            model.addAttribute("item", item);
+
+            orderSaveRequestDto = orderService.createOrderSaveRequestDto(memberDetails, itemId, quantity);
+        }
+
+        orderSaveRequestDto.setMemberId(member.getMemberId());
         model.addAttribute("orderSaveRequestDto", orderSaveRequestDto);
         model.addAttribute("memberDetails", memberDetails);
 
@@ -68,14 +68,24 @@ public class OrderController {
     }
 
     @PostMapping("/new")
-    public String createOrder(@Valid @ModelAttribute("orderSaveRequestDto") OrderSaveRequestDto orderSaveRequestDto, BindingResult bindingResult, Model model) {
+    public String createOrder(@Valid @ModelAttribute("orderSaveRequestDto") OrderSaveRequestDto orderSaveRequestDto,
+                              BindingResult bindingResult, Authentication authentication) {
         if (bindingResult.hasErrors()) {
             log.error("OrderSaveRequestDto binding errors : {}", bindingResult.getAllErrors());
             return "/pages/order/orderForm";
         }
 
-        log.info("OrderSaveRequestDto = {}", orderSaveRequestDto);
+        //장바구니에서 주문하는 경우, orderSaveRequestDto를 생성하도록 변경
+        if (orderSaveRequestDto.isFromCart()) {
+            UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+            MemberResponseDto member = memberService.findMember(userDetails.getUsername());
+
+            orderSaveRequestDto = cartService.prepareOrderFromCart(member.getMemberId());
+        }
+
         Long orderId = orderService.createOrder(orderSaveRequestDto);
+        log.info("주문 완료 - 주문 ID : {}, 회원 ID : {}", orderId, orderSaveRequestDto.getMemberId());
+
         return "redirect:/order/success";
     }
 
@@ -99,30 +109,6 @@ public class OrderController {
         OrderResponseDto order = orderService.findOrderById(orderId);
         model.addAttribute("order", order);
         return "/pages/order/orderDetails";
-    }
-
-    @GetMapping("/checkout")
-    public String checkoutForm(Model model, Authentication authentication) {
-        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
-        MemberResponseDto member = memberService.findMember(userDetails.getUsername());
-
-        CartCheckoutDto cartCheckoutDto = cartService.prepareCheckout(member.getMemberId(), new CartCheckoutDto());
-        model.addAttribute("cartCheckoutDto", cartCheckoutDto);
-        return "/pages/order/checkout";
-    }
-
-    @PostMapping("/checkout")
-    public String checkoutCart(
-            @ModelAttribute("cartCheckoutDto") CartCheckoutDto cartCheckoutDto, Authentication authentication) {
-        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
-        MemberResponseDto member = memberService.findMember(userDetails.getUsername());
-
-        //memberId 설정
-        cartCheckoutDto.setMemberId(member.getMemberId());
-        log.info("CartChekckoutDto before checkout : {}", cartCheckoutDto);
-        //사용자 제공 데이터를 포함한 DTO를 서비스로 전달
-        checkoutService.checkoutCart(cartCheckoutDto);
-        return "redirect:/order/success";
     }
 
     @GetMapping("/success")

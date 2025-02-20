@@ -103,6 +103,7 @@ public class OrderServiceImpl implements OrderService {
                 .customerName(member.getUsername())
                 .customerPhone(member.getPhoneNumber())
                 .customerAddress(member.getFullAddress())
+                .customerAdditionalInfo(member.getAdditionalInfo())
                 .quantity(quantity)
                 .build();
 

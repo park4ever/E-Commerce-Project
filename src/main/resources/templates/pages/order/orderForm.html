@@ -75,6 +75,7 @@
                         <!-- 상품 이미지 -->
                         <div class="form-group">
                             <label>상품 이미지</label>
+                            <p th:text="${orderItem.imageUrl}"></p> <!-- 이미지 URL 확인 -->
                             <img th:src="@{${orderItem.imageUrl}}" alt="상품 이미지" style="max-width: 150px; max-height: 150px;">
                         </div>
 
@@ -106,9 +107,9 @@
                 <input type="text" class="form-control" id="street" th:field="*{shippingAddress.street}" placeholder="도로명 주소 또는 지번 주소를 입력하세요" required>
                 <button type="button" id="openAddressSearchBtn" class="btn btn-secondary mt-2">주소 검색</button>
             </div>
-            <div class="form-group mt-2">
+            <div class="form-group">
                 <label>상세 주소</label>
-                <input type="text" class="form-control" id="additionalInfo" th:field="*{shippingAddress.additionalInfo}" placeholder="상세 주소를 입력하세요">
+                <input type="text" class="form-control" id="customerAdditionalInfo" th:value="${memberDetails.additionalInfo}" readonly>
             </div>
             <div class="form-group">
                 <label>도시</label>

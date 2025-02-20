@@ -19,19 +19,14 @@ public class OrderSaveRequestDto {
 
     private String customerName;
     private String customerPhone;
-    private String customerAddress;
+    private Address customerAddress;
     private Address shippingAddress;
     private PaymentMethod paymentMethod;
 
-    private Integer quantity;
+    private boolean fromCart;
 
     public List<OrderItemDto> getOrderItemDto() {
         return orderItems;
-    }
-
-    //변환 메서드
-    public Address convertToCustomerAddress() {
-        return Address.fromFullAddress(this.customerAddress);
     }
 
     public Address convertToShippingAddress() {

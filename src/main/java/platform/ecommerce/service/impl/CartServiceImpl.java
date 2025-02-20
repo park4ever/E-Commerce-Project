@@ -6,8 +6,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import platform.ecommerce.dto.cart.CartCheckoutDto;
 import platform.ecommerce.dto.cart.CartItemDto;
+import platform.ecommerce.dto.order.OrderItemDto;
+import platform.ecommerce.dto.order.OrderSaveRequestDto;
 import platform.ecommerce.entity.*;
 import platform.ecommerce.repository.CartItemRepository;
 import platform.ecommerce.repository.CartRepository;
@@ -15,9 +16,14 @@ import platform.ecommerce.repository.ItemRepository;
 import platform.ecommerce.repository.MemberRepository;
 import platform.ecommerce.service.CartService;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
+
+import static java.util.stream.Collectors.*;
+import static platform.ecommerce.entity.PaymentMethod.*;
 
 @Slf4j
 @Service
@@ -97,7 +103,7 @@ public class CartServiceImpl implements CartService {
                         cartItem.getQuantity(),
                         cartItem.getItem().getImageUrl()
                 ))
-                .collect(Collectors.toList());
+                .collect(toList());
     }
 
     @Override
@@ -118,7 +124,7 @@ public class CartServiceImpl implements CartService {
         if (cartItem != null) {
             cartItemRepository.delete(cartItem);
         } else {
-            throw new IllegalArgumentException("장바구니에 해당 상품이 없습니다.");
+            throw new IllegalArgumentException("장바구니에 상품이 없습니다.");
         }
     }
 
@@ -133,8 +139,7 @@ public class CartServiceImpl implements CartService {
     @Override
     @Transactional(readOnly = true)
     public List<CartItemDto> findCartItems(Long memberId) {
-        Cart cart = cartRepository.findByMemberId(memberId)
-                .orElseThrow(() -> new IllegalArgumentException("장바구니를 찾을 수 없습니다."));
+        Cart cart = getCartByMemberId(memberId);
 
         List<CartItem> cartItems = cartItemRepository.findByCart(cart);
 
@@ -145,40 +150,22 @@ public class CartServiceImpl implements CartService {
                         cartItem.getItem().getPrice(),
                         cartItem.getQuantity(),
                         cartItem.getItem().getImageUrl()))
-                .collect(Collectors.toList());
+                .collect(toList());
     }
 
     @Override
-    public CartCheckoutDto prepareCheckout(Long memberId, CartCheckoutDto cartCheckoutDto) {
-        Cart cart = cartRepository.findByMemberId(memberId)
-                .orElseThrow(() -> new IllegalArgumentException("장바구니를 찾을 수 없습니다."));
+    public OrderSaveRequestDto prepareOrderFromCart(Long memberId) {
+        Cart cart = getCartByMemberId(memberId);
 
         if (cart.getCartItems().isEmpty()) {
             log.warn("Cart is empty for member ID : {}", memberId);
-            return new CartCheckoutDto(memberId, new ArrayList<>());
+            return createEmptyOrder(memberId);
         }
-
-        List<CartItemDto> cartItemDtos = cart.getCartItems().stream()
-                .map(cartItem -> new CartItemDto(
-                        cartItem.getItem().getId(),
-                        cartItem.getItem().getItemName(),
-                        cartItem.getItem().getPrice(),
-                        cartItem.getQuantity(),
-                        cartItem.getItem().getImageUrl()))
-                .collect(Collectors.toList());
 
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new UsernameNotFoundException("회원을 찾을 수 없습니다."));
 
-        return new CartCheckoutDto(
-                memberId,
-                cartItemDtos,
-                member.getUsername(),
-                member.getPhoneNumber(),
-                member.getAddress().fullAddress(),
-                cartCheckoutDto.getShippingAddress(),
-                cartCheckoutDto.getPaymentMethod(),
-                cartCheckoutDto.getQuantity());
+        return createOrderFromCart(cart, member);
     }
 
     @Override
@@ -215,6 +202,48 @@ public class CartServiceImpl implements CartService {
         return cartRepository.findByMemberId(memberId)
                 .map(cart -> cart.getCartItems().size())
                 .orElse(0); //예외 대신 기본값 0을 반환
+    }
+
+    private OrderSaveRequestDto createEmptyOrder(Long memberId) {
+        return OrderSaveRequestDto.builder()
+                .memberId(memberId)
+                .orderDate(LocalDateTime.now())
+                .orderItems(new ArrayList<>()) //장바구니가 비었을 때
+                .fromCart(true)
+                .build();
+    }
+
+    private OrderSaveRequestDto createOrderFromCart(Cart cart, Member member) {
+        List<OrderItemDto> orderItems = cart.getCartItems().stream()
+                .map(this::convertToOrderItemDto)
+                .collect(toList());
+
+        return OrderSaveRequestDto.builder()
+                .memberId(member.getId())
+                .orderDate(LocalDateTime.now())
+                .orderItems(orderItems)
+                .customerName(member.getUsername())
+                .customerPhone(member.getPhoneNumber())
+                .customerAddress(member.getAddress())
+                .shippingAddress(member.getAddress())   //기본값으로 설정(UI에서 선택 시 덮어씌어짐)
+                .paymentMethod(CARD)   //기본값으로 설정(UI에서 선택 시 덮어씌어짐)
+                .fromCart(true)
+                .build();
+    }
+
+    private OrderItemDto convertToOrderItemDto(CartItem cartItem) {
+        return new OrderItemDto(
+                cartItem.getItem().getId(),
+                cartItem.getItem().getItemName(),
+                cartItem.getItem().getPrice(),
+                cartItem.getQuantity(),
+                cartItem.getItem().getImageUrl()
+        );
+    }
+
+    private Cart getCartByMemberId(Long memberId) {
+        return cartRepository.findByMemberId(memberId)
+                .orElseThrow(() -> new IllegalArgumentException("장바구니를 찾을 수 없습니다."));
     }
 
     private void validateItemQuantity(int quantity) {
