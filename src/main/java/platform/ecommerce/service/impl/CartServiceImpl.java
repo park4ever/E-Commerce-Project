@@ -243,7 +243,7 @@ public class CartServiceImpl implements CartService {
 
     private Cart getCartByMemberId(Long memberId) {
         return cartRepository.findByMemberId(memberId)
-                .orElseThrow(() -> new IllegalArgumentException("장바구니를 찾을 수 없습니다."));
+                .orElseThrow(() -> new IllegalStateException("장바구니를 찾을 수 없습니다. 먼저 상품을 추가하세요."));
     }
 
     private void validateItemQuantity(int quantity) {

@@ -7,6 +7,7 @@ import platform.ecommerce.entity.Address;
 @Data
 public class MemberDetailsDto {
 
+    private Long memberId;
     private String username;
     private String phoneNumber;
     private String street;
@@ -15,7 +16,8 @@ public class MemberDetailsDto {
     private String additionalInfo;
 
     @Builder
-    public MemberDetailsDto(String username, String phoneNumber, Address address) {
+    public MemberDetailsDto(Long memberId, String username, String phoneNumber, Address address) {
+        this.memberId = memberId;
         this.username = username;
         this.phoneNumber = phoneNumber;
 
@@ -32,5 +34,10 @@ public class MemberDetailsDto {
                 city != null ? city : "",
                 street != null ? street : "",
                 zipcode != null ? zipcode : "").trim();
+    }
+
+    public Address getAddress() {
+        return new Address(this.city, this.street, this.zipcode,
+                this.additionalInfo != null ? this.additionalInfo : "");
     }
 }

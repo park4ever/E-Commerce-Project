@@ -58,11 +58,10 @@ public class OrderController {
             orderSaveRequestDto = orderService.createOrderSaveRequestDto(memberDetails, itemId, quantity);
         }
 
-        orderSaveRequestDto.setMemberId(member.getMemberId());
         model.addAttribute("orderSaveRequestDto", orderSaveRequestDto);
         model.addAttribute("memberDetails", memberDetails);
 
-        log.info("OrderSaveRequestDto created : {}", orderSaveRequestDto);
+        log.info("Order 요청 - memberId : {}, orderDate : {}", orderSaveRequestDto.getMemberId(), orderSaveRequestDto.getOrderDate());
 
         return "/pages/order/orderForm";
     }

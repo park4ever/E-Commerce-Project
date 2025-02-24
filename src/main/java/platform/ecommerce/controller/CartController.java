@@ -7,6 +7,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import platform.ecommerce.dto.cart.CartItemDto;
 import platform.ecommerce.dto.member.MemberResponseDto;
 import platform.ecommerce.service.CartService;
@@ -24,8 +25,9 @@ public class CartController {
     private final MemberService memberService;
 
     @GetMapping
-    public String viewCart(Model model, Authentication authentication) {
+    public String viewCart(Model model, Authentication authentication, RedirectAttributes redirectAttributes) {
         if (authentication == null || !((authentication.getPrincipal()) instanceof UserDetails)) {
+            redirectAttributes.addFlashAttribute("errorMessage", "장바구니는 로그인한 사용자만 확인 가능합니다.");
             return "redirect:/login";
         }
         UserDetails userDetails = (UserDetails) authentication.getPrincipal();
@@ -36,7 +38,7 @@ public class CartController {
         int cartItemsTotal = cartService.calculateCartTotal(cartItems);
         model.addAttribute("cartItemsTotal", cartItemsTotal);
 
-        log.info("cartItems = {}, cartItemsTotal = {}", cartItems, cartItemsTotal);
+        log.debug("장바구니 상품 개수 = {}", cartItems.size());
         return "/pages/cart/cartList";
     }
 

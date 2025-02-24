@@ -21,6 +21,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -97,31 +98,29 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     public OrderSaveRequestDto createOrderSaveRequestDto(MemberDetailsDto member, Long itemId, Integer quantity) {
-        OrderSaveRequestDto orderSaveRequestDto = OrderSaveRequestDto.builder()
-                .orderDate(LocalDateTime.now())
-                .orderItems(new ArrayList<>())
-                .customerName(member.getUsername())
-                .customerPhone(member.getPhoneNumber())
-                .customerAddress(member.getFullAddress())
-                .customerAdditionalInfo(member.getAdditionalInfo())
-                .quantity(quantity)
-                .build();
-
-        if (itemId != null) {
-            Item item = itemRepository.findById(itemId)
-                    .orElseThrow(() -> new IllegalArgumentException("상품을 찾을 수 없습니다."));
-            OrderItemDto orderItemDto = OrderItemDto.builder()
-                    .itemId(itemId)
-                    .itemName(item.getItemName())
-                    .orderPrice(item.getPrice())
-                    .count(quantity)
-                    .build();
-            log.info("orderItemDto : {}", orderItemDto);
-                orderSaveRequestDto.getOrderItemDto().add(orderItemDto);
-                log.info("orderSaveRequestDto : {}", orderSaveRequestDto);
+        if (itemId == null || quantity == null || quantity <= 0) {
+            throw new IllegalArgumentException("유효하지 않은 상품 ID 또는 수량입니다.");
         }
 
-        return orderSaveRequestDto;
+        Item item = itemRepository.findById(itemId)
+                .orElseThrow(() -> new IllegalArgumentException("상품을 찾을 수 없습니다."));
+
+        OrderItemDto orderItemDto = OrderItemDto.builder()
+                .itemId(item.getId())
+                .itemName(item.getItemName())
+                .orderPrice(item.getPrice())
+                .count(quantity)
+                .imageUrl(item.getImageUrl())
+                .build();
+
+        return OrderSaveRequestDto.builder()
+                .memberId(member.getMemberId())
+                .orderDate(LocalDateTime.now())
+                .orderItems(Collections.singletonList(orderItemDto))
+                .customerName(member.getUsername())
+                .customerPhone(member.getPhoneNumber())
+                .customerAddress(member.getAddress())
+                .build();
     }
 
     @Override
