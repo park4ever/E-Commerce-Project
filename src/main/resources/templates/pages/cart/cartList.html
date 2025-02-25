@@ -6,89 +6,9 @@
     <meta charset="UTF-8">
     <title>장바구니</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-    <style>
-        @font-face {
-            font-family: 'BMHANNAAir';
-            src: url('../fonts/BMHANNAAir_ttf.ttf') format('truetype');
-        }
-        @font-face {
-            font-family: 'BMHANNAPro';
-            src: url('../fonts/BMHANNAPro.ttf') format('truetype');
-        }
-
-        body {
-            font-family: 'BMHANNAAir', sans-serif; /* 전체 페이지 폰트 설정 */
-        }
-
-        .item-image {
-            width: 100px; /* 이미지 크기를 적절히 조정하기 */
-            height: auto;
-        }
-
-        .cart-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
-        }
-
-        .cart-table th, .cart-table td {
-            border: 1px solid #ddd;
-            padding: 10px;
-            text-align: center; /* 모든 내용 중앙 정렬 */
-            vertical-align: middle; /* 수직 중앙 정렬 */
-        }
-
-        .cart-table th {
-            background-color: #f8f9fa;
-        }
-
-        .cart-summary {
-            margin-top: 20px;
-            font-size: 1.2em;
-            font-weight: bold;
-        }
-
-        .btn-primary {
-            background-color: #007bff; /* Bootstrap 기본 색상 */
-            border: none;
-        }
-
-        .btn-primary:hover {
-            background-color: #0056b3; /* Hover 시 색상 변경 */
-        }
-
-        .quantity-buttons {
-            display: flex;
-            align-items: center;
-            justify-content: center; /* 수평 중앙 정렬 */
-        }
-
-        .quantity-buttons button {
-            margin: 0 5px; /* 버튼 사이 간격 */
-        }
-
-        .cart-title {
-            font-family: 'BMHANNAPro', sans-serif; /* 장바구니 제목에만 적용할 폰트 */
-        }
-    </style>
-    <script defer>
-        function changeQuantity(amount, button) {
-            const quantityInput = button.parentNode.querySelector('input[name="quantity"]');
-            const currentQuantity = parseInt(quantityInput.value, 10);
-            const newQuantity = currentQuantity + amount;
-
-            if (newQuantity > 0) {
-                quantityInput.value = newQuantity;
-                console.log('Updated Quantity:', newQuantity);
-            } else {
-                console.log('Invalid Quantity:', newQuantity);
-            }
-        }
-
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log('DOM fully loaded and parsed');
-        });
-    </script>
+    <link rel="stylesheet" href="/css/cartList.css"/>
+    <meta name="csrf-token" th:content="${_csrf.token}"/>
+    <script src="/js/cartList.js"></script>
 </head>
 <body>
 
@@ -118,15 +38,14 @@
                 <td th:text="${cartItem.itemName}"></td>
                 <td th:text="${cartItem.itemPrice}"></td>
                 <td>
-                    <form th:action="@{/cart/update}" method="post" class="quantity-buttons">
-                        <input type="hidden" name="itemId" th:value="${cartItem.itemId}"/>
-                        <button type="button" class="btn btn-secondary" onclick="changeQuantity(-1, this)">-</button>
-                        <input type="number" name="quantity" th:value="${cartItem.quantity}" min="1" max="100" required class="form-control" style="width: 60px; display: inline;"/>
-                        <button type="button" class="btn btn-secondary" onclick="changeQuantity(1, this)">+</button>
-                        <button type="submit" class="btn btn-warning">수정</button>
-                    </form>
+                    <div class="quantity-buttons">
+                        <input type="hidden" class="cart-item-id" th:value="${cartItem.itemId}"/>
+                        <button type="button" class="btn btn-secondary decrease-btn">-</button>
+                        <input type="number" class="cart-item-quantity form-control" th:value="${cartItem.quantity}" min="1" max="100" required style="width: 60px; display: inline;"/>
+                        <button type="button" class="btn btn-secondary increase-btn">+</button>
+                    </div>
                 </td>
-                <td th:text="${cartItem.itemPrice * cartItem.quantity}"></td>
+                <td><span class="cart-item-total" th:text="${cartItem.itemPrice * cartItem.quantity}"></span></td>
                 <td>
                     <form th:action="@{/cart/remove}" method="post">
                         <input type="hidden" name="itemId" th:value="${cartItem.itemId}"/>
@@ -138,9 +57,11 @@
         </table>
 
         <div class="cart-summary d-flex justify-content-between align-items-center">
-            <p>총 결제 금액: <span th:text="${cartItemsTotal}"></span></p>
+            <!--<p>총 주문 금액: <span th:text="${cartItems.![itemPrice * quantity].stream().reduce(0, Integer::sum)}"></span> 원</p>-->
+            <p>총 주문 금액: <span class="cart-total-price" th:text="${cartItemsTotal}"></span></p>
             <div>
-                <a th:href="@{/order/checkout}" class="btn btn-primary">주문하기</a>
+                <a th:href="@{/order/new(fromCart=true)}" class="btn btn-primary"
+                   th:disabled="${#lists.isEmpty(cartItems)}">주문하기</a>
                 <form action="#" th:action="@{/cart/clear}" method="post" style="display:inline;">
                     <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
                     <button type="submit" class="btn btn-danger">장바구니 비우기</button>

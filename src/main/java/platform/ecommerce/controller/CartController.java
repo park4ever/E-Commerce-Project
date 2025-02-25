@@ -2,6 +2,7 @@ package platform.ecommerce.controller;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
@@ -9,6 +10,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import platform.ecommerce.dto.cart.CartItemDto;
+import platform.ecommerce.dto.cart.CartUpdateRequest;
 import platform.ecommerce.dto.member.MemberResponseDto;
 import platform.ecommerce.service.CartService;
 import platform.ecommerce.service.MemberService;
@@ -58,19 +60,26 @@ public class CartController {
     }
 
     @PostMapping("/update")
-    public String updateCartItem(@ModelAttribute("cartItemDto") CartItemDto cartItemDto,
-                                 Authentication authentication) {
-        log.info("itemId = {}, quantity = {}", cartItemDto.getItemId(), cartItemDto.getQuantity());
+    public ResponseEntity<?> updateCartItem(@RequestBody CartUpdateRequest request,
+                                            Authentication authentication) {
+        log.info("✅ updateCartItem 요청: itemId = {}, quantity = {}", request.getItemId(), request.getQuantity());
 
-        if (cartItemDto.getItemId() == null || cartItemDto.getQuantity() <= 0) {
-            throw new IllegalArgumentException("유효하지 않은 상품 ID 또는 수량입니다.");
+        if (request.getItemId() == null || request.getQuantity() == null || request.getQuantity() < 1 || request.getQuantity() > 100) {
+            log.error("🚨 updateCartItem: 잘못된 수량 입력! itemId = {}, quantity = {}", request.getItemId(), request.getQuantity());
+            return ResponseEntity.badRequest().body("{\"success\": false, \"message\": \"수량은 1~100 사이여야 합니다.\"}");
         }
 
         UserDetails userDetails = (UserDetails) authentication.getPrincipal();
         Long memberId = memberService.findMember(userDetails.getUsername()).getMemberId();
-        cartService.updateItemQuantity(memberId, cartItemDto.getItemId(), cartItemDto.getQuantity());
-        return "redirect:/cart";
+        cartService.updateItemQuantity(memberId, request.getItemId(), request.getQuantity());
+
+        int updatedTotal = cartService.calculateCartTotal(cartService.getCartItems(memberId)); // 총 금액 업데이트
+
+        log.info("✅ updateCartItem 성공: 새로운 총 주문 금액 = {}", updatedTotal);
+
+        return ResponseEntity.ok("{\"success\": true, \"cartTotal\": " + updatedTotal + "}");
     }
+
 
     @PostMapping("/remove")
     public String removeItemFromCart(@RequestParam("itemId") Long itemId,

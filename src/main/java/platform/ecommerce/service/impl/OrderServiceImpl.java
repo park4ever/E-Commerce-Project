@@ -111,6 +111,7 @@ public class OrderServiceImpl implements OrderService {
                 .orderPrice(item.getPrice())
                 .count(quantity)
                 .imageUrl(item.getImageUrl())
+                .totalPrice(item.getPrice() * quantity)
                 .build();
 
         return OrderSaveRequestDto.builder()

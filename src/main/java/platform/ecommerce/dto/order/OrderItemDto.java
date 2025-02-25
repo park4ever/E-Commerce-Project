@@ -18,6 +18,7 @@ public class OrderItemDto {
     private Integer orderPrice; // 주문 시 가격
     private Integer count;      // 주문할 수량
     private String imageUrl; // 이미지 경로
+    private Integer totalPrice;
 
     public OrderItemDto(OrderItem orderItem) {
         this.itemId = orderItem.getItem().getId();
@@ -25,6 +26,7 @@ public class OrderItemDto {
         this.orderPrice = orderItem.getOrderPrice();
         this.count = orderItem.getCount();
         this.imageUrl = orderItem.getItem().getImageUrl();
+        this.totalPrice = this.orderPrice * this.count;
     }
 
     public boolean isValid() {
