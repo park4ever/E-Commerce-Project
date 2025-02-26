@@ -9,29 +9,6 @@
     <script src="https://developers.kakao.com/sdk/js/kakao.js"></script>
     <script src="https://t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
     <script src="/js/orderForm.js"></script>
-    <script>
-        Kakao.init('fcb06fd71e67da6f5f16237578814762');
-
-        function openAddressSearch() {
-            new daum.Postcode({
-                oncomplete: function(data) {
-                    var roadAddr = data.roadAddress;
-                    var jibunAddr = data.jibunAddress;
-                    var address = roadAddr || jibunAddr;
-
-                    // 배송지 정보 입력 필드에 값 설정
-                    document.getElementById('street').value = address;
-                    document.getElementById('zipcode').value = data.zonecode;
-                    document.getElementById('city').value = data.sido;
-                }
-            }).open();
-        }
-
-        // 페이지 로드 후 실행되는 코드
-        window.onload = function() {
-            document.getElementById('openAddressSearchBtn').addEventListener('click', openAddressSearch);
-        }
-    </script>
 </head>
 <body>
 <div layout:fragment="content">
@@ -43,7 +20,10 @@
             <input type="hidden" th:field="*{memberId}">
             <input type="hidden" th:field="*{customerName}">
             <input type="hidden" th:field="*{customerPhone}">
-            <input type="hidden" th:field="*{customerAddress}">
+            <input type="hidden" id="customerStreet" th:value="${memberDetails.street}">
+            <input type="hidden" id="customerCity" th:value="${memberDetails.city}">
+            <input type="hidden" id="customerZipcode" th:value="${memberDetails.zipcode}">
+            <input type="hidden" id="customerAdditionalInfo" th:value="${memberDetails.additionalInfo}">
 
             <!-- 주문 아이템 -->
             <h4>주문 아이템</h4>
@@ -54,7 +34,6 @@
 
                         <!-- 상품 이미지 -->
                         <div class="form-group">
-                            <label>상품 이미지</label>
                             <img th:src="@{'/images/' + ${orderItem.imageUrl}}" alt="상품 이미지" style="max-width: 150px; max-height: 150px;">
                         </div>
 
@@ -64,7 +43,7 @@
                         </div>
                         <div class="form-group">
                             <label>수량</label>
-                            <input type="number" class="form-control" th:field="*{orderItems[__${iterStat.index}__].count}" required>
+                            <input type="number" class="form-control order-item-quantity" th:field="*{orderItems[__${iterStat.index}__].count}" required>
                         </div>
                         <div class="form-group">
                             <label>가격</label>
@@ -72,8 +51,9 @@
                         </div>
                         <div class="form-group">
                             <label>총 가격</label>
-                            <input type="text" class="form-control" th:field="*{orderItems[__${iterStat.index}__].totalPrice}" readonly>
+                            <input type="text" class="form-control order-item-total" th:field="*{orderItems[__${iterStat.index}__].totalPrice}" readonly>
                         </div>
+                        <input type="hidden" class="order-item-price" th:value="${orderItem.orderPrice}">
                     </div>
                 </div>
             </div>
@@ -88,7 +68,7 @@
             <button type="button" id="openAddressSearchBtn" class="btn btn-secondary mt-2">주소 검색</button>
             <div class="form-group">
                 <label>상세 주소</label>
-                <input type="text" class="form-control" th:field="*{shippingAddress.additionalInfo}" placeholder="상세 주소">
+                <input type="text" class="form-control" id="additionalInfo" name="shippingAddress.additionalInfo" placeholder="상세 주소">
             </div>
             <div class="form-group">
                 <label>도시</label>

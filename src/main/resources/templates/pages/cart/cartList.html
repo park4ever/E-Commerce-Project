@@ -36,7 +36,7 @@
             <tr th:each="cartItem : ${cartItems}">
                 <td><img th:src="@{'/images/' + ${cartItem.imageUrl}}" alt="상품 이미지" class="item-image"/></td>
                 <td th:text="${cartItem.itemName}"></td>
-                <td th:text="${cartItem.itemPrice}"></td>
+                <td th:text="${cartItem.itemPrice}"> 원</td>
                 <td>
                     <div class="quantity-buttons">
                         <input type="hidden" class="cart-item-id" th:value="${cartItem.itemId}"/>
