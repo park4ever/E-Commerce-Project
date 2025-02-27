@@ -7,10 +7,18 @@
 </head>
 <body>
 
-<div layout:fragment="content">
+<div layout:fragment="content" class="container text-center">
+    <h1>🎉 주문이 성공적으로 완료되었습니다! 🎉</h1>
 
-    <h1>주문이 성공적으로 완료되었습니다!</h1>
+    <div th:if="${order}">
+        <p><strong>주문 번호:</strong> <span th:text="${order.orderId}"></span></p>
+        <p><strong>총 결제 금액:</strong> <span th:text="${order.totalPrice}"></span> 원</p>
+    </div>
 
+    <div class="mt-4">
+        <a th:href="@{/order/history}" class="btn btn-primary">주문 내역 보기</a>
+        <a th:href="@{/}" class="btn btn-secondary">홈으로 이동</a>
+    </div>
 </div>
 
 </body>

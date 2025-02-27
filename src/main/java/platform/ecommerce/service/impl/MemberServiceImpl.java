@@ -42,13 +42,40 @@ public class MemberServiceImpl implements MemberService {
     @Override
     @Transactional(readOnly = true)
     public MemberDetailsDto findMemberDetails(String email) {
+        log.info("✅ findMemberDetails() 호출 - email: {}", email);
+
         Member member = findMemberByEmail(email);
+        if (member == null) {
+            log.warn("🚨 이메일 '{}'에 해당하는 회원을 찾을 수 없음!", email);
+            return null;
+        }
+
+        log.info("✅ 회원 정보 로드 완료: {}", member);
 
         return MemberDetailsDto.builder()
+                .memberId(member.getId())
                 .username(member.getUsername())
                 .phoneNumber(member.getPhoneNumber())
                 .address(member.getAddress())
                 .build();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public MemberDetailsDto findMemberDetailsOrDefault(String email) {
+        Member member = findMemberByEmail(email);
+
+        if (member == null) {
+            log.warn("🚨 Member not found for email: {}. Returning default values.", email);
+            return MemberDetailsDto.builder()
+                    .memberId(0L)
+                    .username("")
+                    .phoneNumber("")
+                    .address(new Address("", "", "", ""))
+                    .build();
+        }
+
+        return findMemberDetails(email);
     }
 
     @Override

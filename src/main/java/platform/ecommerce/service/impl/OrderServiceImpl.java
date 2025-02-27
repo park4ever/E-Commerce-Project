@@ -114,6 +114,7 @@ public class OrderServiceImpl implements OrderService {
                 .totalPrice(item.getPrice() * quantity)
                 .build();
 
+        log.info("✅ createOrderSaveRequestDto - memberId: {}", member.getMemberId()); //TODO DELETE
         return OrderSaveRequestDto.builder()
                 .memberId(member.getMemberId())
                 .orderDate(LocalDateTime.now())

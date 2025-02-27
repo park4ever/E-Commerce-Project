@@ -15,6 +15,7 @@ import platform.ecommerce.dto.item.ItemResponseDto;
 import platform.ecommerce.dto.member.MemberDetailsDto;
 import platform.ecommerce.dto.member.MemberResponseDto;
 import platform.ecommerce.dto.order.*;
+import platform.ecommerce.entity.Address;
 import platform.ecommerce.entity.OrderStatus;
 import platform.ecommerce.service.*;
 
@@ -59,6 +60,7 @@ public class OrderController {
         }
 
         model.addAttribute("orderSaveRequestDto", orderSaveRequestDto);
+        log.info("✅ OrderController - GET /order/new: {}", orderSaveRequestDto); //TODO DELETE
         model.addAttribute("memberDetails", memberDetails);
 
         log.info("Order 요청 - memberId : {}, orderDate : {}", orderSaveRequestDto.getMemberId(), orderSaveRequestDto.getOrderDate());
@@ -69,21 +71,32 @@ public class OrderController {
     @PostMapping("/new")
     public String createOrder(@Valid @ModelAttribute("orderSaveRequestDto") OrderSaveRequestDto orderSaveRequestDto,
                               BindingResult bindingResult, Authentication authentication) {
+        log.info("✅ 주문 생성 요청: orderSaveRequestDto = {}", orderSaveRequestDto);
+
         if (bindingResult.hasErrors()) {
-            log.error("OrderSaveRequestDto binding errors : {}", bindingResult.getAllErrors());
+            log.error("🚨 주문 데이터 검증 실패: {}", bindingResult.getAllErrors());
             return "/pages/order/orderForm";
         }
 
-        //장바구니에서 주문하는 경우, orderSaveRequestDto를 생성하도록 변경
-        if (orderSaveRequestDto.isFromCart()) {
-            UserDetails userDetails = (UserDetails) authentication.getPrincipal();
-            MemberResponseDto member = memberService.findMember(userDetails.getUsername());
+        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+        MemberResponseDto member = memberService.findMember(userDetails.getUsername());
 
+        //장바구니에서의 주문인지 확인
+        if (orderSaveRequestDto.isFromCart()) {
+            log.info("🛒 장바구니 기반 주문입니다! orderSaveRequestDto를 장바구니 정보로 업데이트합니다.");
             orderSaveRequestDto = cartService.prepareOrderFromCart(member.getMemberId());
+        } else {
+            //단일 상품 주문의 경우 'memberId'가 없으면 추가
+            if (orderSaveRequestDto.getMemberId() == null) {
+                log.warn("🚨 orderSaveRequestDto에 memberId가 없습니다! Authentication에서 가져옵니다.");
+                orderSaveRequestDto.setMemberId(member.getMemberId());
+            }
         }
 
+        log.info("✅ 최종 orderSaveRequestDto: {}", orderSaveRequestDto);
+
         Long orderId = orderService.createOrder(orderSaveRequestDto);
-        log.info("주문 완료 - 주문 ID : {}, 회원 ID : {}", orderId, orderSaveRequestDto.getMemberId());
+        log.info("✅ 주문 완료 - 주문 ID: {}", orderId);
 
         return "redirect:/order/success";
     }
@@ -111,7 +124,11 @@ public class OrderController {
     }
 
     @GetMapping("/success")
-    public String orderSuccess() {
+    public String orderSuccess(@RequestParam(value = "orderId", required = false) Long orderId, Model model) {
+        if (orderId != null) {
+            OrderResponseDto order = orderService.findOrderById(orderId);
+            model.addAttribute("order", order);
+        }
         return "/pages/order/success";
     }
 
