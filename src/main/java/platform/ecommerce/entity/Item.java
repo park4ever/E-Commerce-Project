@@ -2,6 +2,7 @@ package platform.ecommerce.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.BatchSize;
 import platform.ecommerce.exception.NotEnoughStockException;
 
 import java.util.ArrayList;
@@ -36,11 +37,8 @@ public class Item extends BaseTimeEntity {
     private String imageUrl;
 
     @OneToMany(mappedBy = "item", cascade = REMOVE)
+    @BatchSize(size = 100)
     private List<Review> reviews = new ArrayList<>();
-
-    //TODO DELETE
-//    @Enumerated(STRING)
-//    private Category category;
 
     /* == 비즈니스 로직 == */
     public void addStock(int quantity) {

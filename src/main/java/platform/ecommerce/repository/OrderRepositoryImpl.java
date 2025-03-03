@@ -13,13 +13,18 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import platform.ecommerce.dto.order.OrderSearchCondition;
 import platform.ecommerce.entity.Order;
+import platform.ecommerce.entity.QItem;
 import platform.ecommerce.entity.QOrder;
+import platform.ecommerce.entity.QOrderItem;
 
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
+import java.util.Optional;
 
+import static platform.ecommerce.entity.QItem.item;
 import static platform.ecommerce.entity.QOrder.*;
+import static platform.ecommerce.entity.QOrderItem.orderItem;
 
 @Slf4j
 public class OrderRepositoryImpl implements OrderRepositoryCustom {
@@ -64,16 +69,19 @@ public class OrderRepositoryImpl implements OrderRepositoryCustom {
         OrderSpecifier<?> sortOrder = getSortOrder(cond);
         if (sortOrder != null) {
             query.orderBy(sortOrder);
+        } else {
+            query.orderBy(order.orderDate.desc());
         }
 
         List<Order> orders = query.fetch();
 
         //COUNT 쿼리 생성
-        Long total = queryFactory
-                .select(order.count())
+        Long total = Optional.ofNullable(queryFactory
+                .select(order.id.count())
                 .from(order)
                 .where(builder)
-                .fetchOne();
+                .fetchOne()
+        ).orElse(0L);
 
         return new PageImpl<>(orders, pageable, total);
     }

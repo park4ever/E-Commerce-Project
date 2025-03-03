@@ -12,6 +12,4 @@ import platform.ecommerce.entity.Item;
 import java.util.List;
 
 public interface ItemRepository extends JpaRepository<Item, Long>, QuerydslPredicateExecutor<Item>, ItemRepositoryCustom {
-
-//    List<Item> findByCategory(Category category); //TODO DELETE
 }

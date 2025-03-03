@@ -3,6 +3,7 @@ package platform.ecommerce.entity;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.BatchSize;
 
 import static jakarta.persistence.FetchType.*;
 

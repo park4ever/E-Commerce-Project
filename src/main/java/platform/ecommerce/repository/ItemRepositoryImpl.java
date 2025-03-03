@@ -11,10 +11,13 @@ import org.springframework.data.domain.Pageable;
 import platform.ecommerce.dto.item.ItemSearchCondition;
 import platform.ecommerce.entity.Item;
 import platform.ecommerce.entity.QItem;
+import platform.ecommerce.entity.QReview;
 
 import java.util.List;
+import java.util.Optional;
 
 import static platform.ecommerce.entity.QItem.*;
+import static platform.ecommerce.entity.QReview.review;
 
 public class ItemRepositoryImpl implements ItemRepositoryCustom {
 
@@ -38,11 +41,6 @@ public class ItemRepositoryImpl implements ItemRepositoryCustom {
             builder.and(item.price.between(cond.getMinPrice(), cond.getMaxPrice()));
         }
 
-        //카테고리 검색 조건
-//        if (cond.getCategory() != null) {
-//            builder.and(item.category.eq(cond.getCategory()));
-//        } //TODO DELETE
-
         //기본 SELECT 쿼리 생성(상품 리스트 가져오기)
         List<Item> items = queryFactory
                 .selectFrom(item)
@@ -53,11 +51,12 @@ public class ItemRepositoryImpl implements ItemRepositoryCustom {
                 .fetch();
 
         //COUNT 쿼리 생성(전체 결과 수 가져오기)
-        Long total = queryFactory
-                .select(item.count())
+        Long total = Optional.ofNullable(queryFactory
+                .select(item.id.count())
                 .from(item)
                 .where(builder)
-                .fetchOne();
+                .fetchOne()
+        ).orElse(0L);
 
         return new PageImpl<>(items, pageable, total);
     }

@@ -3,6 +3,7 @@ package platform.ecommerce.entity;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.BatchSize;
 import platform.ecommerce.dto.order.OrderSaveRequestDto;
 
 import java.time.LocalDateTime;
@@ -35,6 +36,7 @@ public class Order extends BaseTimeEntity {
     private OrderStatus orderStatus;
 
     @OneToMany(mappedBy = "order", cascade = ALL, orphanRemoval = true)
+    @BatchSize(size = 100)
     private List<OrderItem> orderItems = new ArrayList<>();
 
     @Embedded

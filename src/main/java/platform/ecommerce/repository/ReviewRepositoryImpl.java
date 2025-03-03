@@ -9,12 +9,18 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.core.parameters.P;
 import platform.ecommerce.dto.review.ReviewSearchCondition;
+import platform.ecommerce.entity.QItem;
+import platform.ecommerce.entity.QMember;
 import platform.ecommerce.entity.QReview;
 import platform.ecommerce.entity.Review;
 
 import java.util.List;
+import java.util.Optional;
 
+import static platform.ecommerce.entity.QItem.item;
+import static platform.ecommerce.entity.QMember.*;
 import static platform.ecommerce.entity.QReview.*;
 
 @Slf4j
@@ -38,6 +44,8 @@ public class ReviewRepositoryImpl implements ReviewRepositoryCustom {
         //SELECT 쿼리 생성
         JPAQuery<Review> query = queryFactory
                 .selectFrom(review)
+                .leftJoin(review.item, item).fetchJoin()
+                .leftJoin(review.member, member).fetchJoin()
                 .where(builder)
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize());
@@ -46,16 +54,19 @@ public class ReviewRepositoryImpl implements ReviewRepositoryCustom {
         OrderSpecifier<?> sortOrder = getSortOrder(cond.getSortBy());
         if (sortOrder != null) {
             query.orderBy(sortOrder);
+        } else {
+            query.orderBy(review.createdDate.desc());
         }
 
         List<Review> reviews = query.fetch();
 
         //COUNT 쿼리 생성
-        Long total = queryFactory
-                .select(review.count())
+        Long total = Optional.ofNullable(queryFactory
+                .select(review.id.count())
                 .from(review)
                 .where(builder)
-                .fetchOne();
+                .fetchOne()
+        ).orElse(0L);
 
         return new PageImpl<>(reviews, pageable, total);
     }
