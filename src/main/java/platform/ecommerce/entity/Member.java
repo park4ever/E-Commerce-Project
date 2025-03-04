@@ -57,11 +57,20 @@ public class Member extends BaseTimeEntity {
     @OneToMany(mappedBy = "member", cascade = REMOVE, orphanRemoval = true)
     private List<Review> reviews = new ArrayList<>();
 
+    @Column(nullable = false, columnDefinition = "boolean default true")
+    private boolean isActive = true;
+
     public void updateMemberInfo(String username, String phoneNumber, Address address, LocalDate dateOfBirth) {
         this.username = username;
         this.phoneNumber = phoneNumber;
         this.address = address;
         this.dateOfBirth = dateOfBirth;
+    }
+
+    public void updateMemberByAdmin(String username, String phoneNumber, Role role) {
+        this.username = username;
+        this.phoneNumber = phoneNumber;
+        this.role = role; //관리자만 역할 변경 가능
     }
 
     public void changePassword(String encodedPassword) {
@@ -71,12 +80,15 @@ public class Member extends BaseTimeEntity {
         this.password = encodedPassword;
     }
 
-    /*== 연관관계 편의 메서드 ==*/
     public void addReview(Review review) {
         reviews.add(review);
     }
 
     public void removeReview(Review review) {
         reviews.remove(review);
+    }
+
+    public void deactivate() {
+        this.isActive = false;
     }
 }
