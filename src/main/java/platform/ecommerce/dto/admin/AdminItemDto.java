@@ -22,5 +22,6 @@ public class AdminItemDto {
     private LocalDateTime lastModifiedDate;
 
     private int totalSales = 0;
-    private boolean isAvailable;
+
+    private Boolean isAvailable;
 }

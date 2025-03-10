@@ -124,7 +124,6 @@ public class ItemServiceImpl implements ItemService {
                 itemUpdateDto.getDescription() != null ? itemUpdateDto.getDescription() : existingItem.getDescription(),
                 itemUpdateDto.getPrice() != null ? itemUpdateDto.getPrice() : existingItem.getPrice(),
                 itemUpdateDto.getStockQuantity() != null ? itemUpdateDto.getStockQuantity() : existingItem.getStockQuantity()
-//                itemUpdateDto.getCategory() != null ? itemUpdateDto.getCategory() : existingItem.getCategory() //TODO DELETE
         );
     }
 

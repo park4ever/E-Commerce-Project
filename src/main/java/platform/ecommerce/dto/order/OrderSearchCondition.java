@@ -18,4 +18,6 @@ public class OrderSearchCondition {
     private OrderStatus status;
     private String sortBy; //예 : "date", "status"
     private boolean ascending; //오름차순, 내림차순 여부
+
+    private Boolean isPaid;
 }

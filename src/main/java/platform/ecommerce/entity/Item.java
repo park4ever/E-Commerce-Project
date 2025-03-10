@@ -40,9 +40,12 @@ public class Item extends BaseTimeEntity {
     @BatchSize(size = 100)
     private List<Review> reviews = new ArrayList<>();
 
-    /* == 비즈니스 로직 == */
+    @Column(nullable = false)
+    private boolean isAvailable = true; //상품 활성화 여부
+
     public void addStock(int quantity) {
         this.stockQuantity += quantity;
+        this.isAvailable = this.stockQuantity > 0; //재고가 추가되면 활성화
     }
 
     public void removeStock(int quantity) {
@@ -51,6 +54,7 @@ public class Item extends BaseTimeEntity {
             throw new NotEnoughStockException("재고가 0 보다 작을 수 없습니다.");
         }
         this.stockQuantity = restStock;
+        this.isAvailable = restStock > 0; //재고가 0이면 비활성화
     }
 
     public boolean isOutOfStock(int count) {
@@ -66,10 +70,20 @@ public class Item extends BaseTimeEntity {
         this.description = description;
         this.price = price;
         this.stockQuantity = stockQuantity;
-//        this.category = category; //TODO DELETE
+        this.isAvailable = stockQuantity > 0;
     }
 
-    /*== 연관관계 편의 메서드 ==*/
+    public void deactivate() {
+        this.isAvailable = false; //상품 비활성화
+    }
+
+    public void activate() {
+        //재고가 있을 때만 활성화
+        if (this.stockQuantity > 0) {
+            this.isAvailable = true;
+        }
+    }
+
     public void addReview(Review review) {
         reviews.add(review);
     }

@@ -8,15 +8,20 @@ import jakarta.persistence.EntityManager;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.util.StringUtils;
 import platform.ecommerce.dto.item.ItemSearchCondition;
 import platform.ecommerce.entity.Item;
 import platform.ecommerce.entity.QItem;
+import platform.ecommerce.entity.QOrderItem;
 import platform.ecommerce.entity.QReview;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
 import static platform.ecommerce.entity.QItem.*;
+import static platform.ecommerce.entity.QOrderItem.orderItem;
 import static platform.ecommerce.entity.QReview.review;
 
 public class ItemRepositoryImpl implements ItemRepositoryCustom {
@@ -61,6 +66,38 @@ public class ItemRepositoryImpl implements ItemRepositoryCustom {
         return new PageImpl<>(items, pageable, total);
     }
 
+    @Override
+    public List<Item> searchItems(String searchKeyword, Sort sort) {
+        OrderSpecifier<?> orderSpecifier = item.createdDate.desc(); // 기본 정렬: 최신순
+
+        // 정렬 조건 설정
+        if (sort != null && sort.isSorted()) {
+            for (Sort.Order order : sort) {
+                switch (order.getProperty()) {
+                    case "price":
+                        orderSpecifier = order.isAscending() ? item.price.asc() : item.price.desc();
+                        break;
+                    case "stockQuantity":
+                        orderSpecifier = order.isAscending() ? item.stockQuantity.asc() : item.stockQuantity.desc();
+                        break;
+                }
+            }
+        }
+
+        // 검색 조건: 상품명 OR 설명에 검색어 포함
+        BooleanBuilder builder = new BooleanBuilder();
+        if (StringUtils.hasText(searchKeyword)) {
+            builder.or(item.itemName.containsIgnoreCase(searchKeyword))
+                    .or(item.description.containsIgnoreCase(searchKeyword));
+        }
+
+        return queryFactory
+                .selectFrom(item)
+                .where(builder)
+                .orderBy(orderSpecifier)
+                .fetch();
+    }
+
     //정렬 조건 설정 메서드
     private OrderSpecifier<?> getSortOrder(ItemSearchCondition cond) {
         if ("priceAsc".equals(cond.getSortBy())) {
@@ -71,5 +108,16 @@ public class ItemRepositoryImpl implements ItemRepositoryCustom {
             return item.itemName.asc();
         }
         return item.id.asc(); // 기본 정렬 조건
+    }
+
+    @Override
+    public int getTotalSalesByItemId(Long itemId) {
+        Integer totalSales = queryFactory
+                .select(orderItem.count.sum())
+                .from(orderItem)
+                .where(orderItem.item.id.eq(itemId))
+                .fetchOne();
+
+        return totalSales != null ? totalSales : 0;
     }
 }

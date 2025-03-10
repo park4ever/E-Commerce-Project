@@ -1,5 +1,7 @@
 package platform.ecommerce.service;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import platform.ecommerce.dto.admin.AdminItemDto;
 import platform.ecommerce.dto.admin.AdminMemberDto;
 import platform.ecommerce.dto.admin.AdminOrderDto;
@@ -13,10 +15,10 @@ public interface AdminService {
     /**
      * 회원 관리
      */
-    List<AdminMemberDto> getAllMembers(String searchKeyword, String sortBy); //회원 목록 조회
-    AdminMemberDto getMemberById(Long memberId); //회원 상세 조회
-    void updateMember(Long memberId, AdminMemberDto updatedMemberDto); //회원 정보 수정
-    void deleteMember(Long memberId); //회원 삭제
+    List<AdminMemberDto> getAllMembers(String searchKeyword, String sortBy);
+    AdminMemberDto getMemberById(Long memberId);
+    void updateMember(Long memberId, AdminMemberDto updatedMemberDto);
+    void deleteMember(Long memberId);
 
     /**
      * 상품 관리
@@ -24,12 +26,13 @@ public interface AdminService {
     List<AdminItemDto> getAllItems(String searchKeyword, String sortBy);
     AdminItemDto getItemById(Long itemId);
     void updateItem(Long itemId, AdminItemDto updatedItemDto);
+    void toggleItemAvailability(Long itemId, boolean isAvailable);
     void deleteItem(Long itemId);
 
     /**
      * 주문 관리
      */
-    List<AdminOrderDto> getAllOrders(String searchKeyword, String sortBy);
+    Page<AdminOrderDto> getAllOrders(String searchKeyword, Pageable pageable);
     AdminOrderDto getOrderById(Long orderId);
     void updateOrderStatus(Long orderId, OrderStatus newStatus);
     void cancelOrder(Long orderId);

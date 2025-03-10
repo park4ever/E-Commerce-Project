@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import static jakarta.persistence.FetchType.*;
+import static platform.ecommerce.entity.OrderStatus.*;
 
 @Entity
 @Getter
@@ -52,8 +53,11 @@ public class OrderItem extends  BaseTimeEntity {
         this.imageUrl = imageUrl;
     }
 
-    /* == 비즈니스 로직 == */
     public void cancel() {
+        if (order.getOrderStatus() == SHIPPED || order.getOrderStatus() == DELIVERED) {
+            throw new IllegalStateException("이미 배송된 상품은 취소할 수 없습니다.");
+        }
+
         getItem().addStock(count);
     }
 

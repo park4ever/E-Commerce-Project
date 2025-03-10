@@ -2,21 +2,25 @@ package platform.ecommerce.service.impl;
 
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
-import platform.ecommerce.dto.admin.AdminItemDto;
-import platform.ecommerce.dto.admin.AdminMemberDto;
-import platform.ecommerce.dto.admin.AdminOrderDto;
-import platform.ecommerce.dto.admin.AdminReviewDto;
+import platform.ecommerce.dto.admin.*;
+import platform.ecommerce.entity.Item;
 import platform.ecommerce.entity.Member;
+import platform.ecommerce.entity.Order;
 import platform.ecommerce.entity.OrderStatus;
 import platform.ecommerce.repository.*;
 import platform.ecommerce.service.AdminService;
 
 import java.util.List;
 import java.util.stream.Collectors;
+
+import static java.util.stream.Collectors.toList;
+import static org.springframework.data.domain.Sort.Direction.*;
 
 @Service
 @RequiredArgsConstructor
@@ -35,9 +39,9 @@ public class AdminServiceImpl implements AdminService {
     public List<AdminMemberDto> getAllMembers(String searchKeyword, String sortBy) {
         Sort sort = Sort.unsorted(); // 기본 정렬 없음
         if ("createdDate".equals(sortBy)) {
-            sort = Sort.by(Sort.Direction.ASC, "createdDate");
+            sort = Sort.by(ASC, "createdDate");
         } else if ("lastModifiedDate".equals(sortBy)) {
-            sort = Sort.by(Sort.Direction.ASC, "lastModifiedDate");
+            sort = Sort.by(ASC, "lastModifiedDate");
         }
 
         List<Member> members = StringUtils.hasText(searchKeyword)
@@ -55,7 +59,7 @@ public class AdminServiceImpl implements AdminService {
                         member.getCreatedDate(),
                         member.getLastModifiedDate()
                 ))
-                .collect(Collectors.toList());
+                .collect(toList());
     }
 
     //회원 상세 조회
@@ -100,44 +104,147 @@ public class AdminServiceImpl implements AdminService {
         memberRepository.save(member); //명시적 저장
     }
 
+    //상품 목록 조회(검색 및 정렬 포함)
     @Override
+    @Transactional(readOnly = true)
     public List<AdminItemDto> getAllItems(String searchKeyword, String sortBy) {
-        return null;
+        Sort sort = Sort.by(DESC, "createdDate"); // 기본 정렬: 최신순
+
+        switch (sortBy) {
+            case "price":
+                sort = Sort.by(ASC, "price"); // 가격 낮은 순
+                break;
+            case "priceDesc":
+                sort = Sort.by(DESC, "price"); // 가격 높은 순
+                break;
+            case "stockQuantity":
+                sort = Sort.by(DESC, "stockQuantity"); // 재고 많은 순
+                break;
+            case "stockQuantityAsc":
+                sort = Sort.by(ASC, "stockQuantity"); // 재고 적은 순
+                break;
+            case "createdDateAsc":
+                sort = Sort.by(ASC, "createdDate"); // 오래된 순 (오래된 상품 먼저)
+                break;
+        }
+
+        List<Item> items = itemRepository.searchItems(searchKeyword, sort);
+
+        return items.stream()
+                .map(item -> new AdminItemDto(
+                        item.getId(),
+                        item.getItemName(),
+                        item.getDescription(),
+                        item.getPrice(),
+                        item.getStockQuantity(),
+                        item.getImageUrl(),
+                        item.getCreatedDate(),
+                        item.getLastModifiedDate(),
+                        itemRepository.getTotalSalesByItemId(item.getId()),
+                        item.isAvailable()
+                ))
+                .collect(toList());
     }
 
+    //상품 상세 조회
     @Override
+    @Transactional(readOnly = true)
     public AdminItemDto getItemById(Long itemId) {
-        return null;
+        Item item = itemRepository.findById(itemId)
+                .orElseThrow(() -> new EntityNotFoundException("상품 ID [" + itemId + "]를 찾을 수 없습니다."));
+
+        int totalSales = itemRepository.getTotalSalesByItemId(itemId);
+
+        return new AdminItemDto(
+                item.getId(),
+                item.getItemName(),
+                item.getDescription(),
+                item.getPrice(),
+                item.getStockQuantity(),
+                item.getImageUrl(),
+                item.getCreatedDate(),
+                item.getLastModifiedDate(),
+                totalSales,
+                item.isAvailable()
+        );
     }
 
+    //상품 정보 수정
     @Override
     public void updateItem(Long itemId, AdminItemDto updatedItemDto) {
+        Item item = itemRepository.findById(itemId)
+                .orElseThrow(() -> new EntityNotFoundException("상품 ID [" + itemId + "]를 찾을 수 없습니다."));
 
+        item.updateItemDetails(
+                updatedItemDto.getItemName(),
+                updatedItemDto.getDescription(),
+                updatedItemDto.getPrice(),
+                updatedItemDto.getStockQuantity()
+        );
     }
 
+    //상품 활성/비활성화
+    @Override
+    public void toggleItemAvailability(Long itemId, boolean isAvailable) {
+        Item item = itemRepository.findById(itemId)
+                .orElseThrow(() -> new EntityNotFoundException("상품 ID [" + itemId + "]를 찾을 수 없습니다."));
+
+        if (isAvailable) {
+            item.activate(); //활성화
+        } else {
+            item.deactivate(); //비활성화
+        }
+
+        itemRepository.save(item);
+    }
+
+    //상품 삭제
     @Override
     public void deleteItem(Long itemId) {
+        Item item = itemRepository.findById(itemId)
+                .orElseThrow(() -> new EntityNotFoundException("상품 ID [" + itemId + "]를 찾을 수 없습니다."));
 
+        itemRepository.delete(item);
     }
 
+    //주문 목록 조회(검색 및 정렬 포함)
     @Override
-    public List<AdminOrderDto> getAllOrders(String searchKeyword, String sortBy) {
-        return null;
+    @Transactional(readOnly = true)
+    public Page<AdminOrderDto> getAllOrders(String searchKeyword, Pageable pageable) {
+        Page<Order> orders = orderRepository.searchOrders(searchKeyword, pageable);
+
+        return orders.map(this::convertToAdminOrderDto);
     }
 
+    //주문 상세 조회
     @Override
+    @Transactional(readOnly = true)
     public AdminOrderDto getOrderById(Long orderId) {
-        return null;
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new EntityNotFoundException("주문 ID [" + orderId + "]를 찾을 수 없습니다."));
+
+        return convertToAdminOrderDto(order);
     }
 
+    //주문 상태 변경
     @Override
     public void updateOrderStatus(Long orderId, OrderStatus newStatus) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new EntityNotFoundException("주문 ID [" + orderId + "]를 찾을 수 없습니다."));
 
+        order.updateStatus(newStatus);
     }
 
     @Override
     public void cancelOrder(Long orderId) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new EntityNotFoundException("주문 ID [" + orderId + "]를 찾을 수 없습니다."));
 
+        if (!order.isCancelable()) {
+            throw new IllegalStateException("현재 상태에서는 주문을 취소할 수 없습니다.");
+        }
+
+        order.cancel();
     }
 
     @Override
@@ -163,5 +270,32 @@ public class AdminServiceImpl implements AdminService {
     @Override
     public void deleteReview(Long reviewId) {
 
+    }
+
+    private AdminOrderDto convertToAdminOrderDto(Order order) {
+        List<AdminOrderItemDto> orderItems = order.getOrderItems().stream()
+                .map(orderItem -> new AdminOrderItemDto(
+                        orderItem.getItem().getId(),
+                        orderItem.getItem().getItemName(),
+                        orderItem.getOrderPrice(),
+                        orderItem.getCount(),
+                        orderItem.getItem().getImageUrl()
+                ))
+                .collect(toList());
+
+        return new AdminOrderDto(
+                order.getId(),
+                order.getMember().getEmail(),
+                order.getMember().getUsername(),
+                order.getOrderDate(),
+                order.getOrderStatus(),
+                order.getPaymentMethod(),
+                order.getShippingAddress().toString(),
+                order.getLastModifiedDate(),
+                orderItems,
+                order.getTotalPrice(),
+                order.isPaid(),
+                order.isCancelable()
+        );
     }
 }

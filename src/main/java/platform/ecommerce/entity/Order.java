@@ -13,6 +13,7 @@ import java.util.List;
 import static jakarta.persistence.CascadeType.*;
 import static jakarta.persistence.FetchType.*;
 import static platform.ecommerce.entity.OrderStatus.*;
+import static platform.ecommerce.entity.PaymentMethod.*;
 
 @Entity
 @Getter
@@ -47,6 +48,8 @@ public class Order extends BaseTimeEntity {
 
     private String modificationReason;
 
+    private boolean isPaid = false;
+
     /* == 연관관계 편의 메서드 == */
     @Builder
     public Order(Member member, LocalDateTime orderDate, OrderStatus orderStatus, List<OrderItem> orderItems, Address shippingAddress, PaymentMethod paymentMethod, String modificationReason) {
@@ -56,6 +59,8 @@ public class Order extends BaseTimeEntity {
         this.shippingAddress = shippingAddress;
         this.paymentMethod = paymentMethod;
         this.modificationReason = modificationReason;
+        this.isPaid = paymentMethod != BANK_TRANSFER; //무통장입금일 경우 default -> false
+
         if (orderItems != null) {
             for (OrderItem orderItem : orderItems) {
                 this.addOrderItem(orderItem);
@@ -75,22 +80,30 @@ public class Order extends BaseTimeEntity {
         orderItem.associateOrder(this);
     }
 
-    /* == 비즈니스 로직 == */
+    //결제 완료 처리
+    public void markAsPaid() {
+        this.isPaid = true;
+    }
+
+    //주문 취소 가능 여부 확인
+    public boolean isCancelable() {
+        return orderStatus == PENDING || orderStatus == PROCESSED;
+    }
+
     //배송 전 상태에서 취소
     public void cancel() {
-        if (orderStatus == PENDING || orderStatus == PROCESSED) {
-            orderStatus = CANCELLED;
-            for (OrderItem orderItem : orderItems) {
-                orderItem.cancel();
-            }
-        } else {
-            throw new IllegalStateException("배송 준비중인 경우에만 주문 취소가 가능합니다.");
+        if (!isCancelable()) {
+            throw new IllegalStateException("배송 준비 중인 경우에만 주문 취소가 가능합니다.");
+        }
+        this.orderStatus = CANCELLED;
+        for (OrderItem orderItem : orderItems) {
+            orderItem.cancel();
         }
     }
 
     //배송 전 상태에서 주소 변경
     public void updateShippingAddress(Address newAddress) {
-        if (orderStatus == PENDING || orderStatus == PROCESSED) {
+        if (isCancelable()) {
             this.shippingAddress = newAddress;
         } else {
             throw new IllegalStateException("배송 준비 중인 경우에만 주소 변경이 가능합니다.");
@@ -116,12 +129,9 @@ public class Order extends BaseTimeEntity {
         }
     }
 
-    /* == 조회 로직 == */
     public int getTotalPrice() {
-        int totalPrice = 0;
-        for (OrderItem orderItem : orderItems) {
-            totalPrice += orderItem.getTotalPrice();
-        }
-        return totalPrice;
+        return orderItems.stream()
+                .mapToInt(OrderItem::getTotalPrice)
+                .sum();
     }
 }

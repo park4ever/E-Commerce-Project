@@ -31,6 +31,8 @@ public class QItem extends EntityPathBase<Item> {
 
     public final StringPath imageUrl = createString("imageUrl");
 
+    public final BooleanPath isAvailable = createBoolean("isAvailable");
+
     public final StringPath itemName = createString("itemName");
 
     //inherited

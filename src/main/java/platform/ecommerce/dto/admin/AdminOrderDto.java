@@ -17,6 +17,7 @@ public class AdminOrderDto {
     
     private Long id;
     private String memberEmail;
+    private String memberName;
 
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime orderDate;
@@ -24,9 +25,11 @@ public class AdminOrderDto {
     private OrderStatus orderStatus;
     private PaymentMethod paymentMethod;
     private String shippingAddress;
-
     private LocalDateTime lastModifiedDate;
 
     private List<AdminOrderItemDto> orderItems;
     private int totalAmount;
+
+    private boolean isPaid;
+    private boolean isCancelable;
 }
