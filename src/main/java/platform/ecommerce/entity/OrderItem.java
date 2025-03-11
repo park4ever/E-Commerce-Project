@@ -34,14 +34,6 @@ public class OrderItem extends  BaseTimeEntity {
     @Column(name = "image_url")
     private String imageUrl; //이미지 경로
 
-    /* == 연관관계 편의 메서드 == */
-    public void associateOrder(Order order) {
-        this.order = order;
-        if (!order.getOrderItems().contains(this)) {
-            order.getOrderItems().add(this);
-        }
-    }
-
     @Builder
     public OrderItem(Item item, int orderPrice, int count, Order order, String imageUrl) {
         this.item = item;
@@ -51,6 +43,13 @@ public class OrderItem extends  BaseTimeEntity {
             this.associateOrder(order);
         }
         this.imageUrl = imageUrl;
+    }
+
+    public void associateOrder(Order order) {
+        this.order = order;
+        if (!order.getOrderItems().contains(this)) {
+            order.getOrderItems().add(this);
+        }
     }
 
     public void cancel() {
@@ -63,5 +62,20 @@ public class OrderItem extends  BaseTimeEntity {
 
     public int getTotalPrice() {
         return getOrderPrice() * getCount();
+    }
+
+    public void updateQuantity(int newQuantity) {
+        int quantityDifference = newQuantity - this.count;
+        this.count = newQuantity;
+
+        if (quantityDifference > 0) {
+            item.removeStock(quantityDifference);
+        } else {
+            item.addStock(-quantityDifference);
+        }
+    }
+
+    public void updateOrderPrice(int newPrice) {
+        this.orderPrice = newPrice;
     }
 }

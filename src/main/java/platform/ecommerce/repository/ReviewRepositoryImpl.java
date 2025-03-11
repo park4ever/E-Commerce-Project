@@ -10,6 +10,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.parameters.P;
+import org.springframework.util.StringUtils;
 import platform.ecommerce.dto.review.ReviewSearchCondition;
 import platform.ecommerce.entity.QItem;
 import platform.ecommerce.entity.QMember;
@@ -23,7 +24,6 @@ import static platform.ecommerce.entity.QItem.item;
 import static platform.ecommerce.entity.QMember.*;
 import static platform.ecommerce.entity.QReview.*;
 
-@Slf4j
 public class ReviewRepositoryImpl implements ReviewRepositoryCustom {
 
     private final JPAQueryFactory queryFactory;
@@ -71,9 +71,37 @@ public class ReviewRepositoryImpl implements ReviewRepositoryCustom {
         return new PageImpl<>(reviews, pageable, total);
     }
 
-    private OrderSpecifier<?> getSortOrder(String sortBy) {
-        log.info("정렬 기준 : {}", sortBy);
+    @Override
+    public Page<Review> searchReviews(String searchKeyword, Pageable pageable) {
+        BooleanBuilder builder = new BooleanBuilder();
 
+        //검색어가 포함된 리뷰 찾기(내용 or 작성자 이메일)
+        if (StringUtils.hasText(searchKeyword)) {
+            builder.and(review.content.containsIgnoreCase(searchKeyword))
+                    .or(review.member.email.containsIgnoreCase(searchKeyword))
+                    .or(review.item.itemName.containsIgnoreCase(searchKeyword));
+        }
+
+        List<Review> reviews = queryFactory
+                .selectFrom(review)
+                .leftJoin(review.item, item).fetchJoin()
+                .leftJoin(review.member, member).fetchJoin()
+                .where(builder)
+                .offset(pageable.getOffset())
+                .limit(pageable.getPageSize())
+                .orderBy(review.createdDate.desc())
+                .fetch();
+
+        Long total = Optional.ofNullable(queryFactory
+                .select(review.id.count())
+                .from(review)
+                .where(builder)
+                .fetchOne()).orElse(0L);
+
+        return new PageImpl<>(reviews, pageable, total);
+    }
+
+    private OrderSpecifier<?> getSortOrder(String sortBy) {
         if (sortBy == null || sortBy.isEmpty()) {
             return review.createdDate.desc(); //기본값을 최신순으로
         }

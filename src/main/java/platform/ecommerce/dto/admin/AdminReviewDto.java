@@ -21,4 +21,7 @@ public class AdminReviewDto {
 
     private LocalDateTime createdDate;
     private LocalDateTime lastModifiedDate;
+
+    private boolean isVisible;
+    private String adminReply;
 }

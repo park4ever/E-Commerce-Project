@@ -67,35 +67,34 @@ public class ItemRepositoryImpl implements ItemRepositoryCustom {
     }
 
     @Override
-    public List<Item> searchItems(String searchKeyword, Sort sort) {
+    public Page<Item> searchItems(String searchKeyword, Pageable pageable) {
         OrderSpecifier<?> orderSpecifier = item.createdDate.desc(); // 기본 정렬: 최신순
 
-        // 정렬 조건 설정
-        if (sort != null && sort.isSorted()) {
-            for (Sort.Order order : sort) {
-                switch (order.getProperty()) {
-                    case "price":
-                        orderSpecifier = order.isAscending() ? item.price.asc() : item.price.desc();
-                        break;
-                    case "stockQuantity":
-                        orderSpecifier = order.isAscending() ? item.stockQuantity.asc() : item.stockQuantity.desc();
-                        break;
-                }
-            }
-        }
-
-        // 검색 조건: 상품명 OR 설명에 검색어 포함
+        //검색 조건 : 상품명 or 설명에 검색어 포함
         BooleanBuilder builder = new BooleanBuilder();
         if (StringUtils.hasText(searchKeyword)) {
             builder.or(item.itemName.containsIgnoreCase(searchKeyword))
                     .or(item.description.containsIgnoreCase(searchKeyword));
         }
 
-        return queryFactory
+        //기본 SELECT 쿼리 생성(상품 목록 가져오기)
+        List<Item> items = queryFactory
                 .selectFrom(item)
                 .where(builder)
                 .orderBy(orderSpecifier)
+                .offset(pageable.getOffset())
+                .limit(pageable.getPageSize())
                 .fetch();
+
+        //COUNT 쿼리 생성(전체 결과 수 가져오기)
+        Long total = Optional.ofNullable(queryFactory
+                        .select(item.id.count())
+                        .from(item)
+                        .where(builder)
+                        .fetchOne()
+        ).orElse(0L);
+
+        return new PageImpl<>(items, pageable, total);
     }
 
     //정렬 조건 설정 메서드

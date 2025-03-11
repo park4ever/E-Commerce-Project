@@ -10,10 +10,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 import platform.ecommerce.dto.admin.*;
-import platform.ecommerce.entity.Item;
-import platform.ecommerce.entity.Member;
-import platform.ecommerce.entity.Order;
-import platform.ecommerce.entity.OrderStatus;
+import platform.ecommerce.entity.*;
 import platform.ecommerce.repository.*;
 import platform.ecommerce.service.AdminService;
 
@@ -37,14 +34,12 @@ public class AdminServiceImpl implements AdminService {
     //회원 목록 조회(검색 및 정렬 포함)
     @Override
     @Transactional(readOnly = true)
-    public List<AdminMemberDto> getAllMembers(String searchKeyword, String sortBy) {
-        Sort sort = getSortForMembers(sortBy);
+    public Page<AdminMemberDto> getAllMembers(String searchKeyword, Pageable pageable) {
+        Page<Member> members = StringUtils.hasText(searchKeyword)
+                ? memberRepository.searchActiveMembers(searchKeyword, pageable)
+                : memberRepository.findAllActiveMembers(pageable);
 
-        List<Member> members = StringUtils.hasText(searchKeyword)
-                ? memberRepository.searchActiveMembers(searchKeyword, searchKeyword, sort)
-                : memberRepository.findAllActiveMembers(sort);
-
-        return members.stream().map(this::convertToAdminMemberDto).collect(toList());
+        return members.map(this::convertToAdminMemberDto);
     }
 
     //회원 상세 조회
@@ -77,11 +72,10 @@ public class AdminServiceImpl implements AdminService {
     //상품 목록 조회(검색 및 정렬 포함)
     @Override
     @Transactional(readOnly = true)
-    public List<AdminItemDto> getAllItems(String searchKeyword, String sortBy) {
-        Sort sort = getSortForItem(sortBy);
-        List<Item> items = itemRepository.searchItems(searchKeyword, sort);
+    public Page<AdminItemDto> getAllItems(String searchKeyword, Pageable pageable) {
+        Page<Item> items = itemRepository.searchItems(searchKeyword, pageable);
 
-        return items.stream().map(this::convertToAdminItemDto).collect(toList());
+        return items.map(this::convertToAdminItemDto);
     }
 
     //상품 상세 조회
@@ -146,6 +140,7 @@ public class AdminServiceImpl implements AdminService {
         findEntityById(orderRepository, orderId, "주문").updateStatus(newStatus);
     }
 
+    //주문 취소
     @Override
     public void cancelOrder(Long orderId) {
         Order order = findEntityById(orderRepository, orderId, "주문");
@@ -157,29 +152,109 @@ public class AdminServiceImpl implements AdminService {
         order.cancel();
     }
 
+    //주문 상품 수량 변경
     @Override
-    public void updateOrderItem(Long orderItemId, int newQuantity) {
+    public void updateOrderItemQuantity(Long orderItemId, int newQuantity) {
+        OrderItem orderItem = findEntityById(orderItemRepository, orderItemId, "주문 상품");
 
+        if (newQuantity <= 0) {
+            throw new IllegalArgumentException("주문 수량은 1 이상이어야 합니다.");
+        }
+
+        orderItem.updateQuantity(newQuantity);
     }
 
+    //주문 상품 가격 변경
+    @Override
+    public void updateOrderItemPrice(Long orderItemId, int newPrice) {
+        OrderItem orderItem = findEntityById(orderItemRepository, orderItemId, "주문 상품");
+
+        if (newPrice < 0) {
+            throw new IllegalArgumentException("가격은 0 이상이어야 합니다.");
+        }
+
+        if (orderItem.getOrderPrice() == newPrice) {
+            throw new IllegalStateException("변경할 값이 현재 가격과 동일합니다.");
+        }
+
+        orderItem.updateOrderPrice(newPrice);
+    }
+
+    //주문 상품 삭제
     @Override
     public void deleteOrderItem(Long orderItemId) {
+        OrderItem orderItem = findEntityById(orderItemRepository, orderItemId, "주문 상품");
 
+        if (orderItem.getOrder().getOrderStatus() == OrderStatus.SHIPPED ||
+            orderItem.getOrder().getOrderStatus() == OrderStatus.DELIVERED) {
+            throw new IllegalStateException("배송된 상품은 삭제할 수 없습니다.");
+        }
+
+        orderItemRepository.delete(orderItem);
     }
 
+    //리뷰 목록 조회(검색 및 정렬 포함)
     @Override
-    public List<AdminReviewDto> getAllReviews(String searchKeyword, String sortBy) {
-        return null;
+    @Transactional(readOnly = true)
+    public Page<AdminReviewDto> getAllReviews(String searchKeyword, Pageable pageable) {
+        Page<Review> reviews = reviewRepository.searchReviews(searchKeyword, pageable);
+
+        return reviews.map(this::convertToAdminReviewDto);
     }
 
+    //리뷰 상세 조회
     @Override
+    @Transactional(readOnly = true)
     public AdminReviewDto getReviewById(Long reviewId) {
-        return null;
+        return convertToAdminReviewDto(findEntityById(reviewRepository, reviewId, "리뷰"));
     }
 
+    //리뷰 삭제
     @Override
     public void deleteReview(Long reviewId) {
+        Review review = findEntityById(reviewRepository, reviewId, "리뷰");
 
+        if (review == null) {
+            throw new EntityNotFoundException("삭제할 리뷰가 존재하지 않습니다.");
+        }
+
+        reviewRepository.delete(review);
+    }
+
+    //리뷰 공개/비공개 설정
+    @Override
+    public void toggleReviewVisibility(Long reviewId, boolean isVisible) {
+        Review review = findEntityById(reviewRepository, reviewId, "리뷰");
+
+        if (review.isVisible() == isVisible) {
+            throw new IllegalStateException("이미 해당 상태로 설정되어 있습니다.");
+        }
+
+        review.toggleVisibility(isVisible);
+    }
+
+    //관리자 답변 추가
+    @Override
+    public void addAdminReply(Long reviewId, String reply) {
+        Review review = findEntityById(reviewRepository, reviewId, "리뷰");
+
+        if (reply == null || reply.trim().isEmpty()) {
+            throw new IllegalArgumentException("관리자 답변은 비어 있을 수 없습니다.");
+        }
+
+        review.addAdminReply(reply);
+    }
+
+    //관리자 답변 삭제
+    @Override
+    public void removeAdminReply(Long reviewId) {
+        Review review = findEntityById(reviewRepository, reviewId, "리뷰");
+
+        if (review.getAdminReply() == null) {
+            throw new IllegalStateException("삭제할 관리자 답변이 존재하지 않습니다.");
+        }
+
+        review.removeAdminReply();
     }
 
     /**
@@ -247,6 +322,23 @@ public class AdminServiceImpl implements AdminService {
                 .totalAmount(order.getTotalPrice())
                 .isPaid(order.isPaid())
                 .isCancelable(order.isCancelable())
+                .build();
+    }
+
+    //AdminReviewDto 변환
+    private AdminReviewDto convertToAdminReviewDto(Review review) {
+        return AdminReviewDto.builder()
+                .id(review.getId())
+                .memberEmail(review.getMember().getEmail())
+                .itemId(review.getItem().getId())
+                .itemName(review.getItem().getItemName())
+                .content(review.getContent())
+                .rating(review.getRating())
+                .imageUrl(review.getImageUrl())
+                .createdDate(review.getCreatedDate())
+                .lastModifiedDate(review.getLastModifiedDate())
+                .isVisible(review.isVisible())
+                .adminReply(review.getAdminReply())
                 .build();
     }
 

@@ -11,7 +11,7 @@ import java.util.List;
 public interface ItemRepositoryCustom {
     Page<Item> findItemsByCondition(ItemSearchCondition cond, Pageable pageable);
 
-    List<Item> searchItems(String searchKeyword, Sort sort);
+    Page<Item> searchItems(String searchKeyword, Pageable pageable);
 
     int getTotalSalesByItemId(Long itemId);
 }

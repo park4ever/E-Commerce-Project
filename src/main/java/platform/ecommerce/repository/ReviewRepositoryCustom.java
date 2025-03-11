@@ -8,4 +8,6 @@ import platform.ecommerce.entity.Review;
 public interface ReviewRepositoryCustom {
 
     Page<Review> findReviewsWithPageable(ReviewSearchCondition cond, Pageable pageable);
+
+    Page<Review> searchReviews(String searchKeyword, Pageable pageable);
 }

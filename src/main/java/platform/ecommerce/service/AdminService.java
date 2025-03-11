@@ -15,7 +15,7 @@ public interface AdminService {
     /**
      * 회원 관리
      */
-    List<AdminMemberDto> getAllMembers(String searchKeyword, String sortBy);
+    Page<AdminMemberDto> getAllMembers(String searchKeyword, Pageable pageable);
     AdminMemberDto getMemberById(Long memberId);
     void updateMember(Long memberId, AdminMemberDto updatedMemberDto);
     void deleteMember(Long memberId);
@@ -23,7 +23,7 @@ public interface AdminService {
     /**
      * 상품 관리
      */
-    List<AdminItemDto> getAllItems(String searchKeyword, String sortBy);
+    Page<AdminItemDto> getAllItems(String searchKeyword, Pageable pageable);
     AdminItemDto getItemById(Long itemId);
     void updateItem(Long itemId, AdminItemDto updatedItemDto);
     void toggleItemAvailability(Long itemId, boolean isAvailable);
@@ -40,13 +40,17 @@ public interface AdminService {
     /**
      * 주문 상품 관리
      */
-    void updateOrderItem(Long orderItemId, int newQuantity);
+    void updateOrderItemQuantity(Long orderItemId, int newQuantity);
+    void updateOrderItemPrice(Long orderItemId, int newPrice);
     void deleteOrderItem(Long orderItemId);
 
     /**
      * 리뷰 관리
      */
-    List<AdminReviewDto> getAllReviews(String searchKeyword, String sortBy);
+    Page<AdminReviewDto> getAllReviews(String searchKeyword, Pageable pageable);
     AdminReviewDto getReviewById(Long reviewId);
     void deleteReview(Long reviewId);
+    void toggleReviewVisibility(Long reviewId, boolean isVisible);
+    void addAdminReply(Long reviewId, String reply);
+    void removeAdminReply(Long reviewId);
 }

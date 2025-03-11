@@ -38,7 +38,12 @@ public class Review extends BaseTimeEntity {
     @Column(name = "image_url")
     private String imageUrl;
 
-    /*== 연관관계 편의 메서드 ==*/
+    @Column(nullable = false)
+    private boolean isVisible = true;
+
+    @Column(columnDefinition = "TEXT")
+    private String adminReply;
+
     public static Review createReview(Item item, Member member, String content, int rating) {
         Review review = new Review();
         review.item = item;
@@ -60,7 +65,6 @@ public class Review extends BaseTimeEntity {
         this.imageUrl = imageUrl;
     }
 
-    /* 양방향 연관관계 메서드 */
     public void assignItem(Item item) {
         this.item = item;
         if (!item.getReviews().contains(this)) {
@@ -72,5 +76,17 @@ public class Review extends BaseTimeEntity {
         if (!member.getReviews().contains(this)) {
             member.getReviews().add(this);
         }
+    }
+
+    public void toggleVisibility(boolean isVisible) {
+        this.isVisible = isVisible;
+    }
+
+    public void addAdminReply(String reply) {
+        this.adminReply = reply;
+    }
+
+    public void removeAdminReply() {
+        this.adminReply = null;
     }
 }
