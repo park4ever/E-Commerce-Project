@@ -8,8 +8,6 @@ import platform.ecommerce.dto.admin.AdminOrderDto;
 import platform.ecommerce.dto.admin.AdminReviewDto;
 import platform.ecommerce.entity.OrderStatus;
 
-import java.util.List;
-
 public interface AdminService {
 
     /**
@@ -18,7 +16,7 @@ public interface AdminService {
     Page<AdminMemberDto> getAllMembers(String searchKeyword, Pageable pageable);
     AdminMemberDto getMemberById(Long memberId);
     void updateMember(Long memberId, AdminMemberDto updatedMemberDto);
-    void deleteMember(Long memberId);
+    void deactivateMember(Long memberId);
 
     /**
      * 상품 관리

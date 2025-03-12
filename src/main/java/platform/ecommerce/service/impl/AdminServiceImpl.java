@@ -63,7 +63,7 @@ public class AdminServiceImpl implements AdminService {
 
     //회원 삭제
     @Override
-    public void deleteMember(Long memberId) {
+    public void deactivateMember(Long memberId) {
         Member member = findEntityById(memberRepository, memberId, "회원");
         member.deactivate();
         memberRepository.save(member); //명시적 저장
