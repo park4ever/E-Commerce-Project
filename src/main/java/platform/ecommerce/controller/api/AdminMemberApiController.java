@@ -17,7 +17,6 @@ import static org.springframework.data.domain.Sort.Direction.*;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/admin/members")
-@PreAuthorize("hasRole('ADMIN')")
 public class AdminMemberApiController {
 
     private final AdminService adminService;
@@ -27,7 +26,7 @@ public class AdminMemberApiController {
      */
     @GetMapping
     public ResponseEntity<Page<AdminMemberDto>> getAllMembers(
-            @RequestParam(required = false) String searchKeyword,
+            @RequestParam(value = "searchKeyword", required = false) String searchKeyword,
             @PageableDefault(size = 10, sort = "createdDate", direction = DESC) Pageable pageable) {
         Page<AdminMemberDto> members = adminService.getAllMembers(searchKeyword, pageable);
 
@@ -38,7 +37,7 @@ public class AdminMemberApiController {
      * 회원 상세 조회
      */
     @GetMapping("/{id}")
-    public ResponseEntity<AdminMemberDto> getMemberById(@PathVariable Long id) {
+    public ResponseEntity<AdminMemberDto> getMemberById(@PathVariable("id") Long id) {
         AdminMemberDto member = adminService.getMemberById(id);
 
         return ResponseEntity.ok(member);
@@ -48,9 +47,19 @@ public class AdminMemberApiController {
      * 회원 정보 수정
      */
     @PutMapping("/{id}")
-    public ResponseEntity<Void> updateMember(@PathVariable Long id,
+    public ResponseEntity<Void> updateMember(@PathVariable("id") Long id,
                                              @RequestBody @Valid AdminMemberDto dto) {
         adminService.updateMember(id, dto);
+
+        return ResponseEntity.noContent().build();
+    }
+
+    /**
+     * 회원 활성화
+     */
+    @PutMapping("/{id}/activate")
+    public ResponseEntity<Void> activateMember(@PathVariable("id") Long id) {
+        adminService.activateMember(id);
 
         return ResponseEntity.noContent().build();
     }
@@ -59,7 +68,7 @@ public class AdminMemberApiController {
      * 회원 비활성화
      */
     @PutMapping("/{id}/deactivate")
-    public ResponseEntity<Void> deactivateMember(@PathVariable Long id) {
+    public ResponseEntity<Void> deactivateMember(@PathVariable("id") Long id) {
         adminService.deactivateMember(id);
 
         return ResponseEntity.noContent().build();

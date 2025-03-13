@@ -64,6 +64,7 @@ public class SecurityConfig {
                         .requestMatchers("/", "/signup", "/login", "/item/**", "/resources/**").permitAll()
                         .requestMatchers("/member/check-password").permitAll()
                         .requestMatchers("/member/update-form").authenticated()
+                        .requestMatchers("/admin", "/admin/**", "/api/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated()
                 )
                 .formLogin(formLogin -> formLogin

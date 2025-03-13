@@ -55,6 +55,7 @@ tasks.named('test') {
 def generated = 'src/main/generated'
 
 tasks.withType(JavaCompile) {
+	options.compilerArgs << "-parameters"
 	options.getGeneratedSourceOutputDirectory().set(file(generated))
 }
 

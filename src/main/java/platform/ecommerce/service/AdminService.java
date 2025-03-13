@@ -6,7 +6,10 @@ import platform.ecommerce.dto.admin.AdminItemDto;
 import platform.ecommerce.dto.admin.AdminMemberDto;
 import platform.ecommerce.dto.admin.AdminOrderDto;
 import platform.ecommerce.dto.admin.AdminReviewDto;
+import platform.ecommerce.entity.OrderItem;
 import platform.ecommerce.entity.OrderStatus;
+
+import java.util.List;
 
 public interface AdminService {
 
@@ -16,6 +19,7 @@ public interface AdminService {
     Page<AdminMemberDto> getAllMembers(String searchKeyword, Pageable pageable);
     AdminMemberDto getMemberById(Long memberId);
     void updateMember(Long memberId, AdminMemberDto updatedMemberDto);
+    void activateMember(Long memberId);
     void deactivateMember(Long memberId);
 
     /**
@@ -51,4 +55,18 @@ public interface AdminService {
     void toggleReviewVisibility(Long reviewId, boolean isVisible);
     void addAdminReply(Long reviewId, String reply);
     void removeAdminReply(Long reviewId);
+
+    /**
+     * 대쉬보드 통계용
+     */
+    long countMembers();
+    long countNewMembers(int days);
+    long countItems();
+    long countOrders();
+    long countRecentOrders(int days);
+    long calculateTotalRevenue();
+    long calculateRecentRevenue(int days);
+    List<OrderItem> getOrderItemsWithOrder(Long orderId);
+    long countReviews();
+    long countRecentReviews(int days);
 }

@@ -65,6 +65,7 @@ public class Member extends BaseTimeEntity {
         this.phoneNumber = phoneNumber;
         this.address = address;
         this.dateOfBirth = dateOfBirth;
+        this.isActive = true;
     }
 
     public void updateMemberByAdmin(String username, String phoneNumber, Role role) {
@@ -86,6 +87,10 @@ public class Member extends BaseTimeEntity {
 
     public void removeReview(Review review) {
         reviews.remove(review);
+    }
+
+    public void activate() {
+        this.isActive = true;
     }
 
     public void deactivate() {

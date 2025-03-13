@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.w3.org/1999/xhtml" layout:decorate="~{layout/admin-layout}">
+<head>
+    <title>회원 관리</title>
+    <script type="text/javascript" th:src="@{/js/admin/admin-members.js}" defer></script>
+</head>
+<body>
+<main layout:fragment="content">
+    <div class="container">
+        <h1 class="mt-4">회원 관리</h1>
+
+        <!-- 검색 입력 필드 -->
+        <div class="mb-3">
+            <input type="text" id="searchKeyword" class="form-control" placeholder="회원 검색">
+            <button class="btn btn-primary mt-2" onclick="loadMembers()">검색</button>
+        </div>
+
+        <!-- 회원 목록 테이블 -->
+        <table class="table table-bordered">
+            <thead>
+            <tr>
+                <th>ID</th>
+                <th>이메일</th>
+                <th>이름</th>
+                <th>전화번호</th>
+                <th>생년월일</th>
+                <th>가입일</th>
+                <th>상태</th>
+                <th>관리</th>
+            </tr>
+            </thead>
+            <tbody id="members-table-body">
+            <!-- 회원 데이터가 동적으로 추가될 부분 -->
+            </tbody>
+        </table>
+    </div>
+</main>
+</body>
+</html>

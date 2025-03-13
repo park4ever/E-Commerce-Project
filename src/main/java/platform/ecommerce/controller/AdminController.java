@@ -19,7 +19,6 @@ import platform.ecommerce.service.AdminService;
 @Controller
 @RequiredArgsConstructor
 @RequestMapping("/admin")
-@PreAuthorize("hasRole('ADMIN')")
 public class AdminController {
 
     private final AdminService adminService;
@@ -36,7 +35,7 @@ public class AdminController {
      * 회원 목록 조회
      */
     @GetMapping("/members")
-    public String getAllMembers(@RequestParam(required = false) String searchKeyword,
+    public String getAllMembers(@RequestParam(value = "searchKeyword", required = false) String searchKeyword,
                                 Pageable pageable, Model model) {
         Page<AdminMemberDto> members = adminService.getAllMembers(searchKeyword, pageable);
         model.addAttribute("members", members);
@@ -48,7 +47,7 @@ public class AdminController {
      * 회원 상세 조회
      */
     @GetMapping("/members/{id}")
-    public String getMemberDetail(@PathVariable Long id, Model model) {
+    public String getMemberDetail(@PathVariable("id") Long id, Model model) {
         AdminMemberDto member = adminService.getMemberById(id);
         model.addAttribute("member", member);
 
@@ -59,7 +58,7 @@ public class AdminController {
      * 상품 목록 조회
      */
     @GetMapping("/items")
-    public String getAllItems(@RequestParam(required = false) String searchKeyword,
+    public String getAllItems(@RequestParam(value = "searchKeyword", required = false) String searchKeyword,
                               Pageable pageable, Model model) {
         Page<AdminItemDto> items = adminService.getAllItems(searchKeyword, pageable);
         model.addAttribute("items", items);
@@ -71,7 +70,7 @@ public class AdminController {
      * 상품 상세 조회
      */
     @GetMapping("/items/{id}")
-    public String getItemDetail(@PathVariable Long id, Model model) {
+    public String getItemDetail(@PathVariable("id") Long id, Model model) {
         AdminItemDto item = adminService.getItemById(id);
         model.addAttribute("item", item);
 
@@ -82,7 +81,7 @@ public class AdminController {
      * 주문 목록 조회
      */
     @GetMapping("/orders")
-    public String getAllOrders(@RequestParam(required = false) String searchKeyword,
+    public String getAllOrders(@RequestParam(value = "searchKeyword", required = false) String searchKeyword,
                                Pageable pageable, Model model) {
         Page<AdminOrderDto> orders = adminService.getAllOrders(searchKeyword, pageable);
         model.addAttribute("orders", orders);
@@ -94,7 +93,7 @@ public class AdminController {
      * 주문 상세 조회
      */
     @GetMapping("/orders/{id}")
-    public String getOrderDetail(@PathVariable Long id, Model model) {
+    public String getOrderDetail(@PathVariable("id") Long id, Model model) {
         AdminOrderDto order = adminService.getOrderById(id);
         model.addAttribute("order", order);
 
@@ -105,7 +104,7 @@ public class AdminController {
      * 리뷰 목록 조회
      */
     @GetMapping("/reviews")
-    public String getAllReviews(@RequestParam(required = false) String searchKeyword,
+    public String getAllReviews(@RequestParam(value = "searchKeyword", required = false) String searchKeyword,
                                 Pageable pageable, Model model) {
         Page<AdminReviewDto> reviews = adminService.getAllReviews(searchKeyword, pageable);
         model.addAttribute("reviews", reviews);
@@ -117,7 +116,7 @@ public class AdminController {
      * 리뷰 상세 조회
      */
     @GetMapping("/reviews/{id}")
-    public String getReviewDetail(@PathVariable Long id, Model model) {
+    public String getReviewDetail(@PathVariable("id") Long id, Model model) {
         AdminReviewDto review = adminService.getReviewById(id);
         model.addAttribute("review", review);
 

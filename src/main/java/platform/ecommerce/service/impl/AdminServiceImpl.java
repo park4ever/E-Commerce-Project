@@ -14,8 +14,8 @@ import platform.ecommerce.entity.*;
 import platform.ecommerce.repository.*;
 import platform.ecommerce.service.AdminService;
 
+import java.time.LocalDateTime;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import static java.util.stream.Collectors.toList;
 import static org.springframework.data.domain.Sort.Direction.*;
@@ -36,8 +36,8 @@ public class AdminServiceImpl implements AdminService {
     @Transactional(readOnly = true)
     public Page<AdminMemberDto> getAllMembers(String searchKeyword, Pageable pageable) {
         Page<Member> members = StringUtils.hasText(searchKeyword)
-                ? memberRepository.searchActiveMembers(searchKeyword, pageable)
-                : memberRepository.findAllActiveMembers(pageable);
+                ? memberRepository.searchMembers(searchKeyword, pageable)
+                : memberRepository.findAllMembers(pageable);
 
         return members.map(this::convertToAdminMemberDto);
     }
@@ -61,7 +61,14 @@ public class AdminServiceImpl implements AdminService {
         );
     }
 
-    //회원 삭제
+    @Override
+    public void activateMember(Long memberId) {
+        Member member = findEntityById(memberRepository, memberId, "회원");
+        member.activate();
+        memberRepository.save(member);
+    }
+
+    //회원 삭제(비활성화)
     @Override
     public void deactivateMember(Long memberId) {
         Member member = findEntityById(memberRepository, memberId, "회원");
@@ -255,6 +262,73 @@ public class AdminServiceImpl implements AdminService {
         }
 
         review.removeAdminReply();
+    }
+
+    /**
+     * 대시보드 통계용
+     */
+    @Override
+    @Transactional(readOnly = true)
+    public long countMembers() {
+        return memberRepository.count();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public long countNewMembers(int days) {
+        LocalDateTime fromDate = LocalDateTime.now().minusDays(days);
+        return memberRepository.countByCreatedDateAfter(fromDate);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public long countItems() {
+        return itemRepository.count();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public long countOrders() {
+        return orderRepository.count();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public long countRecentOrders(int days) {
+        LocalDateTime fromDate = LocalDateTime.now().minusDays(days);
+        return orderRepository.countByCreatedDateAfter(fromDate);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public long calculateTotalRevenue() {
+        return orderRepository.calculateTotalRevenue();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public long calculateRecentRevenue(int days) {
+        LocalDateTime fromDate = LocalDateTime.now().minusDays(days);
+        return orderRepository.calculateRevenueSince(fromDate);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<OrderItem> getOrderItemsWithOrder(Long orderId) {
+        return orderRepository.findOrderItemsWithOrder(orderId);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public long countReviews() {
+        return reviewRepository.count();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public long countRecentReviews(int days) {
+        LocalDateTime fromDate = LocalDateTime.now().minusDays(days);
+        return reviewRepository.countByCreatedDateAfter(fromDate);
     }
 
     /**

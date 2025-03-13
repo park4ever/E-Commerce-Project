@@ -9,7 +9,6 @@ import platform.ecommerce.service.AdminService;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/admin/order-items")
-@PreAuthorize("hasRole('ADMIN')")
 public class AdminOrderItemApiController {
 
     private final AdminService adminService;

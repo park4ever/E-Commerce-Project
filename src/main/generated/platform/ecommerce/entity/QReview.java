@@ -24,6 +24,8 @@ public class QReview extends EntityPathBase<Review> {
 
     public final QBaseTimeEntity _super = new QBaseTimeEntity(this);
 
+    public final StringPath adminReply = createString("adminReply");
+
     public final StringPath content = createString("content");
 
     //inherited
@@ -32,6 +34,8 @@ public class QReview extends EntityPathBase<Review> {
     public final NumberPath<Long> id = createNumber("id", Long.class);
 
     public final StringPath imageUrl = createString("imageUrl");
+
+    public final BooleanPath isVisible = createBoolean("isVisible");
 
     public final QItem item;
 

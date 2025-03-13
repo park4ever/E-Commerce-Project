@@ -17,7 +17,6 @@ import static org.springframework.data.domain.Sort.Direction.*;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/admin/orders")
-@PreAuthorize("hasRole('ADMIN')")
 public class AdminOrderApiController {
 
     private final AdminService adminService;
