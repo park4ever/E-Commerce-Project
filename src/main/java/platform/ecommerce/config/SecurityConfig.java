@@ -27,7 +27,6 @@ import platform.ecommerce.controller.CustomLogoutSuccessHandler;
 
 import java.io.IOException;
 
-@Slf4j
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
@@ -53,9 +52,9 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        log.info("=== [SecurityConfig] Spring Security 설정 시작 ===");
         http
-                .csrf(csrf -> csrf.ignoringRequestMatchers("/login", "/logout", "/order/new"))
+                .csrf(csrf -> csrf
+                        .ignoringRequestMatchers("/login", "/logout", "/order/new", "/api/admin/**"))
                 .requestCache(RequestCacheConfigurer::disable)
                 .securityContext(securityContext -> securityContext
                         .securityContextRepository(new HttpSessionSecurityContextRepository()))
@@ -90,7 +89,6 @@ public class SecurityConfig {
                 )
                 .httpBasic(Customizer.withDefaults());
 
-        log.info("=== [SecurityConfig] Spring Security 설정 완료 ===");
         return http.build();
     }
 }

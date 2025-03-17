@@ -65,7 +65,7 @@ public class AdminServiceImpl implements AdminService {
     public void activateMember(Long memberId) {
         Member member = findEntityById(memberRepository, memberId, "회원");
         member.activate();
-        memberRepository.save(member);
+        memberRepository.saveAndFlush(member);
     }
 
     //회원 삭제(비활성화)
@@ -73,7 +73,7 @@ public class AdminServiceImpl implements AdminService {
     public void deactivateMember(Long memberId) {
         Member member = findEntityById(memberRepository, memberId, "회원");
         member.deactivate();
-        memberRepository.save(member); //명시적 저장
+        memberRepository.saveAndFlush(member); //명시적 저장
     }
 
     //상품 목록 조회(검색 및 정렬 포함)
@@ -352,6 +352,7 @@ public class AdminServiceImpl implements AdminService {
                 .role(member.getRole())
                 .createdDate(member.getCreatedDate())
                 .lastModifiedDate(member.getLastModifiedDate())
+                .isActive(member.isActive())
                 .build();
     }
 

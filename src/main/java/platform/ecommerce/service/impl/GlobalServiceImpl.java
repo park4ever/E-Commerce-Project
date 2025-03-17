@@ -36,6 +36,7 @@ public class GlobalServiceImpl implements GlobalService {
                 .dateOfBirth(dto.getDateOfBirth())
                 .defaultShippingAddress(dto.getDefaultShippingAddress())
                 .role(USER)
+                .isActive(true)
                 .build();
 
         return memberRepository.save(member).getId();

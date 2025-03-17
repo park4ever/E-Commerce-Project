@@ -23,4 +23,6 @@ public class AdminMemberDto {
 
     private LocalDateTime createdDate;
     private LocalDateTime lastModifiedDate;
+
+    private boolean isActive;
 }
