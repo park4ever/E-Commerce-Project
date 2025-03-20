@@ -1,5 +1,6 @@
 package platform.ecommerce.dto.admin;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.*;
 import platform.ecommerce.entity.Role;
 
@@ -24,5 +25,6 @@ public class AdminMemberDto {
     private LocalDateTime createdDate;
     private LocalDateTime lastModifiedDate;
 
+    @JsonProperty("isActive")
     private boolean isActive;
 }

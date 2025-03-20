@@ -51,7 +51,7 @@ public class AdminController {
         AdminMemberDto member = adminService.getMemberById(id);
         model.addAttribute("member", member);
 
-        return "pages/admin/memberDetail";
+        return "pages/admin/member-detail";
     }
 
     /**

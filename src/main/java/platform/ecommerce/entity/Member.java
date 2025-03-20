@@ -58,6 +58,7 @@ public class Member extends BaseTimeEntity {
     @OneToMany(mappedBy = "member", cascade = REMOVE, orphanRemoval = true)
     private List<Review> reviews = new ArrayList<>();
 
+    @JsonProperty("isActive")
     @Column(nullable = false, columnDefinition = "boolean default true")
     private boolean isActive = true;
 
@@ -69,10 +70,13 @@ public class Member extends BaseTimeEntity {
         this.isActive = true;
     }
 
-    public void updateMemberByAdmin(String username, String phoneNumber, Role role) {
+    public void updateMemberByAdmin(String username, String phoneNumber, Role role, boolean isActive) {
         this.username = username;
         this.phoneNumber = phoneNumber;
-        this.role = role; //관리자만 역할 변경 가능
+        if (role != null) {
+            this.role = role;
+        }
+        this.isActive = isActive;
     }
 
     public void changePassword(String encodedPassword) {
@@ -96,5 +100,10 @@ public class Member extends BaseTimeEntity {
 
     public void deactivate() {
         this.isActive = false;
+    }
+
+    //@Getter 때문에 접두사 'is'가 자동으로 제거될 가능성 제거.
+    public boolean getIsActive() {
+        return isActive;
     }
 }

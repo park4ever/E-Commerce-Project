@@ -18,10 +18,11 @@ document.addEventListener("DOMContentLoaded", function () {
                 tableBody.innerHTML = "";  // 기존 데이터 초기화
 
                 data.content.forEach(member => {
-                    let isActive = member.active ?? member.isActive; // 필드 이름이 다를 가능성 고려
+                    let isActive = member.active ?? member.isActive;
+
                     let row = `<tr data-member-id="${member.id}">
                         <td>${member.id}</td>
-                        <td>${member.email}</td>
+                        <td><a href="/admin/members/${member.id}" class="member-link">${member.email}</a></td> <!-- ✅ 상세 조회 페이지 이동 -->
                         <td>${member.username}</td>
                         <td>${member.phoneNumber || '-'}</td>
                         <td>${member.dateOfBirth ? new Date(member.dateOfBirth).toLocaleDateString() : '-'}</td>
@@ -37,7 +38,15 @@ document.addEventListener("DOMContentLoaded", function () {
                     tableBody.innerHTML += row;
                 });
 
-                // 버튼 이벤트 리스너 추가
+                // 회원 상세 조회 페이지 이동
+                document.querySelectorAll(".member-link").forEach(link => {
+                    link.addEventListener("click", function (event) {
+                        event.preventDefault();
+                        window.location.href = this.getAttribute("href");
+                    });
+                });
+
+                // 버튼 이벤트 리스너
                 document.querySelectorAll(".activate-btn").forEach(button => {
                     button.addEventListener("click", function () {
                         updateMemberStatus(this.dataset.memberId, true);
@@ -80,12 +89,9 @@ document.addEventListener("DOMContentLoaded", function () {
                 let activateBtn = document.querySelector(`.activate-btn[data-member-id="${memberId}"]`);
                 let deactivateBtn = document.querySelector(`.deactivate-btn[data-member-id="${memberId}"]`);
 
-                if (isActive) {
-                    activateBtn.disabled = true;
-                    deactivateBtn.disabled = false;
-                } else {
-                    activateBtn.disabled = false;
-                    deactivateBtn.disabled = true;
+                if (activateBtn && deactivateBtn) {
+                    activateBtn.disabled = isActive;
+                    deactivateBtn.disabled = !isActive;
                 }
 
                 // 최신 데이터 갱신 (0.5초 후)

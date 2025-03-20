@@ -2,6 +2,7 @@ package platform.ecommerce.service.impl;
 
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -20,6 +21,7 @@ import java.util.List;
 import static java.util.stream.Collectors.toList;
 import static org.springframework.data.domain.Sort.Direction.*;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional
@@ -57,10 +59,12 @@ public class AdminServiceImpl implements AdminService {
         member.updateMemberByAdmin(
                 updatedMemberDto.getUsername(),
                 updatedMemberDto.getPhoneNumber(),
-                updatedMemberDto.getRole()
+                updatedMemberDto.getRole(),
+                updatedMemberDto.isActive()
         );
     }
 
+    //회원 활성화
     @Override
     public void activateMember(Long memberId) {
         Member member = findEntityById(memberRepository, memberId, "회원");
@@ -352,7 +356,7 @@ public class AdminServiceImpl implements AdminService {
                 .role(member.getRole())
                 .createdDate(member.getCreatedDate())
                 .lastModifiedDate(member.getLastModifiedDate())
-                .isActive(member.isActive())
+                .isActive(member.getIsActive())
                 .build();
     }
 
