@@ -11,6 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import platform.ecommerce.dto.admin.AdminMemberDto;
+import platform.ecommerce.dto.member.MemberPageRequestDto;
 import platform.ecommerce.service.AdminService;
 
 import static org.springframework.data.domain.Sort.Direction.*;
@@ -27,10 +28,8 @@ public class AdminMemberApiController {
      * 회원 목록 조회(검색 및 페이징 포함)
      */
     @GetMapping
-    public ResponseEntity<Page<AdminMemberDto>> getAllMembers(
-            @RequestParam(value = "searchKeyword", required = false) String searchKeyword,
-            @PageableDefault(size = 10, sort = "createdDate", direction = DESC) Pageable pageable) {
-        Page<AdminMemberDto> members = adminService.getAllMembers(searchKeyword, pageable);
+    public ResponseEntity<Page<AdminMemberDto>> getAllMembers(MemberPageRequestDto requestDto) {
+        Page<AdminMemberDto> members = adminService.getAllMembers(requestDto);
 
         return ResponseEntity.ok(members);
     }

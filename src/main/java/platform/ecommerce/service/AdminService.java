@@ -6,6 +6,7 @@ import platform.ecommerce.dto.admin.AdminItemDto;
 import platform.ecommerce.dto.admin.AdminMemberDto;
 import platform.ecommerce.dto.admin.AdminOrderDto;
 import platform.ecommerce.dto.admin.AdminReviewDto;
+import platform.ecommerce.dto.member.MemberPageRequestDto;
 import platform.ecommerce.entity.OrderItem;
 import platform.ecommerce.entity.OrderStatus;
 
@@ -16,7 +17,7 @@ public interface AdminService {
     /**
      * 회원 관리
      */
-    Page<AdminMemberDto> getAllMembers(String searchKeyword, Pageable pageable);
+    Page<AdminMemberDto> getAllMembers(MemberPageRequestDto requestDto);
     AdminMemberDto getMemberById(Long memberId);
     void updateMember(Long memberId, AdminMemberDto updatedMemberDto);
     void activateMember(Long memberId);

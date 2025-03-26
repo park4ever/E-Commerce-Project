@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 import platform.ecommerce.dto.admin.*;
+import platform.ecommerce.dto.member.MemberPageRequestDto;
 import platform.ecommerce.entity.*;
 import platform.ecommerce.repository.*;
 import platform.ecommerce.service.AdminService;
@@ -36,10 +37,12 @@ public class AdminServiceImpl implements AdminService {
     //회원 목록 조회(검색 및 정렬 포함)
     @Override
     @Transactional(readOnly = true)
-    public Page<AdminMemberDto> getAllMembers(String searchKeyword, Pageable pageable) {
-        Page<Member> members = StringUtils.hasText(searchKeyword)
-                ? memberRepository.searchMembers(searchKeyword, pageable)
-                : memberRepository.findAllMembers(pageable);
+    public Page<AdminMemberDto> getAllMembers(MemberPageRequestDto requestDto) {
+        Pageable pageable = requestDto.toPageable();
+
+        Page<Member> members = StringUtils.hasText(requestDto.getSearchKeyword())
+                ? memberRepository.searchMembers(requestDto.getSearchKeyword(), pageable)
+                : memberRepository.findAll(pageable);
 
         return members.map(this::convertToAdminMemberDto);
     }

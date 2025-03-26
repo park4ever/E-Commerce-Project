@@ -2,6 +2,7 @@
 <html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.w3.org/1999/xhtml" layout:decorate="~{layout/admin-layout}">
 <head>
     <title>회원 관리</title>
+    <link rel="stylesheet" th:href="@{/css/admin.css}">
     <script type="text/javascript" th:src="@{/js/admin/admin-members.js}" defer></script>
 </head>
 <body>
@@ -9,30 +10,47 @@
     <div class="container">
         <h1 class="mt-4">회원 관리</h1>
 
-        <!-- 검색 입력 필드 -->
-        <div class="mb-3">
-            <input type="text" id="searchKeyword" class="form-control" placeholder="회원 검색">
-            <button class="btn btn-primary mt-2" onclick="loadMembers()">검색</button>
+        <!-- 검색 & 정렬 -->
+        <div class="row mb-3 align-items-center">
+            <div class="col-md-6">
+                <input type="text" id="searchKeyword" class="form-control" placeholder="회원 검색 (이메일, 이름)">
+            </div>
+            <div class="col-md-3">
+                <select id="sortSelect" class="form-select">
+                    <option value="createdDate,desc">가입일 ↓ (최신순)</option>
+                    <option value="createdDate,asc">가입일 ↑ (오래된순)</option>
+                    <option value="username,asc">이름 ↑</option>
+                    <option value="username,desc">이름 ↓</option>
+                    <option value="email,asc">이메일 ↑</option>
+                    <option value="email,desc">이메일 ↓</option>
+                </select>
+            </div>
+            <div class="col-md-3 text-end">
+                <button class="btn btn-primary" onclick="loadMembers()">검색</button>
+            </div>
         </div>
 
-        <!-- 회원 목록 테이블 -->
-        <table class="table table-bordered">
-            <thead>
+        <!-- 회원 테이블 -->
+        <table class="table table-bordered table-hover text-center align-middle">
+            <thead class="table-light">
             <tr>
-                <th>ID</th>
-                <th>이메일</th>
-                <th>이름</th>
+                <th data-sort="id" style="cursor:pointer">ID</th>
+                <th data-sort="email" style="cursor:pointer">이메일</th>
+                <th data-sort="username" style="cursor:pointer">이름</th>
                 <th>전화번호</th>
-                <th>생년월일</th>
-                <th>가입일</th>
+                <th data-sort="dateOfBirth" style="cursor:pointer">생년월일</th>
+                <th data-sort="createdDate" style="cursor:pointer">가입일</th>
                 <th>상태</th>
                 <th>관리</th>
             </tr>
             </thead>
             <tbody id="members-table-body">
-            <!-- 회원 데이터가 동적으로 추가될 부분 -->
+            <!-- JS로 회원 데이터 채워짐 -->
             </tbody>
         </table>
+        <nav id="pagination-container" class="d-flex justify-content-center mt-4">
+            <!-- 페이지네이션 버튼이 JS로 추가됨 -->
+        </nav>
     </div>
 </main>
 </body>

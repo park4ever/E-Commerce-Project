@@ -14,6 +14,7 @@ import platform.ecommerce.dto.admin.AdminItemDto;
 import platform.ecommerce.dto.admin.AdminMemberDto;
 import platform.ecommerce.dto.admin.AdminOrderDto;
 import platform.ecommerce.dto.admin.AdminReviewDto;
+import platform.ecommerce.dto.member.MemberPageRequestDto;
 import platform.ecommerce.service.AdminService;
 
 @Controller
@@ -35,9 +36,8 @@ public class AdminController {
      * 회원 목록 조회
      */
     @GetMapping("/members")
-    public String getAllMembers(@RequestParam(value = "searchKeyword", required = false) String searchKeyword,
-                                Pageable pageable, Model model) {
-        Page<AdminMemberDto> members = adminService.getAllMembers(searchKeyword, pageable);
+    public String getAllMembers(MemberPageRequestDto requestDto, Model model) {
+        Page<AdminMemberDto> members = adminService.getAllMembers(requestDto);
         model.addAttribute("members", members);
 
         return "pages/admin/members";
