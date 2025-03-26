@@ -41,7 +41,7 @@ public class AdminServiceImpl implements AdminService {
         Pageable pageable = requestDto.toPageable();
 
         Page<Member> members = StringUtils.hasText(requestDto.getSearchKeyword())
-                ? memberRepository.searchMembers(requestDto.getSearchKeyword(), pageable)
+                ? memberRepository.searchMembers(requestDto.getSearchKeyword(), requestDto.getSearchField(), pageable)
                 : memberRepository.findAll(pageable);
 
         return members.map(this::convertToAdminMemberDto);

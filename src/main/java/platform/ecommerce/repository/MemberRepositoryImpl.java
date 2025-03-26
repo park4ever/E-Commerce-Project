@@ -26,13 +26,24 @@ public class MemberRepositoryImpl implements MemberRepositoryCustom {
     }
 
     @Override
-    public Page<Member> searchMembers(String keyword, Pageable pageable) {
+    public Page<Member> searchMembers(String keyword, String field, Pageable pageable) {
         BooleanBuilder builder = new BooleanBuilder();
 
         //검색 조건
         if (keyword != null && !keyword.isBlank()) {
-            builder.and(member.email.containsIgnoreCase(keyword)
-                    .or(member.username.containsIgnoreCase(keyword)));
+            switch (field) {
+                case "email" -> builder.and(member.email.containsIgnoreCase(keyword));
+                case "username" -> builder.and(member.username.containsIgnoreCase(keyword));
+                case "phoneNumber" -> builder.and(member.phoneNumber.containsIgnoreCase(keyword));
+                case "role" -> builder.and(member.role.stringValue().containsIgnoreCase(keyword));
+                case "all" -> builder.and(
+                        member.email.containsIgnoreCase(keyword)
+                                .or(member.username.containsIgnoreCase(keyword))
+                                .or(member.phoneNumber.containsIgnoreCase(keyword))
+                                .or(member.role.stringValue().containsIgnoreCase(keyword))
+                );
+                default -> builder.and(member.username.containsIgnoreCase(keyword));
+            }
         }
 
         // 정렬 조건

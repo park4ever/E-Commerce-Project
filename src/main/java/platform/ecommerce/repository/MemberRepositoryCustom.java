@@ -6,5 +6,5 @@ import platform.ecommerce.entity.Member;
 
 public interface MemberRepositoryCustom {
 
-    Page<Member> searchMembers(String keyword, Pageable pageable);
+    Page<Member> searchMembers(String keyword, String field, Pageable pageable);
 }
