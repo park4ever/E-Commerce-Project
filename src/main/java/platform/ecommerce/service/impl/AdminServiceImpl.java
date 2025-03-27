@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 import platform.ecommerce.dto.admin.*;
+import platform.ecommerce.dto.item.ItemPageRequestDto;
 import platform.ecommerce.dto.member.MemberPageRequestDto;
 import platform.ecommerce.entity.*;
 import platform.ecommerce.repository.*;
@@ -86,8 +87,12 @@ public class AdminServiceImpl implements AdminService {
     //상품 목록 조회(검색 및 정렬 포함)
     @Override
     @Transactional(readOnly = true)
-    public Page<AdminItemDto> getAllItems(String searchKeyword, Pageable pageable) {
-        Page<Item> items = itemRepository.searchItems(searchKeyword, pageable);
+    public Page<AdminItemDto> getAllItems(ItemPageRequestDto requestDto) {
+        Pageable pageable = requestDto.toPageable();
+
+        Page<Item> items = StringUtils.hasText(requestDto.getSearchKeyword())
+                ? itemRepository.searchItems(requestDto.getSearchKeyword(), requestDto.getSearchField(), pageable)
+                : itemRepository.findAll(pageable);
 
         return items.map(this::convertToAdminItemDto);
     }

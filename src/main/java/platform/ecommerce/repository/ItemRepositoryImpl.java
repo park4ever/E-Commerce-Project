@@ -1,7 +1,9 @@
 package platform.ecommerce.repository;
 
 import com.querydsl.core.BooleanBuilder;
+import com.querydsl.core.types.Order;
 import com.querydsl.core.types.OrderSpecifier;
+import com.querydsl.core.types.dsl.PathBuilder;
 import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import jakarta.persistence.EntityManager;
@@ -67,34 +69,63 @@ public class ItemRepositoryImpl implements ItemRepositoryCustom {
     }
 
     @Override
-    public Page<Item> searchItems(String searchKeyword, Pageable pageable) {
-        OrderSpecifier<?> orderSpecifier = item.createdDate.desc(); // 기본 정렬: 최신순
-
-        //검색 조건 : 상품명 or 설명에 검색어 포함
+    public Page<Item> searchItems(String keyword, String field, Pageable pageable) {
         BooleanBuilder builder = new BooleanBuilder();
-        if (StringUtils.hasText(searchKeyword)) {
-            builder.or(item.itemName.containsIgnoreCase(searchKeyword))
-                    .or(item.description.containsIgnoreCase(searchKeyword));
+
+        //전체 검색
+        if ("all".equals(field)) {
+            builder.or(item.itemName.containsIgnoreCase(keyword))
+                    .or(item.description.containsIgnoreCase(keyword))
+                    .or(item.price.stringValue().containsIgnoreCase(keyword))
+                    .or(item.stockQuantity.stringValue().containsIgnoreCase(keyword));
+        } else if ("itemName".equals(field)) {
+            builder.and(item.itemName.containsIgnoreCase(keyword));
+        } else if ("description".equals(field)) {
+            builder.and(item.description.containsIgnoreCase(keyword));
+        } else if ("price".equals(field)) {
+            builder.and(item.price.stringValue().containsIgnoreCase(keyword));
+        } else if ("stockQuantity".equals(field)) {
+            builder.and(item.stockQuantity.stringValue().containsIgnoreCase(keyword));
         }
 
-        //기본 SELECT 쿼리 생성(상품 목록 가져오기)
+        //정렬 조건
+        PathBuilder<Item> pathBuilder = new PathBuilder<>(Item.class, item.getMetadata());
+        List<OrderSpecifier<Comparable>> orderSpecifiers = pageable.getSort().stream()
+                .map(order -> new OrderSpecifier<>(
+                        order.isAscending() ? Order.ASC : Order.DESC,
+                        pathBuilder.getComparable(order.getProperty(), Comparable.class)
+                ))
+                .toList();
+
+        //메인 쿼리
         List<Item> items = queryFactory
                 .selectFrom(item)
                 .where(builder)
-                .orderBy(orderSpecifier)
+                .orderBy(orderSpecifiers.toArray(new OrderSpecifier[0]))
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())
                 .fetch();
 
-        //COUNT 쿼리 생성(전체 결과 수 가져오기)
+        //카운트 쿼리
         Long total = Optional.ofNullable(queryFactory
                         .select(item.id.count())
                         .from(item)
                         .where(builder)
-                        .fetchOne()
-        ).orElse(0L);
+                        .fetchOne())
+                .orElse(0L);
 
         return new PageImpl<>(items, pageable, total);
+    }
+
+    @Override
+    public int getTotalSalesByItemId(Long itemId) {
+        Integer totalSales = queryFactory
+                .select(orderItem.count.sum())
+                .from(orderItem)
+                .where(orderItem.item.id.eq(itemId))
+                .fetchOne();
+
+        return totalSales != null ? totalSales : 0;
     }
 
     //정렬 조건 설정 메서드
@@ -107,16 +138,5 @@ public class ItemRepositoryImpl implements ItemRepositoryCustom {
             return item.itemName.asc();
         }
         return item.id.asc(); // 기본 정렬 조건
-    }
-
-    @Override
-    public int getTotalSalesByItemId(Long itemId) {
-        Integer totalSales = queryFactory
-                .select(orderItem.count.sum())
-                .from(orderItem)
-                .where(orderItem.item.id.eq(itemId))
-                .fetchOne();
-
-        return totalSales != null ? totalSales : 0;
     }
 }

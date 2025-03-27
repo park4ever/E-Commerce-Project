@@ -10,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import platform.ecommerce.dto.admin.AdminItemDto;
+import platform.ecommerce.dto.item.ItemPageRequestDto;
 import platform.ecommerce.service.AdminService;
 
 import static org.springframework.data.domain.Sort.Direction.*;
@@ -25,10 +26,8 @@ public class AdminItemApiController {
      * 상품 목록 조회(검색 및 페이징 포함)
      */
     @GetMapping
-    public ResponseEntity<Page<AdminItemDto>> getAllItems(
-            @RequestParam(required = false) String searchKeyword,
-            @PageableDefault(size = 10, sort = "createdDate", direction = DESC) Pageable pageable) {
-        Page<AdminItemDto> items = adminService.getAllItems(searchKeyword, pageable);
+    public ResponseEntity<Page<AdminItemDto>> getAllItems(ItemPageRequestDto requestDto) {
+        Page<AdminItemDto> items = adminService.getAllItems(requestDto);
 
         return ResponseEntity.ok(items);
     }

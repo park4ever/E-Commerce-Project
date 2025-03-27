@@ -160,5 +160,5 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     });
 
-    loadMembers(); // 초기 실행
+    loadMembers();
 });

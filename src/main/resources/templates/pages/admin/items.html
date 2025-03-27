@@ -1,14 +1,16 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.w3.org/1999/xhtml" layout:decorate="~{layout/admin-layout}">
 <head>
-    <title>회원 관리</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>상품 관리</title>
     <link rel="stylesheet" th:href="@{/css/admin.css}">
-    <script type="text/javascript" th:src="@{/js/admin/admin-members.js}" defer></script>
+    <script type="text/javascript" th:src="@{/js/admin/admin-items.js}" defer></script>
 </head>
 <body>
 <main layout:fragment="content">
     <div class="container">
-        <h1 class="mt-4">회원 관리</h1>
+        <h1 class="mt-4">상품 관리</h1>
 
         <!-- 검색 & 정렬 -->
         <div class="row mb-3 align-items-center">
@@ -16,10 +18,10 @@
             <div class="col-md-2">
                 <select id="searchField" class="form-select">
                     <option value="all">전체</option>
-                    <option value="username">이름</option>
-                    <option value="email">이메일</option>
-                    <option value="phoneNumber">전화번호</option>
-                    <option value="role">역할</option>
+                    <option value="itemName">상품명</option>
+                    <option value="description">설명</option>
+                    <option value="price">가격</option>
+                    <option value="stockQuantity">재고</option>
                 </select>
             </div>
             <div class="col-md-4">
@@ -27,37 +29,37 @@
             </div>
             <div class="col-md-3">
                 <select id="sortSelect" class="form-select">
-                    <option value="createdDate,desc">가입일 ↓ (최신순)</option>
-                    <option value="createdDate,asc">가입일 ↑ (오래된순)</option>
-                    <option value="username,asc">이름 ↑</option>
-                    <option value="username,desc">이름 ↓</option>
-                    <option value="email,asc">이메일 ↑</option>
-                    <option value="email,desc">이메일 ↓</option>
+                    <option value="createdDate,desc">최신 등록순</option>
+                    <option value="createdDate,asc">오래된순</option>
+                    <option value="itemName,asc">이름순</option>
+                    <option value="itemName,desc">이름역순</option>
                 </select>
             </div>
             <div class="col-md-3 text-end">
-                <button class="btn btn-primary" onclick="loadMembers()">검색</button>
+                <button class="btn btn-primary" onclick="loadItems()">검색</button>
             </div>
         </div>
 
-        <!-- 회원 테이블 -->
+        <!-- 상품 목록 테이블 -->
         <table class="table table-bordered table-hover text-center align-middle">
             <thead class="table-light">
             <tr>
                 <th data-sort="id" style="cursor:pointer">ID</th>
-                <th data-sort="email" style="cursor:pointer">이메일</th>
-                <th data-sort="username" style="cursor:pointer">이름</th>
-                <th>전화번호</th>
-                <th data-sort="dateOfBirth" style="cursor:pointer">생년월일</th>
-                <th data-sort="createdDate" style="cursor:pointer">가입일</th>
+                <th data-sort="itemName" style="cursor:pointer">상품명</th>
+                <th data-sort="price" style="cursor:pointer">가격</th>
+                <th data-sort="stockQuantity" style="cursor:pointer">재고</th>
+                <th data-sort="createdDate" style="cursor:pointer">생성일</th>
+                <th>총 판매량</th>
                 <th>상태</th>
                 <th>관리</th>
             </tr>
             </thead>
-            <tbody id="members-table-body">
-            <!-- JS로 회원 데이터 채워짐 -->
+            <tbody id="items-table-body">
+            <!-- JS로 상품 데이터 채워짐 -->
             </tbody>
         </table>
+
+        <!-- 페이지네이션 -->
         <nav id="pagination-container" class="d-flex justify-content-center mt-4">
             <!-- 페이지네이션 버튼이 JS로 추가됨 -->
         </nav>
