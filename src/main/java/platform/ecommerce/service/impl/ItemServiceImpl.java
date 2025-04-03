@@ -52,7 +52,7 @@ public class ItemServiceImpl implements ItemService {
                 .price(itemSaveRequestDto.getPrice())
                 .stockQuantity(itemSaveRequestDto.getStockQuantity())
                 .imageUrl(imageUrl)
-//                .category(itemSaveRequestDto.getCategory()) //TODO DELETE
+                .isAvailable(true)
                 .build();
 
         return itemRepository.save(item).getId();
@@ -69,7 +69,6 @@ public class ItemServiceImpl implements ItemService {
                         .price(item.getPrice())
                         .stockQuantity(item.getStockQuantity())
                         .imageUrl("/images/" + item.getImageUrl())
-//                        .category(item.getCategory()) //TODO DELETE
                         .build())
                 .collect(Collectors.toList());
     }
@@ -85,7 +84,6 @@ public class ItemServiceImpl implements ItemService {
                 .price(item.getPrice())
                 .stockQuantity(item.getStockQuantity())
                 .imageUrl("/images/" + item.getImageUrl())
-//                .category(item.getCategory()) //TODO DELETE
                 .build());
     }
 
@@ -101,7 +99,6 @@ public class ItemServiceImpl implements ItemService {
                 .price(item.getPrice())
                 .stockQuantity(item.getStockQuantity())
                 .imageUrl("/images/" + item.getImageUrl())
-//                .category(item.getCategory()) //TODO DELETE
                 .build();
     }
 

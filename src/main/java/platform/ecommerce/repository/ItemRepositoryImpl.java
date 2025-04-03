@@ -7,11 +7,13 @@ import com.querydsl.core.types.dsl.PathBuilder;
 import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import jakarta.persistence.EntityManager;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.util.StringUtils;
+import platform.ecommerce.dto.item.ItemPageRequestDto;
 import platform.ecommerce.dto.item.ItemSearchCondition;
 import platform.ecommerce.entity.Item;
 import platform.ecommerce.entity.QItem;
@@ -19,6 +21,7 @@ import platform.ecommerce.entity.QOrderItem;
 import platform.ecommerce.entity.QReview;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -26,6 +29,7 @@ import static platform.ecommerce.entity.QItem.*;
 import static platform.ecommerce.entity.QOrderItem.orderItem;
 import static platform.ecommerce.entity.QReview.review;
 
+@Slf4j
 public class ItemRepositoryImpl implements ItemRepositoryCustom {
 
     private final JPAQueryFactory queryFactory;
@@ -69,10 +73,13 @@ public class ItemRepositoryImpl implements ItemRepositoryCustom {
     }
 
     @Override
-    public Page<Item> searchItems(String keyword, String field, Pageable pageable) {
+    public Page<Item> searchItems(ItemPageRequestDto requestDto, Pageable pageable) {
         BooleanBuilder builder = new BooleanBuilder();
 
-        //전체 검색
+        //검색 필드에 따른 조건 처리
+        String keyword = requestDto.getSearchKeyword();
+        String field = requestDto.getSearchField();
+
         if ("all".equals(field)) {
             builder.or(item.itemName.containsIgnoreCase(keyword))
                     .or(item.description.containsIgnoreCase(keyword))
@@ -88,16 +95,39 @@ public class ItemRepositoryImpl implements ItemRepositoryCustom {
             builder.and(item.stockQuantity.stringValue().containsIgnoreCase(keyword));
         }
 
-        //정렬 조건
-        PathBuilder<Item> pathBuilder = new PathBuilder<>(Item.class, item.getMetadata());
-        List<OrderSpecifier<Comparable>> orderSpecifiers = pageable.getSort().stream()
-                .map(order -> new OrderSpecifier<>(
-                        order.isAscending() ? Order.ASC : Order.DESC,
-                        pathBuilder.getComparable(order.getProperty(), Comparable.class)
-                ))
-                .toList();
+        // 가격 범위 조건 처리
+        Integer priceMin = requestDto.getPriceMin();
+        Integer priceMax = requestDto.getPriceMax();
+        if (priceMin != null && priceMax != null) {
+            if (priceMin >= 0 && priceMax >= 0 && priceMin <= priceMax) {
+                builder.and(item.price.between(priceMin, priceMax));
+             }
+        }
 
-        //메인 쿼리
+        // 재고 범위 조건 처리
+        Integer stockMin = requestDto.getStockMin();
+        Integer stockMax = requestDto.getStockMax();
+        if (stockMin != null && stockMax != null) {
+            if (stockMin >= 0 && stockMax >= 0 && stockMin <= stockMax) {
+                builder.and(item.stockQuantity.between(stockMin, stockMax));
+            }
+        }
+
+        // 정렬 조건 처리
+        List<OrderSpecifier<Comparable>> orderSpecifiers = new ArrayList<>();
+        String sortBy = requestDto.getSortField();
+        String direction = String.valueOf(requestDto.getSortDirection());
+
+        PathBuilder<Item> pathBuilder = new PathBuilder<>(Item.class, item.getMetadata());
+        Order order = "asc".equalsIgnoreCase(direction) ? Order.ASC : Order.DESC;
+
+        try {
+            orderSpecifiers.add(new OrderSpecifier<>(order, pathBuilder.getComparable(sortBy, Comparable.class)));
+        } catch (IllegalArgumentException e) {
+            log.warn("잘못된 정렬 필드명 : {}", sortBy);
+        }
+
+        // 메인 쿼리
         List<Item> items = queryFactory
                 .selectFrom(item)
                 .where(builder)
@@ -106,7 +136,7 @@ public class ItemRepositoryImpl implements ItemRepositoryCustom {
                 .limit(pageable.getPageSize())
                 .fetch();
 
-        //카운트 쿼리
+        // 카운트 쿼리
         Long total = Optional.ofNullable(queryFactory
                         .select(item.id.count())
                         .from(item)

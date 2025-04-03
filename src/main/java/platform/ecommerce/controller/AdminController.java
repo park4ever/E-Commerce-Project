@@ -74,7 +74,7 @@ public class AdminController {
         AdminItemDto item = adminService.getItemById(id);
         model.addAttribute("item", item);
 
-        return "pages/admin/itemDetail";
+        return "pages/admin/admin-item-detail";
     }
 
     /**

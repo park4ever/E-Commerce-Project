@@ -165,7 +165,6 @@ public class CartServiceImpl implements CartService {
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new UsernameNotFoundException("회원을 찾을 수 없습니다."));
 
-        log.info("✅ prepareOrderFromCart - memberId: {}", member.getId()); //TODO DELETE
         return createOrderFromCart(cart, member);
     }
 

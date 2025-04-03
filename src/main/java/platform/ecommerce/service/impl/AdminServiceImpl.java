@@ -90,9 +90,7 @@ public class AdminServiceImpl implements AdminService {
     public Page<AdminItemDto> getAllItems(ItemPageRequestDto requestDto) {
         Pageable pageable = requestDto.toPageable();
 
-        Page<Item> items = StringUtils.hasText(requestDto.getSearchKeyword())
-                ? itemRepository.searchItems(requestDto.getSearchKeyword(), requestDto.getSearchField(), pageable)
-                : itemRepository.findAll(pageable);
+        Page<Item> items = itemRepository.searchItems(requestDto, pageable);
 
         return items.map(this::convertToAdminItemDto);
     }
@@ -370,13 +368,22 @@ public class AdminServiceImpl implements AdminService {
 
     //AdminItemDto 변환
     private AdminItemDto convertToAdminItemDto(Item item) {
+        String imageUrl = item.getImageUrl();
+
+        if (imageUrl == null || imageUrl.isBlank()) {
+            imageUrl = "/item/default.png";
+        } else {
+            imageUrl = imageUrl.startsWith("/") ? imageUrl.substring(1) : imageUrl;
+            imageUrl = "/images/" + imageUrl;
+        }
+
         return AdminItemDto.builder()
                 .id(item.getId())
                 .itemName(item.getItemName())
                 .description(item.getDescription())
                 .price(item.getPrice())
                 .stockQuantity(item.getStockQuantity())
-                .imageUrl(item.getImageUrl())
+                .imageUrl(imageUrl)
                 .createdDate(item.getCreatedDate())
                 .lastModifiedDate(item.getLastModifiedDate())
                 .totalSales(itemRepository.getTotalSalesByItemId(item.getId()))

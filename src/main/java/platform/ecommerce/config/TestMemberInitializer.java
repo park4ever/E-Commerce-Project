@@ -2,7 +2,6 @@ package platform.ecommerce.config;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.CommandLineRunner;
-import org.springframework.context.annotation.Configuration;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import platform.ecommerce.entity.Address;
 import platform.ecommerce.entity.Member;
@@ -13,7 +12,7 @@ import java.time.LocalDate;
 
 //@Configuration
 @RequiredArgsConstructor
-public class TestDataInitializer implements CommandLineRunner {
+public class TestMemberInitializer implements CommandLineRunner {
 
     private final MemberRepository memberRepository;
     private final PasswordEncoder passwordEncoder;
