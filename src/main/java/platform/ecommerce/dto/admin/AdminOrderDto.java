@@ -1,6 +1,7 @@
 package platform.ecommerce.dto.admin;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.*;
 import platform.ecommerce.entity.OrderStatus;
 import platform.ecommerce.entity.PaymentMethod;
@@ -24,8 +25,14 @@ public class AdminOrderDto {
 
     private OrderStatus orderStatus;
     private PaymentMethod paymentMethod;
-    private String shippingAddress;
+    private String zipcode;
+    private String city;
+    private String street;
+    private String additionalInfo;
+
+    @JsonProperty("modifiedDate")
     private LocalDateTime lastModifiedDate;
+    private String modificationReason;
 
     private List<AdminOrderItemDto> orderItems;
     private int totalAmount;

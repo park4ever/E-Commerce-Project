@@ -3,6 +3,8 @@ package platform.ecommerce.entity;
 import jakarta.persistence.Embeddable;
 import lombok.*;
 
+import java.util.Objects;
+
 @Embeddable
 @Getter
 @Setter

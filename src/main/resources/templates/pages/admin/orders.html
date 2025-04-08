@@ -1,0 +1,62 @@
+<!-- templates/pages/admin/orders.html -->
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.w3.org/1999/xhtml"
+      layout:decorate="~{layout/admin-layout}">
+<head>
+    <title>주문 관리</title>
+    <link rel="stylesheet" th:href="@{/css/admin.css}">
+    <script type="text/javascript" th:src="@{/js/admin/admin-orders.js}" defer></script>
+</head>
+<body>
+<main layout:fragment="content">
+    <div class="container">
+        <h1 class="mt-4">주문 관리</h1>
+
+        <!-- 검색 필드 -->
+        <div class="row mb-3 align-items-center">
+            <div class="col-md-3">
+                <input type="text" id="searchKeyword" class="form-control" placeholder="회원 이름 또는 이메일 검색">
+            </div>
+            <div class="col-md-3">
+                <select id="sortSelect" class="form-select">
+                    <option value="orderDate,desc">주문일 ↓ (최신순)</option>
+                    <option value="orderDate,asc">주문일 ↑ (오래된순)</option>
+                    <option value="memberName,asc">회원 이름 ↑</option>
+                    <option value="memberName,desc">회원 이름 ↓</option>
+                    <option value="orderStatus,asc">주문 상태 ↑</option>
+                    <option value="orderStatus,desc">주문 상태 ↓</option>
+                </select>
+            </div>
+            <div class="col-md-3 text-end">
+                <button class="btn btn-primary" onclick="loadOrders()">검색</button>
+            </div>
+        </div>
+
+        <!-- 주문 목록 테이블 -->
+        <table class="table table-bordered table-hover text-center align-middle">
+            <thead class="table-light">
+            <tr>
+                <th>ID</th>
+                <th>주문 상품</th>
+                <th>총 수량</th>
+                <th>회원 이름</th>
+                <th>주문일</th>
+                <th>상태</th>
+                <th>총 금액</th>
+                <th>결제 여부</th>
+                <th>관리</th>
+            </tr>
+            </thead>
+            <tbody id="orders-table-body">
+            <!-- JS로 동적 생성 -->
+            </tbody>
+        </table>
+
+        <!-- 페이지네이션 -->
+        <nav id="pagination-container" class="d-flex justify-content-center mt-4">
+            <!-- JS로 생성 -->
+        </nav>
+    </div>
+</main>
+</body>
+</html>

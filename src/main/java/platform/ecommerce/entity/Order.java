@@ -50,7 +50,6 @@ public class Order extends BaseTimeEntity {
 
     private boolean isPaid = false;
 
-    /* == 연관관계 편의 메서드 == */
     @Builder
     public Order(Member member, LocalDateTime orderDate, OrderStatus orderStatus, List<OrderItem> orderItems, Address shippingAddress, PaymentMethod paymentMethod, String modificationReason) {
         this.member = member;
@@ -108,6 +107,15 @@ public class Order extends BaseTimeEntity {
         } else {
             throw new IllegalStateException("배송 준비 중인 경우에만 주소 변경이 가능합니다.");
         }
+    }
+
+    //주소 변경(관리자용)
+    public void updateShippingAddressByAdmin(Address newAddress) {
+        this.shippingAddress = newAddress;
+    }
+
+    public void updateModificationReason(String reason) {
+        this.modificationReason = reason;
     }
 
     //교환 및 환불 요청

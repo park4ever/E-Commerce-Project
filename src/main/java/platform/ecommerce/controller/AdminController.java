@@ -97,7 +97,7 @@ public class AdminController {
         AdminOrderDto order = adminService.getOrderById(id);
         model.addAttribute("order", order);
 
-        return "pages/admin/orderDetail";
+        return "pages/admin/admin-order-detail";
     }
 
     /**

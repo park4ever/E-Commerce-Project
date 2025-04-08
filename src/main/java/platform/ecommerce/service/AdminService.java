@@ -2,10 +2,7 @@ package platform.ecommerce.service;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import platform.ecommerce.dto.admin.AdminItemDto;
-import platform.ecommerce.dto.admin.AdminMemberDto;
-import platform.ecommerce.dto.admin.AdminOrderDto;
-import platform.ecommerce.dto.admin.AdminReviewDto;
+import platform.ecommerce.dto.admin.*;
 import platform.ecommerce.dto.item.ItemPageRequestDto;
 import platform.ecommerce.dto.member.MemberPageRequestDto;
 import platform.ecommerce.entity.OrderItem;
@@ -38,7 +35,7 @@ public interface AdminService {
      */
     Page<AdminOrderDto> getAllOrders(String searchKeyword, Pageable pageable);
     AdminOrderDto getOrderById(Long orderId);
-    void updateOrderStatus(Long orderId, OrderStatus newStatus);
+    void updateOrder(Long orderId, AdminOrderUpdateRequest request);
     void cancelOrder(Long orderId);
 
     /**

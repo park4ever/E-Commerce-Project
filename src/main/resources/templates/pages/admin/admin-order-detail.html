@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.w3.org/1999/xhtml" layout:decorate="~{layout/admin-layout}">
+<head>
+    <meta charset="UTF-8">
+    <title>주문 상세</title>
+    <link rel="stylesheet" th:href="@{/css/admin.css}">
+    <script type="text/javascript" th:src="@{/js/admin/admin-order-detail.js}" defer></script>
+    <!-- Kakao 주소 API 스크립트 -->
+    <script src="https://developers.kakao.com/sdk/js/kakao.js"></script>
+    <script src="https://t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
+    <script src="/js/addressSearch.js"></script>
+</head>
+<body>
+<main layout:fragment="content">
+    <div class="container mt-5">
+        <h2 class="text-center">주문 상세 정보</h2>
+
+        <div class="card shadow-sm p-4 mt-4">
+            <table class="table table-bordered">
+                <tbody>
+                <tr><th>주문 ID</th><td id="order-id"></td></tr>
+                <tr><th>회원 이름</th><td id="member-name"></td></tr>
+                <tr><th>이메일</th><td id="member-email"></td></tr>
+                <tr><th>주문일</th><td id="order-date"></td></tr>
+                <tr><th>주문 상태</th><td id="order-status"></td></tr>
+                <tr><th>결제 수단</th><td id="payment-method"></td></tr>
+                <tr><th>결제 여부</th><td id="is-paid"></td></tr>
+                <tr><th>총 주문 금액</th><td id="total-amount"></td></tr>
+                <tr><th>배송지</th><td id="shipping-address"></td></tr>
+                <tr><th>최종 수정일</th><td id="last-modified"></td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <h4 class="mt-5">주문 상품 목록</h4>
+        <table class="table table-bordered text-center align-middle">
+            <thead class="table-light">
+            <tr>
+                <th>상품 ID</th>
+                <th>이미지</th>
+                <th>상품명</th>
+                <th>가격</th>
+                <th>수량</th>
+                <th>합계</th>
+                <th>관리</th>
+            </tr>
+            </thead>
+            <tbody id="order-items-table-body">
+            <!-- JS로 채워짐 -->
+            </tbody>
+        </table>
+
+        <div class="text-center">
+            <a href="/admin/orders" class="btn btn-secondary">목록으로</a>
+            <button id="editOrderBtn" class="btn btn-primary">주문 수정</button>
+            <button id="cancelOrderBtn" class="btn btn-danger">주문 취소</button>
+        </div>
+
+        <!-- 주문 수정 모달 -->
+        <div id="editOrderModal" class="modal fade" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">주문 수정</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="닫기"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="editOrderForm">
+                            <div class="mb-3">
+                                <label class="form-label">주문 상태</label>
+                                <select id="edit-order-status" class="form-select">
+                                    <option value="PENDING">PENDING</option>
+                                    <option value="PROCESSED">PROCESSED</option>
+                                    <option value="SHIPPED">SHIPPED</option>
+                                    <option value="DELIVERED">DELIVERED</option>
+                                    <option value="CANCELLED">CANCELLED</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">배송지</label>
+                                <div class="d-grid gap-2">
+                                    <input type="text" id="zipcode" class="form-control" placeholder="우편번호">
+                                    <input type="text" id="city" class="form-control" placeholder="도시">
+                                    <input type="text" id="street" class="form-control" placeholder="도로명 주소">
+                                    <input type="text" id="additionalInfo" class="form-control" placeholder="상세주소">
+                                    <button type="button" class="btn btn-outline-secondary" onclick="openAddressSearch()">주소 검색</button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary mt-1" onclick="fillCurrentShippingAddress()">기존 배송지 불러오기</button>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">변경 사유</label>
+                                <textarea id="edit-reason" class="form-control" rows="3"></textarea>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">닫기</button>
+                        <button type="button" id="saveOrderBtn" class="btn btn-primary">저장</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+</body>
+</html>

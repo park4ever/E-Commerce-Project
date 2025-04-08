@@ -151,10 +151,26 @@ public class AdminServiceImpl implements AdminService {
         return convertToAdminOrderDto(findEntityById(orderRepository, orderId, "주문"));
     }
 
-    //주문 상태 변경
+    //주문 수정
     @Override
-    public void updateOrderStatus(Long orderId, OrderStatus newStatus) {
-        findEntityById(orderRepository, orderId, "주문").updateStatus(newStatus);
+    public void updateOrder(Long orderId, AdminOrderUpdateRequest request) {
+        Order order = findEntityById(orderRepository, orderId, "주문");
+
+        //상태 변경
+        if (request.getOrderStatus() != null) {
+            order.updateStatus(request.getOrderStatus());
+        }
+
+        //배송지 변경
+        if (request.getShippingAddress() != null && !request.getShippingAddress().isBlank()) {
+            Address newAddress = Address.fromFullAddress(request.getShippingAddress().trim());
+            order.updateShippingAddressByAdmin(newAddress);
+        }
+
+        //상태 변경 사유 입력
+        if (request.getModificationReason() != null && !request.getModificationReason().isBlank()) {
+            order.updateModificationReason(request.getModificationReason());
+        }
     }
 
     //주문 취소
@@ -403,6 +419,8 @@ public class AdminServiceImpl implements AdminService {
                 ))
                 .collect(toList());
 
+        Address address = order.getShippingAddress();
+
         return AdminOrderDto.builder()
                 .id(order.getId())
                 .memberEmail(order.getMember().getEmail())
@@ -410,8 +428,12 @@ public class AdminServiceImpl implements AdminService {
                 .orderDate(order.getOrderDate())
                 .orderStatus(order.getOrderStatus())
                 .paymentMethod(order.getPaymentMethod())
-                .shippingAddress(order.getShippingAddress().toString())
+                .zipcode(address != null ? address.getZipcode() : "")
+                .city(address != null ? address.getCity() : "")
+                .street(address != null ? address.getStreet() : "")
+                .additionalInfo(address != null ? address.getAdditionalInfo() : "")
                 .lastModifiedDate(order.getLastModifiedDate())
+                .modificationReason(order.getModificationReason())
                 .orderItems(orderItems)
                 .totalAmount(order.getTotalPrice())
                 .isPaid(order.isPaid())
