@@ -8,6 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import platform.ecommerce.dto.admin.AdminOrderDto;
 import platform.ecommerce.dto.admin.AdminOrderUpdateRequest;
+import platform.ecommerce.dto.order.OrderPageRequestDto;
 import platform.ecommerce.entity.OrderStatus;
 import platform.ecommerce.service.AdminService;
 
@@ -24,10 +25,8 @@ public class AdminOrderApiController {
      * 주문 목록 조회(검색 및 페이징 포함)
      */
     @GetMapping
-    public ResponseEntity<Page<AdminOrderDto>> getAllOrders(
-            @RequestParam(value = "searchKeyword", required = false) String searchKeyword,
-            @PageableDefault(size = 10, sort = "orderDate", direction = DESC) Pageable pageable) {
-        Page<AdminOrderDto> orders = adminService.getAllOrders(searchKeyword, pageable);
+    public ResponseEntity<Page<AdminOrderDto>> getAllOrders(OrderPageRequestDto requestDto) {
+        Page<AdminOrderDto> orders = adminService.getAllOrders(requestDto);
 
         return ResponseEntity.ok(orders);
     }

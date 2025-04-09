@@ -1,4 +1,3 @@
-<!-- templates/pages/admin/orders.html -->
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.w3.org/1999/xhtml"
       layout:decorate="~{layout/admin-layout}">
@@ -15,16 +14,22 @@
         <!-- 검색 필드 -->
         <div class="row mb-3 align-items-center">
             <div class="col-md-3">
-                <input type="text" id="searchKeyword" class="form-control" placeholder="회원 이름 또는 이메일 검색">
+                <input type="text" id="searchKeyword" class="form-control" placeholder="검색어를 입력하세요.">
+            </div>
+            <div class="col-md-2">
+                <select id="searchField" class="form-select">
+                    <option value="all">전체</option>
+                    <option value="username">회원 이름</option>
+                    <option value="email">이메일</option>
+                    <option value="itemName">상품명</option>
+                </select>
             </div>
             <div class="col-md-3">
                 <select id="sortSelect" class="form-select">
-                    <option value="orderDate,desc">주문일 ↓ (최신순)</option>
-                    <option value="orderDate,asc">주문일 ↑ (오래된순)</option>
-                    <option value="memberName,asc">회원 이름 ↑</option>
-                    <option value="memberName,desc">회원 이름 ↓</option>
-                    <option value="orderStatus,asc">주문 상태 ↑</option>
-                    <option value="orderStatus,desc">주문 상태 ↓</option>
+                    <option value="orderDate,desc">최신순</option>
+                    <option value="orderDate,asc">오래된순</option>
+                    <option value="orderStatus,asc">상태 오름차순</option>
+                    <option value="orderStatus,desc">상태 내림차순</option>
                 </select>
             </div>
             <div class="col-md-3 text-end">
@@ -36,14 +41,14 @@
         <table class="table table-bordered table-hover text-center align-middle">
             <thead class="table-light">
             <tr>
-                <th>ID</th>
+                <th data-sort="id">ID</th>
                 <th>주문 상품</th>
                 <th>총 수량</th>
-                <th>회원 이름</th>
-                <th>주문일</th>
-                <th>상태</th>
+                <th data-sort="member.username">회원 이름</th>
+                <th data-sort="orderDate">주문일</th>
+                <th data-sort="orderStatus">상태</th>
                 <th>총 금액</th>
-                <th>결제 여부</th>
+                <th data-sort="isPaid">결제 여부</th>
                 <th>관리</th>
             </tr>
             </thead>

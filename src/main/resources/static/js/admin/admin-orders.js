@@ -1,24 +1,34 @@
 document.addEventListener("DOMContentLoaded", function () {
+    addSortChangeListener();
+    addHeaderSortListeners();
     loadOrders();
 });
 
 let currentPage = 0;
 const pageSize = 10;
+let currentSortField = "orderDate";
+let currentSortDirection = "desc";
 
 function loadOrders(page = 0) {
     currentPage = page;
 
     const searchKeyword = document.getElementById("searchKeyword")?.value || "";
-    const sortValue = document.getElementById("sortSelect")?.value || "orderDate,desc";
-    const [sortField, sortDirection] = sortValue.split(",");
+    const searchField = document.getElementById("searchField")?.value || "all";
 
-    const url = `/api/admin/orders?searchKeyword=${encodeURIComponent(searchKeyword)}&page=${page}&size=${pageSize}&sort=${sortField},${sortDirection}`;
+    const params = new URLSearchParams({
+        searchKeyword,
+        searchField,
+        page,
+        size: pageSize,
+        sortBy: `${currentSortField},${currentSortDirection}`,
+    });
 
-    fetch(url)
+    fetch(`/api/admin/orders?${params.toString()}`)
         .then(response => response.json())
         .then(data => {
             renderOrders(data.content);
             renderPagination(data.totalPages, data.number);
+            updateHeaderSortIndicators();
         })
         .catch(error => console.error("주문 목록 로딩 실패:", error));
 }
@@ -38,8 +48,6 @@ function renderOrders(orders) {
         const orderItems = order.orderItems;
         const totalQuantity = orderItems.reduce((sum, item) => sum + item.count, 0);
         const allItemNames = orderItems.map(item => item.itemName).join(", ");
-
-        // 대표 상품명 요약 방식 적용
         const itemSummary = (orderItems.length === 1)
             ? orderItems[0].itemName
             : `${orderItems[0].itemName} 외 ${orderItems.length - 1}개`;
@@ -52,7 +60,7 @@ function renderOrders(orders) {
             <td>${formatDate(order.orderDate)}</td>
             <td>${order.orderStatus}</td>
             <td>${order.totalAmount.toLocaleString()}원</td>
-            <td>${order.paid ? '결제 완료' : '미결제'}</td>
+            <td>${order.isPaid ? '결제 완료' : '미결제'}</td>
             <td>
                 <button class="btn btn-sm btn-outline-primary" onclick="goToOrderDetail(${order.id})">상세 보기</button>
             </td>
@@ -82,4 +90,52 @@ function goToOrderDetail(orderId) {
 function formatDate(dateTimeStr) {
     const date = new Date(dateTimeStr);
     return date.toLocaleString("ko-KR");
+}
+
+// 정렬 드롭다운 변경 시 바로 반영
+function addSortChangeListener() {
+    const sortSelect = document.getElementById("sortSelect");
+    if (sortSelect) {
+        sortSelect.addEventListener("change", () => {
+            const [field, dir] = sortSelect.value.split(",");
+            currentSortField = field;
+            currentSortDirection = dir;
+            loadOrders();
+        });
+    }
+}
+
+// 테이블 헤더 클릭 시 정렬
+function addHeaderSortListeners() {
+    const headers = document.querySelectorAll("th[data-sort]");
+    headers.forEach(th => {
+        th.style.cursor = "pointer";
+        th.addEventListener("click", () => {
+            const field = th.dataset.sort;
+
+            if (currentSortField === field) {
+                currentSortDirection = currentSortDirection === "asc" ? "desc" : "asc";
+            } else {
+                currentSortField = field;
+                currentSortDirection = "asc";
+            }
+
+            loadOrders();
+        });
+    });
+}
+
+// 헤더에 정렬 방향 표시 (▲ ▼)
+function updateHeaderSortIndicators() {
+    const headers = document.querySelectorAll("th[data-sort]");
+    headers.forEach(th => {
+        const field = th.dataset.sort;
+        let baseText = th.textContent.replace(/[\u25B2\u25BC]/g, "").trim(); // 기존 ▲▼ 제거
+        if (field === currentSortField) {
+            const arrow = currentSortDirection === "asc" ? " ▲" : " ▼";
+            th.innerHTML = `${baseText}${arrow}`;
+        } else {
+            th.innerHTML = baseText;
+        }
+    });
 }

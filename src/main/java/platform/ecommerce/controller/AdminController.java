@@ -16,6 +16,7 @@ import platform.ecommerce.dto.admin.AdminOrderDto;
 import platform.ecommerce.dto.admin.AdminReviewDto;
 import platform.ecommerce.dto.item.ItemPageRequestDto;
 import platform.ecommerce.dto.member.MemberPageRequestDto;
+import platform.ecommerce.dto.order.OrderPageRequestDto;
 import platform.ecommerce.service.AdminService;
 
 @Controller
@@ -81,9 +82,8 @@ public class AdminController {
      * 주문 목록 조회
      */
     @GetMapping("/orders")
-    public String getAllOrders(@RequestParam(value = "searchKeyword", required = false) String searchKeyword,
-                               Pageable pageable, Model model) {
-        Page<AdminOrderDto> orders = adminService.getAllOrders(searchKeyword, pageable);
+    public String getAllOrders(OrderPageRequestDto requestDto, Model model) {
+        Page<AdminOrderDto> orders = adminService.getAllOrders(requestDto);
         model.addAttribute("orders", orders);
 
         return "pages/admin/orders";

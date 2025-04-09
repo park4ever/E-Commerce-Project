@@ -37,6 +37,7 @@ public class AdminOrderDto {
     private List<AdminOrderItemDto> orderItems;
     private int totalAmount;
 
+    @JsonProperty("isPaid")
     private boolean isPaid;
     private boolean isCancelable;
 }

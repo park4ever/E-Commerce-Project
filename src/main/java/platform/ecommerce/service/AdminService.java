@@ -5,6 +5,7 @@ import org.springframework.data.domain.Pageable;
 import platform.ecommerce.dto.admin.*;
 import platform.ecommerce.dto.item.ItemPageRequestDto;
 import platform.ecommerce.dto.member.MemberPageRequestDto;
+import platform.ecommerce.dto.order.OrderPageRequestDto;
 import platform.ecommerce.entity.OrderItem;
 import platform.ecommerce.entity.OrderStatus;
 
@@ -33,7 +34,7 @@ public interface AdminService {
     /**
      * 주문 관리
      */
-    Page<AdminOrderDto> getAllOrders(String searchKeyword, Pageable pageable);
+    Page<AdminOrderDto> getAllOrders(OrderPageRequestDto requestDto);
     AdminOrderDto getOrderById(Long orderId);
     void updateOrder(Long orderId, AdminOrderUpdateRequest request);
     void cancelOrder(Long orderId);

@@ -13,6 +13,7 @@ import org.springframework.util.StringUtils;
 import platform.ecommerce.dto.admin.*;
 import platform.ecommerce.dto.item.ItemPageRequestDto;
 import platform.ecommerce.dto.member.MemberPageRequestDto;
+import platform.ecommerce.dto.order.OrderPageRequestDto;
 import platform.ecommerce.entity.*;
 import platform.ecommerce.repository.*;
 import platform.ecommerce.service.AdminService;
@@ -138,8 +139,10 @@ public class AdminServiceImpl implements AdminService {
     //주문 목록 조회(검색 및 정렬 포함)
     @Override
     @Transactional(readOnly = true)
-    public Page<AdminOrderDto> getAllOrders(String searchKeyword, Pageable pageable) {
-        Page<Order> orders = orderRepository.searchOrders(searchKeyword, pageable);
+    public Page<AdminOrderDto> getAllOrders(OrderPageRequestDto requestDto) {
+        Pageable pageable = requestDto.toPageable();
+
+        Page<Order> orders = orderRepository.searchOrders(requestDto, pageable);
 
         return orders.map(this::convertToAdminOrderDto);
     }
