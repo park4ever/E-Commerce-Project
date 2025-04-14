@@ -6,6 +6,7 @@ import platform.ecommerce.dto.admin.*;
 import platform.ecommerce.dto.item.ItemPageRequestDto;
 import platform.ecommerce.dto.member.MemberPageRequestDto;
 import platform.ecommerce.dto.order.OrderPageRequestDto;
+import platform.ecommerce.dto.review.ReviewPageRequestDto;
 import platform.ecommerce.entity.OrderItem;
 import platform.ecommerce.entity.OrderStatus;
 
@@ -49,7 +50,7 @@ public interface AdminService {
     /**
      * 리뷰 관리
      */
-    Page<AdminReviewDto> getAllReviews(String searchKeyword, Pageable pageable);
+    Page<AdminReviewDto> getAllReviews(ReviewPageRequestDto requestDto);
     AdminReviewDto getReviewById(Long reviewId);
     void deleteReview(Long reviewId);
     void toggleReviewVisibility(Long reviewId, boolean isVisible);

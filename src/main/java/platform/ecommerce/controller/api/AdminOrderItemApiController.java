@@ -17,8 +17,8 @@ public class AdminOrderItemApiController {
      * 주문 상품 수량 변경
      */
     @PutMapping("/{id}/quantity")
-    public ResponseEntity<Void> updateOrderItemQuantity(@PathVariable Long id,
-                                                        @RequestParam int newQuantity) {
+    public ResponseEntity<Void> updateOrderItemQuantity(@PathVariable("id") Long id,
+                                                        @RequestParam("newQuantity") int newQuantity) {
         adminService.updateOrderItemQuantity(id, newQuantity);
 
         return ResponseEntity.noContent().build();
@@ -28,8 +28,8 @@ public class AdminOrderItemApiController {
      * 주문 상품 가격 변경
      */
     @PutMapping("/{id}/price")
-    public ResponseEntity<Void> updateOrderItemPrice(@PathVariable Long id,
-                                                     @RequestParam int newPrice) {
+    public ResponseEntity<Void> updateOrderItemPrice(@PathVariable("id") Long id,
+                                                     @RequestParam("newPrice") int newPrice) {
         adminService.updateOrderItemPrice(id, newPrice);
 
         return ResponseEntity.noContent().build();
@@ -39,7 +39,7 @@ public class AdminOrderItemApiController {
      * 주문 상품 삭제
      */
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteOrderItem(@PathVariable Long id) {
+    public ResponseEntity<Void> deleteOrderItem(@PathVariable("id") Long id) {
         adminService.deleteOrderItem(id);
 
         return ResponseEntity.noContent().build();

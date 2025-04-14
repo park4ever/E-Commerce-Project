@@ -115,7 +115,7 @@ public class OrderRepositoryImpl implements OrderRepositoryCustom {
 
         //카운트 쿼리
         Long total = Optional.ofNullable(
-                queryFactory.select(order.count())
+                queryFactory.select(order.id.count())
                         .from(order)
                         .where(builder)
                         .fetchOne()

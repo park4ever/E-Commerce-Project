@@ -14,6 +14,7 @@ import platform.ecommerce.dto.admin.*;
 import platform.ecommerce.dto.item.ItemPageRequestDto;
 import platform.ecommerce.dto.member.MemberPageRequestDto;
 import platform.ecommerce.dto.order.OrderPageRequestDto;
+import platform.ecommerce.dto.review.ReviewPageRequestDto;
 import platform.ecommerce.entity.*;
 import platform.ecommerce.repository.*;
 import platform.ecommerce.service.AdminService;
@@ -226,14 +227,20 @@ public class AdminServiceImpl implements AdminService {
             throw new IllegalStateException("배송된 상품은 삭제할 수 없습니다.");
         }
 
-        orderItemRepository.delete(orderItem);
+        orderItem.cancel();
+
+        Order order = orderItem.getOrder();
+        order.getOrderItems().remove(orderItem);    //연관관계 해제
+        orderItemRepository.delete(orderItem);      //명시적 삭제
     }
 
     //리뷰 목록 조회(검색 및 정렬 포함)
     @Override
     @Transactional(readOnly = true)
-    public Page<AdminReviewDto> getAllReviews(String searchKeyword, Pageable pageable) {
-        Page<Review> reviews = reviewRepository.searchReviews(searchKeyword, pageable);
+    public Page<AdminReviewDto> getAllReviews(ReviewPageRequestDto requestDto) {
+        Pageable pageable = requestDto.toPageable();
+
+        Page<Review> reviews = reviewRepository.searchReviews(requestDto, pageable);
 
         return reviews.map(this::convertToAdminReviewDto);
     }
@@ -414,6 +421,7 @@ public class AdminServiceImpl implements AdminService {
     private AdminOrderDto convertToAdminOrderDto(Order order) {
         List<AdminOrderItemDto> orderItems = order.getOrderItems().stream()
                 .map(orderItem -> new AdminOrderItemDto(
+                        orderItem.getId(),
                         orderItem.getItem().getId(),
                         orderItem.getItem().getItemName(),
                         orderItem.getOrderPrice(),
@@ -449,6 +457,7 @@ public class AdminServiceImpl implements AdminService {
         return AdminReviewDto.builder()
                 .id(review.getId())
                 .memberEmail(review.getMember().getEmail())
+                .memberName(review.getMember().getUsername())
                 .itemId(review.getItem().getId())
                 .itemName(review.getItem().getItemName())
                 .content(review.getContent())
@@ -459,19 +468,5 @@ public class AdminServiceImpl implements AdminService {
                 .isVisible(review.isVisible())
                 .adminReply(review.getAdminReply())
                 .build();
-    }
-
-    //회원 정렬 메서드
-    private Sort getSortForMembers(String sortBy) {
-        return "createdDate".equals(sortBy) ? Sort.by(ASC, "createdDate") : Sort.by(ASC, "lastModifiedDate");
-    }
-
-    //상품 정렬 메서드
-    private Sort getSortForItem(String sortBy) {
-        return switch (sortBy) {
-            case "price" -> Sort.by(ASC, "price");
-            case "priceDesc" -> Sort.by(DESC, "price");
-            default -> Sort.by(DESC, "createdDate");
-        };
     }
 }

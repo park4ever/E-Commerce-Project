@@ -9,6 +9,7 @@ import lombok.*;
 @Builder
 public class AdminOrderItemDto {
 
+    private Long orderItemId;
     private Long itemId;
     private String itemName;
     private int orderPrice;
