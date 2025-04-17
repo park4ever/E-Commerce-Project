@@ -31,6 +31,4 @@ public class ItemUpdateDto {
     private String imageUrl; //이미지 URL
 
     private MultipartFile image; //업로드할 새 이미지 파일
-
-//    private Category category; //TODO DELETE
 }

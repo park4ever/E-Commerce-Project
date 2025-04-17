@@ -1,5 +1,6 @@
 package platform.ecommerce.dto.admin;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.*;
 
 import java.time.LocalDateTime;
@@ -23,6 +24,7 @@ public class AdminReviewDto {
     private LocalDateTime createdDate;
     private LocalDateTime lastModifiedDate;
 
+    @JsonProperty("isVisible")
     private boolean isVisible;
     private String adminReply;
 }

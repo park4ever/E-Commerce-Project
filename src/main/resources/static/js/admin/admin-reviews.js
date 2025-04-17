@@ -38,7 +38,7 @@ function renderReviews(reviews) {
     tbody.innerHTML = "";
 
     if (reviews.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="7">등록된 리뷰가 없습니다.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="8">등록된 리뷰가 없습니다.</td></tr>`;
         return;
     }
 
@@ -51,12 +51,20 @@ function renderReviews(reviews) {
             <td>${review.memberName}</td>
             <td>${review.memberEmail}</td>
             <td>${"⭐".repeat(review.rating)}</td>
-            <td>${review.content}</td>
+            <td class="text-truncate" style="max-width: 250px; cursor: pointer;" title="${review.content}" onclick="goToReviewDetail(${review.id})">
+                ${review.content}
+            </td>
             <td>${formatDate(review.createdDate)}</td>
+            <td>
+                <button class="btn btn-sm btn-outline-primary" onclick="goToReviewDetail(${review.id})">상세 보기</button>
+            </td>
         `;
-
         tbody.appendChild(tr);
     });
+}
+
+function goToReviewDetail(reviewId) {
+    window.location.href = `/admin/reviews/${reviewId}`;
 }
 
 function renderPagination(totalPages, currentPage) {
@@ -77,7 +85,6 @@ function formatDate(dateTimeStr) {
     return date.toLocaleString("ko-KR");
 }
 
-// 드롭다운 정렬 옵션 변경 시 적용
 function addSortChangeListener() {
     const sortSelect = document.getElementById("sortSelect");
     if (sortSelect) {
@@ -90,7 +97,6 @@ function addSortChangeListener() {
     }
 }
 
-// 헤더 클릭 정렬
 function addHeaderSortListeners() {
     const headers = document.querySelectorAll("th[data-sort]");
     headers.forEach(th => {
@@ -110,7 +116,6 @@ function addHeaderSortListeners() {
     });
 }
 
-// 헤더에 ▲▼ 표시
 function updateHeaderSortIndicators() {
     const headers = document.querySelectorAll("th[data-sort]");
     headers.forEach(th => {

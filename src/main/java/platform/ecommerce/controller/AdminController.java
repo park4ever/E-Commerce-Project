@@ -120,6 +120,6 @@ public class AdminController {
         AdminReviewDto review = adminService.getReviewById(id);
         model.addAttribute("review", review);
 
-        return "pages/admin/reviewDetail";
+        return "pages/admin/admin-review-detail";
     }
 }

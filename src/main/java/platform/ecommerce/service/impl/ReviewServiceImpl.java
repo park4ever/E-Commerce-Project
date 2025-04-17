@@ -49,14 +49,6 @@ public class ReviewServiceImpl implements ReviewService {
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new EntityNotFoundException("회원을 찾을 수 없습니다."));
 
-        //TODO erase
-        /*Review review = Review.builder()
-                .item(item)
-                .member(member)
-                .content(dto.getContent())
-                .rating(dto.getRating())
-                .build();*/
-
         //createReview 메서드로 리뷰 생성
         Review review = Review.createReview(item, member, dto.getContent(), dto.getRating());
 

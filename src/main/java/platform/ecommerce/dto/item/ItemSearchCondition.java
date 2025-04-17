@@ -14,5 +14,4 @@ public class ItemSearchCondition {
     private Integer minPrice;
     private Integer maxPrice;
     private String sortBy;
-//    private Category category; //TODO DELETE
 }

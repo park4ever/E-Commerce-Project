@@ -60,7 +60,6 @@ public class OrderController {
         }
 
         model.addAttribute("orderSaveRequestDto", orderSaveRequestDto);
-        log.info("✅ OrderController - GET /order/new: {}", orderSaveRequestDto); //TODO DELETE
         model.addAttribute("memberDetails", memberDetails);
 
         log.info("Order 요청 - memberId : {}, orderDate : {}", orderSaveRequestDto.getMemberId(), orderSaveRequestDto.getOrderDate());
