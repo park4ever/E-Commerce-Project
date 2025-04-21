@@ -78,11 +78,11 @@ public class OrderRepositoryImpl implements OrderRepositoryCustom {
             switch (field) {
                 case "username" -> builder.and(order.member.username.containsIgnoreCase(keyword));
                 case "email" -> builder.and(order.member.email.containsIgnoreCase(keyword));
-                case "itemName" -> builder.and(order.orderItems.any().item.itemName.containsIgnoreCase(keyword));
+                case "itemName" -> builder.and(order.orderItems.any().itemOption.item.itemName.containsIgnoreCase(keyword));
                 default -> builder.and(
                         order.member.username.containsIgnoreCase(keyword)
                                 .or(order.member.email.containsIgnoreCase(keyword))
-                                .or(order.orderItems.any().item.itemName.containsIgnoreCase(keyword))
+                                .or(order.orderItems.any().itemOption.item.itemName.containsIgnoreCase(keyword))
                 );
             }
         }

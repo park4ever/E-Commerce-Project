@@ -22,22 +22,26 @@ public class CartItem extends BaseTimeEntity {
     private Cart cart;
 
     @ManyToOne(fetch = LAZY)
-    @JoinColumn(name = "item_id", nullable = false)
-    private Item item;
+    @JoinColumn(name = "item_option_id", nullable = false)
+    private ItemOption itemOption;
 
     @Column(nullable = false)
     private int quantity;
 
+    @Column(nullable = false)
+    private int priceSnapshot;
+
     @Builder
-    public CartItem(Cart cart, Item item, int quantity) {
+    public CartItem(Cart cart, ItemOption itemOption, int quantity, int priceSnapshot) {
         this.cart = cart;
-        this.item = item;
+        this.itemOption = itemOption;
         this.quantity = quantity;
+        this.priceSnapshot = priceSnapshot;
     }
 
     //상품 가격 * 수량 계산
     public int getTotalPrice() {
-        return this.item.getPrice() * this.quantity;
+        return this.priceSnapshot * this.quantity;
     }
 
     //장바구니에서 수량 증가
@@ -67,13 +71,11 @@ public class CartItem extends BaseTimeEntity {
         this.quantity = newQuantity;
     }
 
-    //Cart와 연관관계 설정을 위한 메서드
+    //Cart 연관관계 설정
     public void associateCart(Cart cart) {
         this.cart = cart;
-    }
-
-    //Cart와 연관관계 해제를 위한 메서드
-    public void disassociateCart() {
-        this.cart = null;
+        if (!cart.getCartItems().contains(this)) {
+            cart.getCartItems().add(this);
+        }
     }
 }

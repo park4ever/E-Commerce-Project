@@ -15,10 +15,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.util.StringUtils;
 import platform.ecommerce.dto.item.ItemPageRequestDto;
 import platform.ecommerce.dto.item.ItemSearchCondition;
-import platform.ecommerce.entity.Item;
-import platform.ecommerce.entity.QItem;
-import platform.ecommerce.entity.QOrderItem;
-import platform.ecommerce.entity.QReview;
+import platform.ecommerce.entity.*;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -26,6 +23,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static platform.ecommerce.entity.QItem.*;
+import static platform.ecommerce.entity.QItemOption.*;
 import static platform.ecommerce.entity.QOrderItem.orderItem;
 import static platform.ecommerce.entity.QReview.review;
 
@@ -55,6 +53,8 @@ public class ItemRepositoryImpl implements ItemRepositoryCustom {
         //기본 SELECT 쿼리 생성(상품 리스트 가져오기)
         List<Item> items = queryFactory
                 .selectFrom(item)
+                .leftJoin(item.itemOptions, itemOption).fetchJoin()
+                .distinct()
                 .where(builder)
                 .orderBy(getSortOrder(cond))
                 .offset(pageable.getOffset())
@@ -83,16 +83,13 @@ public class ItemRepositoryImpl implements ItemRepositoryCustom {
         if ("all".equals(field)) {
             builder.or(item.itemName.containsIgnoreCase(keyword))
                     .or(item.description.containsIgnoreCase(keyword))
-                    .or(item.price.stringValue().containsIgnoreCase(keyword))
-                    .or(item.stockQuantity.stringValue().containsIgnoreCase(keyword));
+                    .or(item.price.stringValue().containsIgnoreCase(keyword));
         } else if ("itemName".equals(field)) {
             builder.and(item.itemName.containsIgnoreCase(keyword));
         } else if ("description".equals(field)) {
             builder.and(item.description.containsIgnoreCase(keyword));
         } else if ("price".equals(field)) {
             builder.and(item.price.stringValue().containsIgnoreCase(keyword));
-        } else if ("stockQuantity".equals(field)) {
-            builder.and(item.stockQuantity.stringValue().containsIgnoreCase(keyword));
         }
 
         // 가격 범위 조건 처리
@@ -102,15 +99,6 @@ public class ItemRepositoryImpl implements ItemRepositoryCustom {
             if (priceMin >= 0 && priceMax >= 0 && priceMin <= priceMax) {
                 builder.and(item.price.between(priceMin, priceMax));
              }
-        }
-
-        // 재고 범위 조건 처리
-        Integer stockMin = requestDto.getStockMin();
-        Integer stockMax = requestDto.getStockMax();
-        if (stockMin != null && stockMax != null) {
-            if (stockMin >= 0 && stockMax >= 0 && stockMin <= stockMax) {
-                builder.and(item.stockQuantity.between(stockMin, stockMax));
-            }
         }
 
         // 정렬 조건 처리
@@ -152,7 +140,7 @@ public class ItemRepositoryImpl implements ItemRepositoryCustom {
         Integer totalSales = queryFactory
                 .select(orderItem.count.sum())
                 .from(orderItem)
-                .where(orderItem.item.id.eq(itemId))
+                .where(orderItem.itemOption.item.id.eq(itemId))
                 .fetchOne();
 
         return totalSales != null ? totalSales : 0;

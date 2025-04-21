@@ -31,10 +31,12 @@ public class QCartItem extends EntityPathBase<CartItem> {
 
     public final NumberPath<Long> id = createNumber("id", Long.class);
 
-    public final QItem item;
+    public final QItemOption itemOption;
 
     //inherited
     public final DateTimePath<java.time.LocalDateTime> lastModifiedDate = _super.lastModifiedDate;
+
+    public final NumberPath<Integer> priceSnapshot = createNumber("priceSnapshot", Integer.class);
 
     public final NumberPath<Integer> quantity = createNumber("quantity", Integer.class);
 
@@ -57,7 +59,7 @@ public class QCartItem extends EntityPathBase<CartItem> {
     public QCartItem(Class<? extends CartItem> type, PathMetadata metadata, PathInits inits) {
         super(type, metadata, inits);
         this.cart = inits.isInitialized("cart") ? new QCart(forProperty("cart"), inits.get("cart")) : null;
-        this.item = inits.isInitialized("item") ? new QItem(forProperty("item")) : null;
+        this.itemOption = inits.isInitialized("itemOption") ? new QItemOption(forProperty("itemOption"), inits.get("itemOption")) : null;
     }
 
 }

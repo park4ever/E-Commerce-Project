@@ -6,6 +6,8 @@ import lombok.Data;
 import org.springframework.web.multipart.MultipartFile;
 import platform.ecommerce.entity.Category;
 
+import java.util.List;
+
 @Data
 public class ItemResponseDto {
 
@@ -13,21 +15,20 @@ public class ItemResponseDto {
     private String itemName;
     private String description;
     private Integer price;
-    private Integer stockQuantity;
     private String imageUrl;
+    private Double averageRating;
 
-    private Double averageRating; //평균 별점 추가
-
-//    private Category category;
+    private List<ItemOptionDto> options;
 
     @Builder
-    public ItemResponseDto(Long id, String itemName, String description, Integer price, Integer stockQuantity, String imageUrl) {
+    public ItemResponseDto(Long id, String itemName, String description, Integer price,
+                           String imageUrl, Double averageRating, List<ItemOptionDto> options) {
         this.id = id;
         this.itemName = itemName;
         this.description = description;
         this.price = price;
-        this.stockQuantity = stockQuantity;
         this.imageUrl = imageUrl;
-//        this.category = category;
+        this.averageRating = averageRating;
+        this.options = options;
     }
 }

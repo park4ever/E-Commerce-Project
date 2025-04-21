@@ -19,8 +19,6 @@ import platform.ecommerce.service.CartService;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
 
 import static java.util.stream.Collectors.*;
 import static platform.ecommerce.entity.PaymentMethod.*;
@@ -39,13 +37,12 @@ public class CartServiceImpl implements CartService {
 
     @Override
     public void addItemToCart(Long memberId, Long itemId, int quantity) {
-        log.info("Adding item to cart : memberId = {}, itemId = {}, quantity = {}", memberId, itemId, quantity);
+
         //회원 조회
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new UsernameNotFoundException("회원을 찾을 수 없습니다."));
-        log.info("Member found : {}", member);
 
-        //장바구니 조회, 없으면 생성
+        //장바구니 조회(없으면 생성)
         Cart cart = cartRepository.findByMemberId(memberId)
                 .orElseGet(() -> {
                     Cart newCart = Cart.builder()
@@ -54,56 +51,53 @@ public class CartServiceImpl implements CartService {
                             .build();
                     return cartRepository.save(newCart);
                 });
-        log.info("Cart found or created : {}", cart);
 
-        //장바구니에 상품 조회, 없으면 추가
-        CartItem cartItem = cartItemRepository.findByCartIdAndItemId(cart.getId(), itemId);
+        //상품 조회
+        Item item = itemRepository.findById(itemId)
+                .orElseThrow(() -> new IllegalArgumentException("상품을 찾을 수 없습니다."));
+
+        //장바구니에 해당 상품이 있는지 확인
+        CartItem cartItem = cartItemRepository.findByCartIdAndItemOptionId(cart.getId(), item.getId());
+
         if (cartItem == null) {
-            //장바구니에 해당 상품이 없으면 추가
-            Item item = itemRepository.findById(itemId)
-                    .orElseThrow(() -> new IllegalArgumentException("상품을 찾을 수 없습니다."));
-            log.info("Item found : {}", item);
-
-            validateItemQuantity(quantity);
+            //새로 담는 경우 -> 그대로 검증 후 추가
+            validateQuantity(item, quantity);
 
             cartItem = CartItem.builder()
                     .cart(cart)
                     .item(item)
                     .quantity(quantity)
+                    .priceSnapshot(item.getPrice()) //현재 가격을 snapshot으로 저장
                     .build();
             cartItemRepository.save(cartItem);
-            cart.getCartItems().add(cartItem); //새 아이템을 장바구니에 추가
+            cart.getCartItems().add(cartItem);
         } else {
-            //장바구니에 이미 있는 상품이라면 수량 증가
+            //기존에 있던 상품 -> 총 수량 기준으로 검증
+            int newTotalQuantity = cartItem.getQuantity() + quantity;
+            validateQuantity(item, newTotalQuantity);
+
             cartItem.increaseQuantity(quantity);
         }
-
-        log.info("Cart updated : {}", cart);
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<CartItemDto> getCartItems(Long memberId) {
-        log.info("Fetching cart for member ID : {}", memberId);
-        Cart cart = cartRepository.findByMemberId(memberId)
-                .orElse(null);
+        Cart cart = cartRepository.findByMemberId(memberId).orElse(null);
 
         if (cart == null) {
-            log.warn("Cart not found for member ID : {}", memberId);
             return new ArrayList<>(); //장바구니가 없을 경우 빈 리스트 반환
         }
 
-        log.info("Found cart : {}", cart);
-
         return cart.getCartItems().stream()
+                .filter(cartItem -> isItemDisplayable(cartItem.getItem()))
                 .map(cartItem -> new CartItemDto(
                         cartItem.getItem().getId(),
                         cartItem.getItem().getItemName(),
-                        cartItem.getItem().getPrice(),
+                        cartItem.getPriceSnapshot(),
                         cartItem.getQuantity(),
                         cartItem.getItem().getImageUrl()
-                ))
-                .collect(toList());
+                )).collect(toList());
     }
 
     @Override
@@ -147,7 +141,7 @@ public class CartServiceImpl implements CartService {
                 .map(cartItem -> new CartItemDto(
                         cartItem.getItem().getId(),
                         cartItem.getItem().getItemName(),
-                        cartItem.getItem().getPrice(),
+                        cartItem.getPriceSnapshot(),
                         cartItem.getQuantity(),
                         cartItem.getItem().getImageUrl()))
                 .collect(toList());
@@ -158,7 +152,6 @@ public class CartServiceImpl implements CartService {
         Cart cart = getCartByMemberId(memberId);
 
         if (cart.getCartItems().isEmpty()) {
-            log.warn("Cart is empty for member ID : {}", memberId);
             return createEmptyOrder(memberId);
         }
 
@@ -169,19 +162,11 @@ public class CartServiceImpl implements CartService {
     }
 
     @Override
-    public void clearCartAfterOrder(Long memberId) {
-        log.info("Clearing cart for member ID : {}", memberId);
-        clearCart(memberId);
-    }
-
-    @Override
     public void clearCart(Long memberId) {
-        log.info("Clearing cart for member ID : {}", memberId);
         Cart cart = cartRepository.findByMemberId(memberId)
                 .orElse(null);
 
         if (cart == null) {
-            log.warn("Cart not found for member ID : {}", memberId);
             return;
         }
 
@@ -190,18 +175,33 @@ public class CartServiceImpl implements CartService {
 
         em.flush();
         em.clear();
-
-        log.info("Cart cleared successfully!");
     }
 
     @Override
     @Transactional(readOnly = true)
     public int getCartItemCount(Long memberId) {
-        /*Cart cart = cartRepository.findByMemberId(memberId).orElseThrow(() -> new UsernameNotFoundException("회원을 찾을 수 없습니다."));
-        return (cart != null) ? cart.getCartItems().size() : 0;*/
         return cartRepository.findByMemberId(memberId)
                 .map(cart -> cart.getCartItems().size())
                 .orElse(0); //예외 대신 기본값 0을 반환
+    }
+
+    @Override
+    public void removeOrderedItemsFromCart(Long memberId, List<Long> orderedItemIds) {
+        Cart cart = cartRepository.findByMemberId(memberId).orElse(null);
+
+        if (cart == null) {
+            return;
+        }
+
+        List<CartItem> toRemove = cart.getCartItems().stream()
+                .filter(cartItem -> orderedItemIds.contains(cartItem.getItem().getId()))
+                .toList();
+
+        toRemove.forEach(cart::removeItem);
+    }
+
+    private boolean isItemDisplayable(Item item) {
+        return item != null && item.isAvailable() && item.getStockQuantity() > 0;
     }
 
     private OrderSaveRequestDto createEmptyOrder(Long memberId) {
@@ -235,7 +235,7 @@ public class CartServiceImpl implements CartService {
         return new OrderItemDto(
                 cartItem.getItem().getId(),
                 cartItem.getItem().getItemName(),
-                cartItem.getItem().getPrice(),
+                cartItem.getPriceSnapshot(),
                 cartItem.getQuantity(),
                 cartItem.getItem().getImageUrl(),
                 cartItem.getTotalPrice()
@@ -247,9 +247,12 @@ public class CartServiceImpl implements CartService {
                 .orElseThrow(() -> new IllegalStateException("장바구니를 찾을 수 없습니다. 먼저 상품을 추가하세요."));
     }
 
-    private void validateItemQuantity(int quantity) {
-        if (quantity <= 0) {
+    private void validateQuantity(Item item, int requestedQuantity) {
+        if (requestedQuantity <= 0) {
             throw new IllegalArgumentException("수량은 0보다 커야 합니다.");
+        }
+        if (item.getStockQuantity() < requestedQuantity) {
+            throw new IllegalArgumentException("재고보다 많은 수량을 담을 수 없습니다.");
         }
     }
 
@@ -267,7 +270,7 @@ public class CartServiceImpl implements CartService {
             throw new IllegalArgumentException("장바구니가 존재하지 않습니다.");
         }
 
-        CartItem cartItem = cartItemRepository.findByCartIdAndItemId(cart.getId(), itemId);
+        CartItem cartItem = cartItemRepository.findByCartIdAndItemOptionId(cart.getId(), itemId);
         if (cartItem == null) {
             throw new IllegalArgumentException("장바구니에 해당 상품이 없습니다.");
         }

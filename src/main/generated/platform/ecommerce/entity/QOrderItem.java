@@ -33,7 +33,7 @@ public class QOrderItem extends EntityPathBase<OrderItem> {
 
     public final StringPath imageUrl = createString("imageUrl");
 
-    public final QItem item;
+    public final QItemOption itemOption;
 
     //inherited
     public final DateTimePath<java.time.LocalDateTime> lastModifiedDate = _super.lastModifiedDate;
@@ -60,7 +60,7 @@ public class QOrderItem extends EntityPathBase<OrderItem> {
 
     public QOrderItem(Class<? extends OrderItem> type, PathMetadata metadata, PathInits inits) {
         super(type, metadata, inits);
-        this.item = inits.isInitialized("item") ? new QItem(forProperty("item")) : null;
+        this.itemOption = inits.isInitialized("itemOption") ? new QItemOption(forProperty("itemOption"), inits.get("itemOption")) : null;
         this.order = inits.isInitialized("order") ? new QOrder(forProperty("order"), inits.get("order")) : null;
     }
 

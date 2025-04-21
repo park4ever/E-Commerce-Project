@@ -19,6 +19,8 @@ import platform.ecommerce.entity.Address;
 import platform.ecommerce.entity.OrderStatus;
 import platform.ecommerce.service.*;
 
+import java.util.List;
+
 @Slf4j
 @Controller
 @RequiredArgsConstructor
@@ -35,9 +37,6 @@ public class OrderController {
                             @RequestParam(value = "quantity", required = false) Integer quantity,
                             @RequestParam(value = "fromCart", required = false, defaultValue = "false") boolean fromCart,
                             Model model, Authentication authentication) {
-
-        log.info("itemId : {}, quantity : {}, fromCart : {}", itemId, quantity, fromCart);
-
         //사용자 정보 가져오기
         UserDetails userDetails = (UserDetails) authentication.getPrincipal();
         MemberResponseDto member = memberService.findMember(userDetails.getUsername());
@@ -47,22 +46,16 @@ public class OrderController {
 
         if (fromCart) {
             //장바구니 주문인 경우, prepareOrderFromCart() 호출
-            log.info("장바구니 기반 주문");
             orderSaveRequestDto = cartService.prepareOrderFromCart(member.getMemberId());
         } else {
             //단일 상품 주문인 경우
-            log.info("단일 상품 주문");
             ItemResponseDto item = itemService.findItem(itemId);
-            log.info("상품 정보 - itemId : {}, iteName : {}, imageUrl : {}", item.getId(), item.getItemName(), item.getImageUrl());
             model.addAttribute("item", item);
-
             orderSaveRequestDto = orderService.createOrderSaveRequestDto(memberDetails, itemId, quantity);
         }
 
         model.addAttribute("orderSaveRequestDto", orderSaveRequestDto);
         model.addAttribute("memberDetails", memberDetails);
-
-        log.info("Order 요청 - memberId : {}, orderDate : {}", orderSaveRequestDto.getMemberId(), orderSaveRequestDto.getOrderDate());
 
         return "/pages/order/orderForm";
     }
@@ -70,10 +63,8 @@ public class OrderController {
     @PostMapping("/new")
     public String createOrder(@Valid @ModelAttribute("orderSaveRequestDto") OrderSaveRequestDto orderSaveRequestDto,
                               BindingResult bindingResult, Authentication authentication) {
-        log.info("✅ 주문 생성 요청: orderSaveRequestDto = {}", orderSaveRequestDto);
-
         if (bindingResult.hasErrors()) {
-            log.error("🚨 주문 데이터 검증 실패: {}", bindingResult.getAllErrors());
+            log.error("주문 데이터 검증 실패: {}", bindingResult.getAllErrors());
             return "/pages/order/orderForm";
         }
 
@@ -82,20 +73,24 @@ public class OrderController {
 
         //장바구니에서의 주문인지 확인
         if (orderSaveRequestDto.isFromCart()) {
-            log.info("🛒 장바구니 기반 주문입니다! orderSaveRequestDto를 장바구니 정보로 업데이트합니다.");
             orderSaveRequestDto = cartService.prepareOrderFromCart(member.getMemberId());
         } else {
             //단일 상품 주문의 경우 'memberId'가 없으면 추가
             if (orderSaveRequestDto.getMemberId() == null) {
-                log.warn("🚨 orderSaveRequestDto에 memberId가 없습니다! Authentication에서 가져옵니다.");
                 orderSaveRequestDto.setMemberId(member.getMemberId());
             }
         }
 
-        log.info("✅ 최종 orderSaveRequestDto: {}", orderSaveRequestDto);
-
         Long orderId = orderService.createOrder(orderSaveRequestDto);
-        log.info("✅ 주문 완료 - 주문 ID: {}", orderId);
+
+        //주문한 상품만 장바구니에서 제거
+        if (orderSaveRequestDto.isFromCart()) {
+            List<Long> orderedItemIds = orderSaveRequestDto.getOrderItems().stream()
+                    .map(OrderItemDto::getItemId)
+                    .toList();
+
+            cartService.removeOrderedItemsFromCart(member.getMemberId(), orderedItemIds);
+        }
 
         return "redirect:/order/success";
     }

@@ -21,9 +21,9 @@ public interface CartService {
 
     OrderSaveRequestDto prepareOrderFromCart(Long memberId);
 
-    void clearCartAfterOrder(Long memberId);
-
     void clearCart(Long memberId);
 
     int getCartItemCount(Long memberId);
+
+    void removeOrderedItemsFromCart(Long memberId, List<Long> orderedItemIds);
 }

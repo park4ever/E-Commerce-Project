@@ -11,7 +11,7 @@ import java.util.List;
 
 public interface ItemService {
 
-    Long saveItem(ItemSaveRequestDto itemSaveRequestDto);
+    Long saveItem(ItemSaveRequestDto saveRequestDto);
 
     List<ItemResponseDto> findItems();
 
@@ -19,7 +19,7 @@ public interface ItemService {
 
     ItemResponseDto findItem(Long id);
 
-    void updateItem(Long id, ItemUpdateDto itemUpdateDto);
+    void updateItem(Long id, ItemUpdateDto updateDto);
 
-    ItemUpdateDto convertToUpdateDto(ItemResponseDto itemResponseDto);
+    ItemUpdateDto convertToUpdateDto(ItemResponseDto responseDto);
 }

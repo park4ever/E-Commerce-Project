@@ -22,7 +22,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -57,7 +56,7 @@ public class ReviewServiceImpl implements ReviewService {
             review.updateImageUrl(imageUrl);
         }
 
-        OrderItem orderItem = orderItemRepository.findByOrderIdAndItemId(dto.getOrderId(), dto.getItemId())
+        OrderItem orderItem = orderItemRepository.findByOrderIdAndItemOptionId(dto.getOrderId(), dto.getItemId())
                 .orElseThrow(() -> new EntityNotFoundException("주문 상품을 찾을 수 없습니다."));
         orderItem.getOrder().updateStatus(COMPLETED);
         orderItemRepository.save(orderItem);

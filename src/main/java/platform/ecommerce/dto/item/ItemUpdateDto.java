@@ -10,6 +10,8 @@ import lombok.NoArgsConstructor;
 import org.springframework.web.multipart.MultipartFile;
 import platform.ecommerce.entity.Category;
 
+import java.util.List;
+
 @Data
 @Builder
 @NoArgsConstructor
@@ -25,10 +27,9 @@ public class ItemUpdateDto {
     @Min(value = 0, message = "가격은 0보다 커야 합니다.")
     private Integer price;
 
-    @Min(value = 0, message = "상품 재고 수량은 0보다 커야 합니다.")
-    private Integer stockQuantity;
-
     private String imageUrl; //이미지 URL
 
     private MultipartFile image; //업로드할 새 이미지 파일
+
+    private List<ItemOptionDto> options;
 }

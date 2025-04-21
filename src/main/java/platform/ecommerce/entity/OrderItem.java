@@ -19,8 +19,8 @@ public class OrderItem extends  BaseTimeEntity {
     private Long id;
 
     @ManyToOne(fetch = LAZY)
-    @JoinColumn(name = "item_id")
-    private Item item;
+    @JoinColumn(name = "item_option_id")
+    private ItemOption itemOption;
 
     @JsonIgnore
     @ManyToOne(fetch = LAZY)
@@ -32,11 +32,11 @@ public class OrderItem extends  BaseTimeEntity {
     private int count;
 
     @Column(name = "image_url")
-    private String imageUrl; //이미지 경로
+    private String imageUrl;
 
     @Builder
-    public OrderItem(Item item, int orderPrice, int count, Order order, String imageUrl) {
-        this.item = item;
+    public OrderItem(ItemOption itemOption, int orderPrice, int count, Order order, String imageUrl) {
+        this.itemOption = itemOption;
         this.orderPrice = orderPrice;
         this.count = count;
         if (order != null) {
@@ -57,7 +57,7 @@ public class OrderItem extends  BaseTimeEntity {
             throw new IllegalStateException("이미 배송된 상품은 취소할 수 없습니다.");
         }
 
-        getItem().addStock(count);
+        itemOption.addStock(count);
     }
 
     public int getTotalPrice() {
@@ -69,9 +69,9 @@ public class OrderItem extends  BaseTimeEntity {
         this.count = newQuantity;
 
         if (quantityDifference > 0) {
-            item.removeStock(quantityDifference);
+            itemOption.removeStock(quantityDifference);
         } else {
-            item.addStock(-quantityDifference);
+            itemOption.addStock(-quantityDifference);
         }
     }
 

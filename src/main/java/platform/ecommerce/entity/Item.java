@@ -31,8 +31,6 @@ public class Item extends BaseTimeEntity {
     @Column(nullable = false)
     private int price;
 
-    private int stockQuantity;
-
     @Column(name = "image_url")
     private String imageUrl;
 
@@ -40,48 +38,33 @@ public class Item extends BaseTimeEntity {
     @BatchSize(size = 100)
     private List<Review> reviews = new ArrayList<>();
 
+    @OneToMany(mappedBy = "item", cascade = ALL, orphanRemoval = true)
+    private List<ItemOption> itemOptions = new ArrayList<>();
+
     @Column(nullable = false)
     private boolean isAvailable = true; //상품 활성화 여부
 
-    public void addStock(int quantity) {
-        this.stockQuantity += quantity;
-        this.isAvailable = this.stockQuantity > 0; //재고가 추가되면 활성화
-    }
-
-    public void removeStock(int quantity) {
-        int restStock = this.stockQuantity - quantity;
-        if (restStock < 0) {
-            throw new NotEnoughStockException("재고가 0 보다 작을 수 없습니다.");
-        }
-        this.stockQuantity = restStock;
-        this.isAvailable = restStock > 0; //재고가 0이면 비활성화
-    }
-
-    public boolean isOutOfStock(int count) {
-        return this.stockQuantity < count;
+    public void addItemOption(ItemOption option) {
+        itemOptions.add(option);
+        option.associateItem(this);
     }
 
     public void updateImageUrl(String imageUrl) {
         this.imageUrl = imageUrl;
     }
 
-    public void updateItemDetails(String itemName, String description, int price, int stockQuantity) {
+    public void updateItemDetails(String itemName, String description, int price) {
         this.itemName = itemName;
         this.description = description;
         this.price = price;
-        this.stockQuantity = stockQuantity;
-        this.isAvailable = stockQuantity > 0;
     }
 
     public void deactivate() {
-        this.isAvailable = false; //상품 비활성화
+        this.isAvailable = false;
     }
 
     public void activate() {
-        //재고가 있을 때만 활성화
-        if (this.stockQuantity > 0) {
-            this.isAvailable = true;
-        }
+        this.isAvailable = true;
     }
 
     public void addReview(Review review) {
