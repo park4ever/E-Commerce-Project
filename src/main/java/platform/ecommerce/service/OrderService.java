@@ -7,15 +7,13 @@ import platform.ecommerce.dto.order.OrderModificationDto;
 import platform.ecommerce.dto.order.OrderResponseDto;
 import platform.ecommerce.dto.order.OrderSaveRequestDto;
 import platform.ecommerce.dto.order.OrderSearchCondition;
-import platform.ecommerce.entity.Address;
-import platform.ecommerce.entity.Order;
 import platform.ecommerce.entity.OrderStatus;
 
 import java.util.List;
 
 public interface OrderService {
 
-    Long createOrder(OrderSaveRequestDto orderSaveRequestDto);
+    Long placeOrder(OrderSaveRequestDto requestDto);
 
     List<OrderResponseDto> findOrdersByMemberId(Long memberId);
 
@@ -25,11 +23,11 @@ public interface OrderService {
 
     OrderResponseDto findOrderById(Long orderId);
 
-    OrderSaveRequestDto createOrderSaveRequestDto(MemberDetailsDto member, Long itemId, Integer quantity);
+    OrderSaveRequestDto buildSingleOrderDto(MemberDetailsDto member, Long itemOptionId, Integer quantity);
 
     void updateShippingAddress(OrderModificationDto dto);
 
-    void requestRefundOrExchange(OrderModificationDto dto);
+    void applyRefundOrExchange(OrderModificationDto dto);
 
-    Page<OrderResponseDto> findOrdersWithPageable(OrderSearchCondition cond, Long memberId, Pageable pageable);
+    Page<OrderResponseDto> searchOrders(OrderSearchCondition cond, Long memberId, Pageable pageable);
 }

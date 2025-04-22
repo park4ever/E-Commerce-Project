@@ -13,7 +13,6 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-@Slf4j
 @Getter
 public class OrderResponseDto {
 
@@ -25,25 +24,15 @@ public class OrderResponseDto {
     private PaymentMethod paymentMethod;
 
     public OrderResponseDto(Order order) {
-        this.orderId = order.getId();
-        this.orderDate = order.getOrderDate();
-        this.orderStatus = order.getOrderStatus().toString();
+        orderId = order.getId();
+        orderDate = order.getOrderDate();
+        orderStatus = order.getOrderStatus().toString();
 
-        log.info("Creating OrderResponseDto for order ID : {}", orderId);
-
-        this.orderItems = order.getOrderItems().stream()
-                .map(orderItem -> {
-                    OrderItemDto dto = new OrderItemDto(orderItem);
-                    log.info("OrderItemDto created : {}", dto);
-                    return dto;
-                })
+        orderItems = order.getOrderItems().stream()
+                .map(OrderItemDto::new)
                 .collect(Collectors.toList());
 
-        /*this.orderItems = order.getOrderItems().stream()
-                .map(OrderItemDto::new)
-                .collect(Collectors.toList());*/
-
-        this.shippingAddress = order.getShippingAddress();
-        this.paymentMethod = order.getPaymentMethod();
+        shippingAddress = order.getShippingAddress();
+        paymentMethod = order.getPaymentMethod();
     }
 }

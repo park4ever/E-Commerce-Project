@@ -15,7 +15,6 @@ import platform.ecommerce.dto.item.ItemResponseDto;
 import platform.ecommerce.dto.member.MemberDetailsDto;
 import platform.ecommerce.dto.member.MemberResponseDto;
 import platform.ecommerce.dto.order.*;
-import platform.ecommerce.entity.Address;
 import platform.ecommerce.entity.OrderStatus;
 import platform.ecommerce.service.*;
 
@@ -51,7 +50,7 @@ public class OrderController {
             //단일 상품 주문인 경우
             ItemResponseDto item = itemService.findItem(itemId);
             model.addAttribute("item", item);
-            orderSaveRequestDto = orderService.createOrderSaveRequestDto(memberDetails, itemId, quantity);
+            orderSaveRequestDto = orderService.buildSingleOrderDto(memberDetails, itemId, quantity);
         }
 
         model.addAttribute("orderSaveRequestDto", orderSaveRequestDto);
@@ -81,12 +80,12 @@ public class OrderController {
             }
         }
 
-        Long orderId = orderService.createOrder(orderSaveRequestDto);
+        Long orderId = orderService.placeOrder(orderSaveRequestDto);
 
         //주문한 상품만 장바구니에서 제거
         if (orderSaveRequestDto.isFromCart()) {
             List<Long> orderedItemIds = orderSaveRequestDto.getOrderItems().stream()
-                    .map(OrderItemDto::getItemId)
+                    .map(OrderItemDto::getItemOptionId)
                     .toList();
 
             cartService.removeOrderedItemsFromCart(member.getMemberId(), orderedItemIds);
@@ -103,7 +102,7 @@ public class OrderController {
         UserDetails userDetails = (UserDetails) authentication.getPrincipal();
         MemberResponseDto member = memberService.findMember(userDetails.getUsername());
 
-        Page<OrderResponseDto> orders = orderService.findOrdersWithPageable(searchCondition, member.getMemberId(), pageable);
+        Page<OrderResponseDto> orders = orderService.searchOrders(searchCondition, member.getMemberId(), pageable);
 
         model.addAttribute("orders", orders);
         model.addAttribute("searchCondition", searchCondition);
@@ -185,7 +184,7 @@ public class OrderController {
             return "/pages/order/requestRefundOrExchangeForm";
         }
 
-        orderService.requestRefundOrExchange(dto);
+        orderService.applyRefundOrExchange(dto);
         return "redirect:/order/detail/" + dto.getOrderId();
     }
 }

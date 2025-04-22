@@ -29,7 +29,6 @@ import static platform.ecommerce.entity.QMember.*;
 import static platform.ecommerce.entity.QOrder.*;
 import static platform.ecommerce.entity.QOrderItem.orderItem;
 
-@Slf4j
 public class OrderRepositoryImpl implements OrderRepositoryCustom {
 
     private final JPAQueryFactory queryFactory;
@@ -98,7 +97,6 @@ public class OrderRepositoryImpl implements OrderRepositoryCustom {
             PathBuilder<Order> pathBuilder = new PathBuilder<>(Order.class, order.getMetadata());
             orderSpecifiers.add(new OrderSpecifier<>(jpaOrder, pathBuilder.getComparable(sortField, Comparable.class)));
         } catch (IllegalArgumentException e) {
-            log.warn("잘못된 정렬 필드명 : {}", sortField);
             orderSpecifiers.add(new OrderSpecifier<>(com.querydsl.core.types.Order.DESC, order.orderDate));
         }
 
