@@ -10,13 +10,13 @@ import java.util.List;
 
 public interface ReviewService {
 
-    Long createReview(Long memberId, ReviewRequestDto dto);
+    Long writeReview(Long memberId, ReviewRequestDto dto);
 
     ReviewResponseDto findReview(Long reviewId);
 
-    List<ReviewResponseDto> findReviewsByItemId(Long itemId);
+    List<ReviewResponseDto> getReviewsForItem(Long itemId);
 
-    Page<ReviewResponseDto> findReviewsWithPageable(ReviewSearchCondition cond, Pageable pageable);
+    Page<ReviewResponseDto> searchReviews(ReviewSearchCondition cond, Pageable pageable);
 
     ReviewResponseDto updateReview(Long reviewId, Long memberId, ReviewRequestDto dto);
 

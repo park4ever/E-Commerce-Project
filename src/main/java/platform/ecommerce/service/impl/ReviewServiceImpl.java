@@ -2,7 +2,6 @@ package platform.ecommerce.service.impl;
 
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -27,14 +26,13 @@ import java.util.stream.Collectors;
 
 import static platform.ecommerce.entity.OrderStatus.*;
 
-@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional
 public class ReviewServiceImpl implements ReviewService {
 
     private final ReviewRepository reviewRepository;
-    private final ItemRepository itemRepository;
+    private final ItemOptionRepository itemOptionRepository;
     private final MemberRepository memberRepository;
     private final OrderItemRepository orderItemRepository;
 
@@ -42,9 +40,11 @@ public class ReviewServiceImpl implements ReviewService {
     private String uploadDir;
 
     @Override
-    public Long createReview(Long memberId, ReviewRequestDto dto) {
-        Item item = itemRepository.findById(dto.getItemId())
-                .orElseThrow(() -> new EntityNotFoundException("상품을 찾을 수 없습니다."));
+    public Long writeReview(Long memberId, ReviewRequestDto dto) {
+        ItemOption option = itemOptionRepository.findById(dto.getItemOptionId())
+                .orElseThrow(() -> new EntityNotFoundException("상품 옵션을 찾을 수 없습니다."));
+        Item item = option.getItem();
+
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new EntityNotFoundException("회원을 찾을 수 없습니다."));
 
@@ -56,10 +56,9 @@ public class ReviewServiceImpl implements ReviewService {
             review.updateImageUrl(imageUrl);
         }
 
-        OrderItem orderItem = orderItemRepository.findByOrderIdAndItemOptionId(dto.getOrderId(), dto.getItemId())
+        OrderItem orderItem = orderItemRepository.findByOrderIdAndItemOptionId(dto.getOrderId(), dto.getItemOptionId())
                 .orElseThrow(() -> new EntityNotFoundException("주문 상품을 찾을 수 없습니다."));
         orderItem.getOrder().updateStatus(COMPLETED);
-        orderItemRepository.save(orderItem);
 
         return reviewRepository.save(review).getId();
     }
@@ -70,47 +69,24 @@ public class ReviewServiceImpl implements ReviewService {
         Review review = reviewRepository.findById(reviewId)
                 .orElseThrow(() -> new EntityNotFoundException("리뷰를 찾을 수 없습니다."));
 
-        return ReviewResponseDto.builder()
-                .reviewId(review.getId())
-                .itemId(review.getItem().getId())
-                .memberId(review.getMember().getId())
-                .memberName(review.getMember().getUsername())
-                .content(review.getContent())
-                .rating(review.getRating())
-                .build();
+        return toDto(review);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<ReviewResponseDto> findReviewsByItemId(Long itemId) {
+    public List<ReviewResponseDto> getReviewsForItem(Long itemId) {
         List<Review> reviews = reviewRepository.findByItemId(itemId);
         return reviews.stream()
-                .map(review -> ReviewResponseDto.builder()
-                        .reviewId(review.getId())
-                        .itemId(review.getItem().getId())
-                        .memberId(review.getMember().getId())
-                        .memberName(review.getMember().getUsername())
-                        .content(review.getContent())
-                        .rating(review.getRating())
-                        .imageUrl("/images/review/" + review.getImageUrl())
-                        .build())
+                .map(this::toDto)
                 .collect(Collectors.toList());
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Page<ReviewResponseDto> findReviewsWithPageable(ReviewSearchCondition cond, Pageable pageable) {
+    public Page<ReviewResponseDto> searchReviews(ReviewSearchCondition cond, Pageable pageable) {
         Page<Review> sortedReviews = reviewRepository.findReviewsWithPageable(cond, pageable);
 
-        return sortedReviews.map(review -> ReviewResponseDto.builder()
-                        .reviewId(review.getId())
-                        .itemId(review.getItem().getId())
-                        .memberId(review.getMember().getId())
-                        .memberName(review.getMember().getUsername())
-                        .content(review.getContent())
-                        .rating(review.getRating())
-                        .imageUrl("/images/review/" + review.getImageUrl())
-                        .build());
+        return sortedReviews.map(this::toDto);
     }
 
     @Override
@@ -130,15 +106,7 @@ public class ReviewServiceImpl implements ReviewService {
             review.updateImageUrl(imageUrl);
         }
 
-        return ReviewResponseDto.builder()
-                .reviewId(review.getId())
-                .itemId(review.getItem().getId())
-                .memberId(memberId)
-                .memberName(review.getMember().getUsername())
-                .content(dto.getContent())
-                .rating(dto.getRating())
-                .imageUrl("/images/review/" + review.getImageUrl())
-                .build();
+        return toDto(review);
     }
 
     @Override
@@ -166,6 +134,18 @@ public class ReviewServiceImpl implements ReviewService {
     @Transactional(readOnly = true)
     public long countReviewsByItemId(Long itemId) {
         return reviewRepository.countByItemId(itemId);
+    }
+
+    private ReviewResponseDto toDto(Review review) {
+        return ReviewResponseDto.builder()
+                .reviewId(review.getId())
+                .itemId(review.getItem().getId())
+                .memberId(review.getMember().getId())
+                .memberName(review.getMember().getUsername())
+                .content(review.getContent())
+                .rating(review.getRating())
+                .imageUrl("/images/review/" + review.getImageUrl())
+                .build();
     }
 
     private String saveImage(MultipartFile imageFile) {

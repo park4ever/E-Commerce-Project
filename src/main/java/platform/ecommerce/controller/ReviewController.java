@@ -1,6 +1,5 @@
 package platform.ecommerce.controller;
 
-import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -10,7 +9,6 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import platform.ecommerce.dto.item.ItemResponseDto;
 import platform.ecommerce.dto.member.MemberResponseDto;
 import platform.ecommerce.dto.review.ReviewParametersDto;
@@ -52,9 +50,9 @@ public class ReviewController {
         UserDetails userDetails = (UserDetails) authentication.getPrincipal();
         MemberResponseDto member = memberService.findMember(userDetails.getUsername());
 
-        reviewService.createReview(member.getMemberId(), dto);
+        reviewService.writeReview(member.getMemberId(), dto);
 
-        return "redirect:/item/" + dto.getItemId();
+        return "redirect:/item/" + dto.getItemOptionId();
     }
 
     @GetMapping("/{reviewId}")
@@ -71,7 +69,7 @@ public class ReviewController {
         dto.setReviewId(reviewId);
         dto.setContent(review.getContent());
         dto.setRating(review.getRating());
-        dto.setItemId(review.getItemId());
+        dto.setItemOptionId(review.getItemId());
         model.addAttribute("reviewRequestDto", dto);
         return "/pages/review/editReviewForm";
     }
@@ -89,7 +87,7 @@ public class ReviewController {
 
         reviewService.updateReview(reviewId, member.getMemberId(), reviewRequestDto);
 
-        return "redirect:/item/" + reviewRequestDto.getItemId();
+        return "redirect:/item/" + reviewRequestDto.getItemOptionId();
     }
 
     @PostMapping("/delete/{reviewId}")

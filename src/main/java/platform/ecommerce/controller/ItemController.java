@@ -5,7 +5,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.web.PageableDefault;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
@@ -23,8 +22,6 @@ import platform.ecommerce.dto.review.ReviewSearchCondition;
 import platform.ecommerce.service.ItemService;
 import platform.ecommerce.service.MemberService;
 import platform.ecommerce.service.ReviewService;
-
-import java.util.List;
 
 @Slf4j
 @Controller
@@ -76,7 +73,7 @@ public class ItemController {
 
         //리뷰 추가 + 필터링
         cond.updateItemId(itemId);
-        Page<ReviewResponseDto> reviews = reviewService.findReviewsWithPageable(cond, pageable);
+        Page<ReviewResponseDto> reviews = reviewService.searchReviews(cond, pageable);
         model.addAttribute("reviews", reviews);
 
         //별점 평균
