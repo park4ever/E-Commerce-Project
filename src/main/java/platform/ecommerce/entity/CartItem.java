@@ -39,6 +39,15 @@ public class CartItem extends BaseTimeEntity {
         this.priceSnapshot = priceSnapshot;
     }
 
+    public static CartItem create(Cart cart, ItemOption option, int quantity) {
+        return CartItem.builder()
+                .cart(cart)
+                .itemOption(option)
+                .quantity(quantity)
+                .priceSnapshot(option.getItem().getPrice())
+                .build();
+    }
+
     //상품 가격 * 수량 계산
     public int getTotalPrice() {
         return this.priceSnapshot * this.quantity;

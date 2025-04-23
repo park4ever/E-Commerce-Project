@@ -37,7 +37,7 @@ public class CartController {
 
         List<CartItemDto> cartItems = cartService.getCartItems(member.getMemberId());
         model.addAttribute("cartItems", cartItems);
-        int cartItemsTotal = cartService.calculateCartTotal(cartItems);
+        int cartItemsTotal = cartService.calculateTotalPrice(cartItems);
         model.addAttribute("cartItemsTotal", cartItemsTotal);
 
         log.debug("장바구니 상품 개수 = {}", cartItems.size());
@@ -47,16 +47,16 @@ public class CartController {
     @PostMapping("/add")
     public String addItemToCart(@ModelAttribute("cartItemDto") CartItemDto cartItemDto,
                                 Authentication authentication) {
-        log.info("itemId = {}, quantity = {}", cartItemDto.getItemId(), cartItemDto.getQuantity());
+        log.info("itemId = {}, quantity = {}", cartItemDto.getItemOptionId(), cartItemDto.getQuantity());
 
-        if (cartItemDto.getItemId() == null || cartItemDto.getQuantity() <= 0) {
+        if (cartItemDto.getItemOptionId() == null || cartItemDto.getQuantity() <= 0) {
             throw new IllegalArgumentException("유효하지 않은 상품 ID 또는 수량입니다.");
         }
 
         UserDetails userDetails = (UserDetails) authentication.getPrincipal();
         Long memberId = memberService.findMember(userDetails.getUsername()).getMemberId();
-        cartService.addItemToCart(memberId, cartItemDto.getItemId(), cartItemDto.getQuantity());
-        return "redirect:/item/" + cartItemDto.getItemId();
+        cartService.addToCart(memberId, cartItemDto.getItemOptionId(), cartItemDto.getQuantity());
+        return "redirect:/item/" + cartItemDto.getItemOptionId();
     }
 
     @PostMapping("/update")
@@ -71,9 +71,9 @@ public class CartController {
 
         UserDetails userDetails = (UserDetails) authentication.getPrincipal();
         Long memberId = memberService.findMember(userDetails.getUsername()).getMemberId();
-        cartService.updateItemQuantity(memberId, request.getItemId(), request.getQuantity());
+        cartService.updateQuantity(memberId, request.getItemId(), request.getQuantity());
 
-        int updatedTotal = cartService.calculateCartTotal(cartService.getCartItems(memberId)); // 총 금액 업데이트
+        int updatedTotal = cartService.calculateTotalPrice(cartService.getCartItems(memberId)); // 총 금액 업데이트
 
         log.info("✅ updateCartItem 성공: 새로운 총 주문 금액 = {}", updatedTotal);
 
@@ -92,7 +92,7 @@ public class CartController {
 
         UserDetails userDetails = (UserDetails) authentication.getPrincipal();
         Long memberId = memberService.findMember(userDetails.getUsername()).getMemberId();
-        cartService.removeItemFromCart(memberId, itemId);
+        cartService.removeFromCart(memberId, itemId);
         return "redirect:/cart";
     }
 

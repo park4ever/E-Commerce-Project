@@ -2,7 +2,6 @@ package platform.ecommerce.dto.cart;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Data
@@ -10,10 +9,11 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class CartItemDto {
 
-    private Long itemId;
+    private Long itemOptionId;
     private String itemName;
-    private Integer itemPrice; // 장바구니에 담긴 상품의 가격
-    private Integer quantity;  // 장바구니에 담긴 수량
+    private String sizeLabel;
+    private Integer itemPrice;      // 장바구니에 담긴 상품의 가격
+    private Integer quantity;       // 장바구니에 담긴 수량
     private String imageUrl;
 
     public int getTotalPrice() {
@@ -21,6 +21,6 @@ public class CartItemDto {
     }
 
     public boolean isValid() {
-        return itemId != null && quantity > 0;
+        return itemOptionId != null && quantity > 0;
     }
 }

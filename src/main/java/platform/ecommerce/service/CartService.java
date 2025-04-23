@@ -7,15 +7,15 @@ import java.util.List;
 
 public interface CartService {
 
-    void addItemToCart(Long memberId, Long itemId, int quantity);
+    void addToCart(Long memberId, Long itemOptionId, int quantity);
 
     List<CartItemDto> getCartItems(Long memberId);
 
-    void updateItemQuantity(Long memberId, Long itemId, int quantity);
+    void updateQuantity(Long memberId, Long itemOptionId, int quantity);
 
-    void removeItemFromCart(Long memberId, Long itemId);
+    void removeFromCart(Long memberId, Long itemOptionId);
 
-    int calculateCartTotal(List<CartItemDto> cartItems);
+    int calculateTotalPrice(List<CartItemDto> cartItems);
 
     List<CartItemDto> findCartItems(Long memberId);
 
@@ -25,5 +25,5 @@ public interface CartService {
 
     int getCartItemCount(Long memberId);
 
-    void removeOrderedItemsFromCart(Long memberId, List<Long> orderedItemIds);
+    void removeOrderedItemsFromCart(Long memberId, List<Long> orderedItemOptionIds);
 }

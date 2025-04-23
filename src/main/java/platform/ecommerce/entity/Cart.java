@@ -27,19 +27,32 @@ public class Cart extends BaseTimeEntity {
     @OneToMany(mappedBy = "cart", cascade = ALL, orphanRemoval = true)
     private List<CartItem> cartItems = new ArrayList<>();
 
-    //장바구니에 상품 추가
+    public static Cart create(Member member) {
+        return Cart.builder()
+                .member(member)
+                .cartItems(new ArrayList<>())
+                .build();
+    }
+
+    public void clearItems() {
+        this.cartItems.clear();
+    }
+
+    public void removeItemsByOptionIds(List<Long> optionIds) {
+        cartItems.removeIf(cartItem ->
+                optionIds.contains(cartItem.getItemOption().getId())
+        );
+    }
+
     public void addItem(CartItem cartItem) {
         this.cartItems.add(cartItem);
         cartItem.associateCart(this); //직접 연관관계 설정 메서드 호출
     }
 
-    //장바구니에서 상품 제거
     public void removeItem(CartItem cartItem) {
         this.cartItems.remove(cartItem);
-        cartItem.disassociateCart(); //직접 연관관계 해제 메서드 호출
     }
 
-    //장바구니 모든 품목 가격 계산
     public int getTotalPrice() {
         return cartItems.stream()
                 .mapToInt(CartItem::getTotalPrice)
