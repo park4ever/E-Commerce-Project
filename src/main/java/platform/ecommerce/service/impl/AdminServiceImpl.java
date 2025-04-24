@@ -113,7 +113,6 @@ public class AdminServiceImpl implements AdminService {
                 updatedItemDto.getItemName(),
                 updatedItemDto.getDescription(),
                 updatedItemDto.getPrice(),
-                updatedItemDto.getStockQuantity()
         );
     }
 

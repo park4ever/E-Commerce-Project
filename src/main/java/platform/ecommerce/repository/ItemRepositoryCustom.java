@@ -10,8 +10,6 @@ import platform.ecommerce.entity.Item;
 import java.util.List;
 
 public interface ItemRepositoryCustom {
-    Page<Item> findItemsByCondition(ItemSearchCondition cond, Pageable pageable);
-
     Page<Item> searchItems(ItemPageRequestDto requestDto, Pageable pageable);
 
     int getTotalSalesByItemId(Long itemId);

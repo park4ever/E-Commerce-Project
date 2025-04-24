@@ -24,7 +24,7 @@ public class TestItemInitializer implements CommandLineRunner {
                     .itemName("테스트용 상품 " + i)
                     .description("테스트용 상품 " + i + "의 상품 설명입니다.")
                     .price(i * 10000)
-                    .stockQuantity(i % 20 + 1)
+//                    .stockQuantity(i % 20 + 1)
                     .imageUrl("/item/default.png") //이렇게 X
                     .isAvailable(true)
                     .build();

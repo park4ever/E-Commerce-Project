@@ -10,6 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import platform.ecommerce.dto.item.*;
 import platform.ecommerce.entity.Item;
+import platform.ecommerce.entity.ItemCategory;
 import platform.ecommerce.entity.ItemOption;
 import platform.ecommerce.repository.ItemRepository;
 import platform.ecommerce.service.ItemService;
@@ -24,7 +25,6 @@ import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -46,6 +46,7 @@ public class ItemServiceImpl implements ItemService {
                 .description(saveRequestDto.getDescription())
                 .price(saveRequestDto.getPrice())
                 .imageUrl(imageUrl)
+                .category(saveRequestDto.getCategory())
                 .isAvailable(true)
                 .build();
 
@@ -73,8 +74,8 @@ public class ItemServiceImpl implements ItemService {
     }
 
     @Override
-    public Page<ItemResponseDto> findItemsWithPageable(ItemSearchCondition cond, Pageable pageable) {
-        return itemRepository.findItemsByCondition(cond, pageable)
+    public Page<ItemResponseDto> findItemsWithPageable(ItemPageRequestDto requestDto, Pageable pageable) {
+        return itemRepository.searchItems(requestDto, pageable)
                 .map(this::mapToResponse);
     }
 
@@ -103,6 +104,7 @@ public class ItemServiceImpl implements ItemService {
                 .description(responseDto.getDescription())
                 .price(responseDto.getPrice())
                 .imageUrl(responseDto.getImageUrl())
+                .category(responseDto.getCategory())
                 .options(responseDto.getOptions())
                 .build();
     }
@@ -122,6 +124,7 @@ public class ItemServiceImpl implements ItemService {
                 .description(item.getDescription())
                 .price(item.getPrice())
                 .imageUrl("/images/" + item.getImageUrl())
+                .category(item.getCategory())
                 .averageRating(null) // TODO: 평균 별점 계산 연동 예정
                 .options(options)
                 .build();
@@ -138,8 +141,9 @@ public class ItemServiceImpl implements ItemService {
         String updatedName = dto.getItemName() != null ? dto.getItemName() : item.getItemName();
         String updatedDescription = dto.getDescription() != null ? dto.getDescription() : item.getDescription();
         int updatedPrice = dto.getPrice() != null ? dto.getPrice() : item.getPrice();
+        ItemCategory updatedCategory = dto.getCategory() != null ? dto.getCategory() : item.getCategory();
 
-        item.updateItemDetails(updatedName, updatedDescription, updatedPrice);
+        item.updateItemDetails(updatedName, updatedDescription, updatedPrice, updatedCategory);
     }
 
     /**

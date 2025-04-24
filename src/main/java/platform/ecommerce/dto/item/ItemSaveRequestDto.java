@@ -8,7 +8,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.web.multipart.MultipartFile;
-import platform.ecommerce.entity.Category;
+import platform.ecommerce.entity.ItemCategory;
 
 import java.util.List;
 
@@ -33,4 +33,7 @@ public class ItemSaveRequestDto {
 
     @NotEmpty(message = "최소 하나 이상의 옵션을 입력해야 합니다.")
     private List<ItemOptionDto> options;
+
+    @NotNull(message = "상품 카테고리는 필수 입력 항목입니다.")
+    private ItemCategory category;
 }

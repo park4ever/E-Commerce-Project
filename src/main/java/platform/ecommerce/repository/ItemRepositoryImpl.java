@@ -14,7 +14,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.util.StringUtils;
 import platform.ecommerce.dto.item.ItemPageRequestDto;
-import platform.ecommerce.dto.item.ItemSearchCondition;
 import platform.ecommerce.entity.*;
 
 import java.time.LocalDateTime;
@@ -37,42 +36,6 @@ public class ItemRepositoryImpl implements ItemRepositoryCustom {
     }
 
     @Override
-    public Page<Item> findItemsByCondition(ItemSearchCondition cond, Pageable pageable) {
-        BooleanBuilder builder = new BooleanBuilder();
-
-        //상품명 검색 조건
-        if (cond.getItemName() != null && !cond.getItemName().isEmpty()) {
-            builder.and(item.itemName.containsIgnoreCase(cond.getItemName()));
-        }
-
-        //가격 범위 검색 조건
-        if (cond.getMinPrice() != null && cond.getMaxPrice() != null) {
-            builder.and(item.price.between(cond.getMinPrice(), cond.getMaxPrice()));
-        }
-
-        //기본 SELECT 쿼리 생성(상품 리스트 가져오기)
-        List<Item> items = queryFactory
-                .selectFrom(item)
-                .leftJoin(item.itemOptions, itemOption).fetchJoin()
-                .distinct()
-                .where(builder)
-                .orderBy(getSortOrder(cond))
-                .offset(pageable.getOffset())
-                .limit(pageable.getPageSize())
-                .fetch();
-
-        //COUNT 쿼리 생성(전체 결과 수 가져오기)
-        Long total = Optional.ofNullable(queryFactory
-                .select(item.id.count())
-                .from(item)
-                .where(builder)
-                .fetchOne()
-        ).orElse(0L);
-
-        return new PageImpl<>(items, pageable, total);
-    }
-
-    @Override
     public Page<Item> searchItems(ItemPageRequestDto requestDto, Pageable pageable) {
         BooleanBuilder builder = new BooleanBuilder();
 
@@ -81,28 +44,36 @@ public class ItemRepositoryImpl implements ItemRepositoryCustom {
         String field = requestDto.getSearchField();
 
         if ("all".equals(field)) {
-            builder.or(item.itemName.containsIgnoreCase(keyword))
-                    .or(item.description.containsIgnoreCase(keyword))
-                    .or(item.price.stringValue().containsIgnoreCase(keyword));
+            builder.andAnyOf(
+                    item.itemName.containsIgnoreCase(keyword),
+                    item.description.containsIgnoreCase(keyword),
+                    item.price.stringValue().containsIgnoreCase(keyword),
+                    item.category.stringValue().containsIgnoreCase(keyword)
+            );
         } else if ("itemName".equals(field)) {
             builder.and(item.itemName.containsIgnoreCase(keyword));
         } else if ("description".equals(field)) {
             builder.and(item.description.containsIgnoreCase(keyword));
         } else if ("price".equals(field)) {
             builder.and(item.price.stringValue().containsIgnoreCase(keyword));
+        } else if ("category".equals(field)) {
+            builder.and(item.category.stringValue().containsIgnoreCase(keyword));
         }
 
         // 가격 범위 조건 처리
         Integer priceMin = requestDto.getPriceMin();
         Integer priceMax = requestDto.getPriceMax();
-        if (priceMin != null && priceMax != null) {
-            if (priceMin >= 0 && priceMax >= 0 && priceMin <= priceMax) {
-                builder.and(item.price.between(priceMin, priceMax));
-             }
+        if (priceMin != null && priceMax != null && priceMin >= 0 && priceMax >= 0 && priceMin <= priceMax) {
+            builder.and(item.price.between(priceMin, priceMax));
+        }
+
+        //카테고리 조건
+        if (requestDto.getCategory() != null) {
+            builder.and(item.category.eq(requestDto.getCategory()));
         }
 
         // 정렬 조건 처리
-        List<OrderSpecifier<Comparable>> orderSpecifiers = new ArrayList<>();
+        List<OrderSpecifier<?>> orderSpecifiers = new ArrayList<>();
         String sortBy = requestDto.getSortField();
         String direction = String.valueOf(requestDto.getSortDirection());
 
@@ -112,7 +83,8 @@ public class ItemRepositoryImpl implements ItemRepositoryCustom {
         try {
             orderSpecifiers.add(new OrderSpecifier<>(order, pathBuilder.getComparable(sortBy, Comparable.class)));
         } catch (IllegalArgumentException e) {
-            log.warn("잘못된 정렬 필드명 : {}", sortBy);
+            log.warn("잘못된 정렬 필드명 : {}, 기본값으로 ID 기준 정렬", sortBy);
+            orderSpecifiers.add(item.id.asc());
         }
 
         // 메인 쿼리
@@ -144,17 +116,5 @@ public class ItemRepositoryImpl implements ItemRepositoryCustom {
                 .fetchOne();
 
         return totalSales != null ? totalSales : 0;
-    }
-
-    //정렬 조건 설정 메서드
-    private OrderSpecifier<?> getSortOrder(ItemSearchCondition cond) {
-        if ("priceAsc".equals(cond.getSortBy())) {
-            return item.price.asc();
-        } else if ("priceDesc".equals(cond.getSortBy())) {
-            return item.price.desc();
-        } else if ("name".equals(cond.getSortBy())) {
-            return item.itemName.asc();
-        }
-        return item.id.asc(); // 기본 정렬 조건
     }
 }

@@ -9,6 +9,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import platform.ecommerce.entity.Item;
+import platform.ecommerce.entity.ItemCategory;
 
 import static org.springframework.data.domain.Sort.*;
 import static org.springframework.data.domain.Sort.Direction.DESC;
@@ -25,6 +26,8 @@ public class ItemPageRequestDto {
     private int size = 10;
     private String sortBy = "createdDate";
     private Direction direction = DESC;
+
+    private ItemCategory category;
 
     @Min(value = 0, message = "가격은 0 이상이어야 합니다.")
     private Integer priceMin;

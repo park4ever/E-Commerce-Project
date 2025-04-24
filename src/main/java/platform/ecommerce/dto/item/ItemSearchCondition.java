@@ -3,7 +3,6 @@ package platform.ecommerce.dto.item;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import platform.ecommerce.entity.Category;
 
 @Data
 @AllArgsConstructor

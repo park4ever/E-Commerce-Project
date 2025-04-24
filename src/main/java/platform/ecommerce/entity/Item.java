@@ -34,6 +34,10 @@ public class Item extends BaseTimeEntity {
     @Column(name = "image_url")
     private String imageUrl;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private ItemCategory category;
+
     @OneToMany(mappedBy = "item", cascade = REMOVE)
     @BatchSize(size = 100)
     private List<Review> reviews = new ArrayList<>();
@@ -53,10 +57,11 @@ public class Item extends BaseTimeEntity {
         this.imageUrl = imageUrl;
     }
 
-    public void updateItemDetails(String itemName, String description, int price) {
+    public void updateItemDetails(String itemName, String description, int price, ItemCategory category) {
         this.itemName = itemName;
         this.description = description;
         this.price = price;
+        this.category = category;
     }
 
     public void deactivate() {

@@ -22,6 +22,8 @@ public class QItem extends EntityPathBase<Item> {
 
     public final QBaseTimeEntity _super = new QBaseTimeEntity(this);
 
+    public final EnumPath<ItemCategory> category = createEnum("category", ItemCategory.class);
+
     //inherited
     public final DateTimePath<java.time.LocalDateTime> createdDate = _super.createdDate;
 
