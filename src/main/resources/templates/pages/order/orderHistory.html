@@ -14,7 +14,7 @@
         <h2>주문 내역</h2>
 
         <!-- 검색 폼 -->
-        <form th:action="@{/order/history}" method="get" th:object="${searchCondition}">
+        <form th:action="@{/order/history}" method="get" th:object="${orderPageRequestDto}">
             <div class="form-group">
                 <label for="startDate">시작 날짜</label>
                 <input type="date" id="startDate" class="form-control" th:field="*{startDate}" />
@@ -55,9 +55,9 @@
         <table class="table mt-4">
             <thead>
             <tr>
-                <th><a th:href="@{/order/history(sortBy='orderId', ascending=${searchCondition.sortBy == 'orderId' ? !searchCondition.ascending : true})}" th:text="#{orderId}">주문 번호</a></th>
-                <th><a th:href="@{/order/history(sortBy='orderDate', ascending=${searchCondition.sortBy == 'orderDate' ? !searchCondition.ascending : true})}" th:text="#{orderDate}">주문 날짜</a></th>
-                <th><a th:href="@{/order/history(sortBy='orderStatus', ascending=${searchCondition.sortBy == 'orderStatus' ? !searchCondition.ascending : true})}" th:text="#{orderStatus}">주문 상태</a></th>
+                <th><a th:href="@{/order/history(sortBy='orderId', ascending=${orderPageRequestDto.sortBy == 'orderId' ? !orderPageRequestDto.ascending : true})}" th:text="#{orderId}">주문 번호</a></th>
+                <th><a th:href="@{/order/history(sortBy='orderDate', ascending=${orderPageRequestDto.sortBy == 'orderDate' ? !orderPageRequestDto.ascending : true})}" th:text="#{orderDate}">주문 날짜</a></th>
+                <th><a th:href="@{/order/history(sortBy='orderStatus', ascending=${orderPageRequestDto.sortBy == 'orderStatus' ? !orderPageRequestDto.ascending : true})}" th:text="#{orderStatus}">주문 상태</a></th>
                 <th>상품 이미지</th>
                 <th>주문 상품</th>
                 <th>주문 수량</th>
@@ -100,17 +100,17 @@
         <div class="pagination mt-4">
             <ul class="pagination">
                 <li class="page-item" th:if="${orders.hasPrevious()}">
-                    <a class="page-link" th:href="@{/order/history(page=${orders.number - 1}, size=${orders.size}, sortBy=${searchCondition.sortBy}, ascending=${searchCondition.ascending})}">
+                    <a class="page-link" th:href="@{/order/history(page=${orders.number - 1}, size=${orders.size}, sortBy=${orderPageRequestDto.sortBy}, ascending=${orderPageRequestDto.ascending})}">
                         이전
                     </a>
                 </li>
                 <li class="page-item" th:each="pageNum : ${#numbers.sequence(0, orders.totalPages - 1)}"
                     th:classappend="${pageNum == orders.number} ? 'active' : ''">
-                    <a class="page-link" th:href="@{/order/history(page=${pageNum}, size=${orders.size}, sortBy=${searchCondition.sortBy}, ascending=${searchCondition.ascending})}"
+                    <a class="page-link" th:href="@{/order/history(page=${pageNum}, size=${orders.size}, sortBy=${orderPageRequestDto.sortBy}, ascending=${orderPageRequestDto.ascending})}"
                        th:text="${pageNum + 1}"></a>
                 </li>
                 <li class="page-item" th:if="${orders.hasNext()}">
-                    <a class="page-link" th:href="@{/order/history(page=${orders.number + 1}, size=${orders.size}, sortBy=${searchCondition.sortBy}, ascending=${searchCondition.ascending})}">
+                    <a class="page-link" th:href="@{/order/history(page=${orders.number + 1}, size=${orders.size}, sortBy=${orderPageRequestDto.sortBy}, ascending=${orderPageRequestDto.ascending})}">
                         다음
                     </a>
                 </li>

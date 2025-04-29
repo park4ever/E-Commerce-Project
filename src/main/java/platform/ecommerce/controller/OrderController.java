@@ -96,16 +96,16 @@ public class OrderController {
 
     @GetMapping("/history")
     public String findOrders(
-            @ModelAttribute("searchCondition") OrderSearchCondition searchCondition, Pageable pageable,
+            @ModelAttribute("orderPageRequestDto") OrderPageRequestDto requestDto, Pageable pageable,
             Model model, Authentication authentication) {
 
         UserDetails userDetails = (UserDetails) authentication.getPrincipal();
         MemberResponseDto member = memberService.findMember(userDetails.getUsername());
 
-        Page<OrderResponseDto> orders = orderService.searchOrders(searchCondition, member.getMemberId(), pageable);
+        Page<OrderResponseDto> orders = orderService.searchOrders(requestDto, pageable);
 
         model.addAttribute("orders", orders);
-        model.addAttribute("searchCondition", searchCondition);
+        model.addAttribute("orderPageRequestDto", requestDto);
         return "/pages/order/orderHistory";
     }
 

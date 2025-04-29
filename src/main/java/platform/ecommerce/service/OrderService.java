@@ -3,10 +3,7 @@ package platform.ecommerce.service;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import platform.ecommerce.dto.member.MemberDetailsDto;
-import platform.ecommerce.dto.order.OrderModificationDto;
-import platform.ecommerce.dto.order.OrderResponseDto;
-import platform.ecommerce.dto.order.OrderSaveRequestDto;
-import platform.ecommerce.dto.order.OrderSearchCondition;
+import platform.ecommerce.dto.order.*;
 import platform.ecommerce.entity.OrderStatus;
 
 import java.util.List;
@@ -29,5 +26,5 @@ public interface OrderService {
 
     void applyRefundOrExchange(OrderModificationDto dto);
 
-    Page<OrderResponseDto> searchOrders(OrderSearchCondition cond, Long memberId, Pageable pageable);
+    Page<OrderResponseDto> searchOrders(OrderPageRequestDto requestDto, Pageable pageable);
 }

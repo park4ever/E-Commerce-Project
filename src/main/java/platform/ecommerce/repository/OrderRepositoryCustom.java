@@ -10,7 +10,5 @@ import platform.ecommerce.entity.Order;
 import java.util.List;
 
 public interface OrderRepositoryCustom {
-    Page<Order> findOrdersWithFilters(OrderSearchCondition cond, Long memberId, Pageable pageable);
-
     Page<Order> searchOrders(OrderPageRequestDto requestDto, Pageable pageable);
 }

@@ -2,9 +2,7 @@ package platform.ecommerce.service.impl;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -126,23 +124,10 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     @Transactional(readOnly = true)
-    public Page<OrderResponseDto> searchOrders(OrderSearchCondition cond, Long memberId, Pageable pageable) {
-        Sort sort = getSort(cond);
-        Pageable pageableWithSort = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), sort);
-
-        Page<Order> orders = orderRepository.findOrdersWithFilters(cond, memberId, pageableWithSort);
+    public Page<OrderResponseDto> searchOrders(OrderPageRequestDto requestDto, Pageable pageable) {
+        Page<Order> orders = orderRepository.searchOrders(requestDto, pageable);
 
         return orders.map(OrderResponseDto::new);
-    }
-
-    private Sort getSort(OrderSearchCondition cond) {
-        return switch (cond.getSortBy()) {
-            case "orderDate" ->
-                    cond.isAscending() ? Sort.by("orderDate").ascending() : Sort.by("orderDate").descending();
-            case "status" ->
-                    cond.isAscending() ? Sort.by("orderStatus").ascending() : Sort.by("orderStatus").descending();
-            default -> Sort.by("id").ascending();
-        };
     }
 
     private Order toOrderEntity(OrderSaveRequestDto orderSaveRequestDto) {
