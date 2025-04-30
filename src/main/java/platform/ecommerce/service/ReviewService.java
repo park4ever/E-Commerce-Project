@@ -2,9 +2,9 @@ package platform.ecommerce.service;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import platform.ecommerce.dto.review.ReviewPageRequestDto;
 import platform.ecommerce.dto.review.ReviewRequestDto;
 import platform.ecommerce.dto.review.ReviewResponseDto;
-import platform.ecommerce.dto.review.ReviewSearchCondition;
 
 import java.util.List;
 
@@ -16,7 +16,7 @@ public interface ReviewService {
 
     List<ReviewResponseDto> getReviewsForItem(Long itemId);
 
-    Page<ReviewResponseDto> searchReviews(ReviewSearchCondition cond, Pageable pageable);
+    Page<ReviewResponseDto> searchReviews(ReviewPageRequestDto requestDto, Pageable pageable);
 
     ReviewResponseDto updateReview(Long reviewId, Long memberId, ReviewRequestDto dto);
 

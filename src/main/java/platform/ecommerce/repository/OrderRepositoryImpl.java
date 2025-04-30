@@ -8,7 +8,6 @@ import jakarta.persistence.EntityManager;
 import org.springframework.data.domain.*;
 import org.springframework.util.StringUtils;
 import platform.ecommerce.dto.order.OrderPageRequestDto;
-import platform.ecommerce.dto.order.OrderSearchCondition;
 import platform.ecommerce.entity.*;
 import platform.ecommerce.entity.Order;
 

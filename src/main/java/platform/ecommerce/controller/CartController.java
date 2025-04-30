@@ -40,15 +40,12 @@ public class CartController {
         int cartItemsTotal = cartService.calculateTotalPrice(cartItems);
         model.addAttribute("cartItemsTotal", cartItemsTotal);
 
-        log.debug("장바구니 상품 개수 = {}", cartItems.size());
-        return "/pages/cart/cartList";
+        return "/pages/cart/cart-list";
     }
 
     @PostMapping("/add")
     public String addItemToCart(@ModelAttribute("cartItemDto") CartItemDto cartItemDto,
                                 Authentication authentication) {
-        log.info("itemId = {}, quantity = {}", cartItemDto.getItemOptionId(), cartItemDto.getQuantity());
-
         if (cartItemDto.getItemOptionId() == null || cartItemDto.getQuantity() <= 0) {
             throw new IllegalArgumentException("유효하지 않은 상품 ID 또는 수량입니다.");
         }
@@ -56,43 +53,39 @@ public class CartController {
         UserDetails userDetails = (UserDetails) authentication.getPrincipal();
         Long memberId = memberService.findMember(userDetails.getUsername()).getMemberId();
         cartService.addToCart(memberId, cartItemDto.getItemOptionId(), cartItemDto.getQuantity());
+
         return "redirect:/item/" + cartItemDto.getItemOptionId();
     }
 
     @PostMapping("/update")
     public ResponseEntity<?> updateCartItem(@RequestBody CartUpdateRequest request,
                                             Authentication authentication) {
-        log.info("✅ updateCartItem 요청: itemId = {}, quantity = {}", request.getItemId(), request.getQuantity());
-
-        if (request.getItemId() == null || request.getQuantity() == null || request.getQuantity() < 1 || request.getQuantity() > 100) {
-            log.error("🚨 updateCartItem: 잘못된 수량 입력! itemId = {}, quantity = {}", request.getItemId(), request.getQuantity());
+        if (request.getCartItemId() == null || request.getQuantity() == null || request.getQuantity() < 1 || request.getQuantity() > 100) {
             return ResponseEntity.badRequest().body("{\"success\": false, \"message\": \"수량은 1~100 사이여야 합니다.\"}");
         }
 
         UserDetails userDetails = (UserDetails) authentication.getPrincipal();
         Long memberId = memberService.findMember(userDetails.getUsername()).getMemberId();
-        cartService.updateQuantity(memberId, request.getItemId(), request.getQuantity());
+
+        cartService.updateQuantity(memberId, request.getCartItemId(), request.getQuantity());
 
         int updatedTotal = cartService.calculateTotalPrice(cartService.getCartItems(memberId)); // 총 금액 업데이트
-
-        log.info("✅ updateCartItem 성공: 새로운 총 주문 금액 = {}", updatedTotal);
 
         return ResponseEntity.ok("{\"success\": true, \"cartTotal\": " + updatedTotal + "}");
     }
 
 
     @PostMapping("/remove")
-    public String removeItemFromCart(@RequestParam("itemId") Long itemId,
+    public String removeItemFromCart(@RequestParam("cartItemId") Long cartItemId,
                                      Authentication authentication) {
-        log.info("itemId = {}", itemId);
-
-        if (itemId == null) {
+        if (cartItemId == null) {
             throw new IllegalArgumentException("유효하지 않은 상품 ID입니다.");
         }
 
         UserDetails userDetails = (UserDetails) authentication.getPrincipal();
         Long memberId = memberService.findMember(userDetails.getUsername()).getMemberId();
-        cartService.removeFromCart(memberId, itemId);
+        cartService.removeFromCart(memberId, cartItemId);
+
         return "redirect:/cart";
     }
 

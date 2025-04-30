@@ -61,17 +61,6 @@ public class CartItem extends BaseTimeEntity {
         this.quantity += amount;
     }
 
-    //장바구니에서 수량 감소
-    public void decreaseQuantity(int decreaseBy) {
-        if (decreaseBy <= 0) {
-            throw new IllegalArgumentException("감소할 수량은 0보다 커야 합니다.");
-        }
-        if (this.quantity - decreaseBy < 0) {
-            throw new IllegalArgumentException("수량이 0보다 작을 수 없습니다.");
-        }
-        this.quantity -= decreaseBy;
-    }
-
     //장바구니에서 수량 설정
     public void updateQuantity(int newQuantity) {
         if (newQuantity <= 0) {

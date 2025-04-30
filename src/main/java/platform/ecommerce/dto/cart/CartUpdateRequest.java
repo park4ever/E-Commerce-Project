@@ -10,8 +10,8 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class CartUpdateRequest {
 
-    @JsonProperty("itemId")
-    private Long itemId;
+    @JsonProperty("cartItemId")
+    private Long cartItemId;
 
     @JsonProperty("quantity")
     private Integer quantity;

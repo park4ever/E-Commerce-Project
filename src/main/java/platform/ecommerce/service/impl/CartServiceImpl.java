@@ -89,18 +89,18 @@ public class CartServiceImpl implements CartService {
     }
 
     @Override
-    public void updateQuantity(Long memberId, Long itemOptionId, int quantity) {
+    public void updateQuantity(Long memberId, Long cartItemId, int quantity) {
         if (quantity <= 0) {
             throw new IllegalArgumentException("수량은 0보다 커야 합니다.");
         }
 
-        CartItem cartItem = getCartItemByOption(memberId, itemOptionId);
+        CartItem cartItem = getCartItem(memberId, cartItemId);
         cartItem.updateQuantity(quantity);
     }
 
     @Override
-    public void removeFromCart(Long memberId, Long itemOptionId) {
-        CartItem cartItem = getCartItemByOption(memberId, itemOptionId);
+    public void removeFromCart(Long memberId, Long cartItemId) {
+        CartItem cartItem = getCartItem(memberId, cartItemId);
         cartItemRepository.delete(cartItem);
     }
 
@@ -225,15 +225,13 @@ public class CartServiceImpl implements CartService {
         }
     }
 
-    private CartItem getCartItemByOption(Long memberId, Long itemOptionId) {
-        Cart cart = cartRepository.findByMemberId(memberId)
-                .orElseThrow(() -> new IllegalArgumentException("장바구니를 찾을 수 없습니다."));
+    private CartItem getCartItem(Long memberId, Long cartItemId) {
+        CartItem cartItem = cartItemRepository.findById(cartItemId)
+                .orElseThrow(() -> new IllegalArgumentException("장바구니 항목을 찾을 수 없습니다."));
 
-        CartItem cartItem = cartItemRepository.findByCartIdAndItemOptionId(cart.getId(), itemOptionId);
-        if (cartItem == null) {
-            throw new IllegalArgumentException("해당 상품이 장바구니에 없습니다.");
+        if (!cartItem.getCart().getMember().getId().equals(memberId)) {
+            throw new IllegalArgumentException("해당 장바구니 항목에 대한 권한이 없습니다.");
         }
-
 
         return cartItem;
     }

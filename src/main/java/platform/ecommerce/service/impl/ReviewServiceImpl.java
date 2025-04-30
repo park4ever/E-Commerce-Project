@@ -8,9 +8,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
+import platform.ecommerce.dto.review.ReviewPageRequestDto;
 import platform.ecommerce.dto.review.ReviewRequestDto;
 import platform.ecommerce.dto.review.ReviewResponseDto;
-import platform.ecommerce.dto.review.ReviewSearchCondition;
 import platform.ecommerce.entity.*;
 import platform.ecommerce.repository.*;
 import platform.ecommerce.service.ReviewService;
@@ -83,8 +83,8 @@ public class ReviewServiceImpl implements ReviewService {
 
     @Override
     @Transactional(readOnly = true)
-    public Page<ReviewResponseDto> searchReviews(ReviewSearchCondition cond, Pageable pageable) {
-        Page<Review> sortedReviews = reviewRepository.findReviewsWithPageable(cond, pageable);
+    public Page<ReviewResponseDto> searchReviews(ReviewPageRequestDto requestDto, Pageable pageable) {
+        Page<Review> sortedReviews = reviewRepository.searchReviews(requestDto, pageable);
 
         return sortedReviews.map(this::toDto);
     }

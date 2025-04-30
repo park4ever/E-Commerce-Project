@@ -12,8 +12,8 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import platform.ecommerce.dto.item.*;
 import platform.ecommerce.dto.member.MemberDetailsDto;
+import platform.ecommerce.dto.review.ReviewPageRequestDto;
 import platform.ecommerce.dto.review.ReviewResponseDto;
-import platform.ecommerce.dto.review.ReviewSearchCondition;
 import platform.ecommerce.service.ItemService;
 import platform.ecommerce.service.MemberService;
 import platform.ecommerce.service.ReviewService;
@@ -57,7 +57,7 @@ public class ItemController {
 
     @GetMapping("/{itemId}")
     public String viewItem(@PathVariable("itemId") Long itemId,
-                           @ModelAttribute("reviewSearchCondition") ReviewSearchCondition cond, Pageable pageable,
+                           @ModelAttribute("reviewPageRequestDto") ReviewPageRequestDto requestDto, Pageable pageable,
                            Model model, Authentication authentication) {
         model.addAttribute("title", "상품 상세 정보");
 
@@ -67,8 +67,7 @@ public class ItemController {
         MemberDetailsDto member = memberService.findMemberDetails(userDetails.getUsername());
 
         //리뷰 관련 데이터
-        cond.updateItemId(itemId);
-        Page<ReviewResponseDto> reviews = reviewService.searchReviews(cond, pageable);
+        Page<ReviewResponseDto> reviews = reviewService.searchReviews(requestDto, pageable);
         double ratingAvg = reviewService.calculateAverageRating(itemId);
         long reviewCount = reviewService.countReviewsByItemId(itemId);
 
@@ -77,7 +76,7 @@ public class ItemController {
         model.addAttribute("viewModel", viewModel);
 
         //리뷰 조건 다시 넣어줌(페이징 등 이슈)
-        model.addAttribute("reviewSearchCondition", cond);
+        model.addAttribute("reviewPageRequestDto", requestDto);
 
         return "/pages/item/item-detail";
     }

@@ -11,9 +11,9 @@ public interface CartService {
 
     List<CartItemDto> getCartItems(Long memberId);
 
-    void updateQuantity(Long memberId, Long itemOptionId, int quantity);
+    void updateQuantity(Long memberId, Long cartItemId, int quantity);
 
-    void removeFromCart(Long memberId, Long itemOptionId);
+    void removeFromCart(Long memberId, Long cartItemId);
 
     int calculateTotalPrice(List<CartItemDto> cartItems);
 
