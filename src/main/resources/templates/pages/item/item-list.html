@@ -81,7 +81,13 @@
             <td th:text="${item.itemName}">상품명</td>
             <td th:text="${item.category}">카테고리</td>
             <td th:text="${item.description}">설명</td>
-            <td th:text="${item.price}">가격</td>
+            <td>
+                <span th:if="${item.discountPrice != null}">
+                    <span style="text-decoration: line-through;" th:text="${item.price} + ' 원'"></span>
+                    <span class="text-danger fw-bold ms-2" th:text="${item.discountPrice} + ' 원'"></span>
+                </span>
+                <span th:if="${item.discountPrice == null}" th:text="${item.price} + ' 원'"></span>
+            </td>
             <td>
                 <a th:href="@{/item/{id}(id=${item.id})}" class="btn btn-sm btn-outline-primary">상세보기</a>
             </td>

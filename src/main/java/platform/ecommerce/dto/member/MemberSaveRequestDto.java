@@ -33,11 +33,8 @@ public class MemberSaveRequestDto {
     @Pattern(regexp = "^\\d{10,11}$", message = "전화번호는 10~11자리 숫자만 입력 가능합니다.")
     private String phoneNumber;
 
-//    @NotBlank(message = "주소는 필수 입력 항목입니다.")
     private Address address;
 
     @DateTimeFormat(pattern = "yyyy-MM-dd")
     private LocalDate dateOfBirth;
-
-    private String defaultShippingAddress;
 }

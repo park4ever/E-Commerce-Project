@@ -1,7 +1,6 @@
 package platform.ecommerce.service.impl;
 
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -103,6 +102,7 @@ public class ItemServiceImpl implements ItemService {
                 .itemName(responseDto.getItemName())
                 .description(responseDto.getDescription())
                 .price(responseDto.getPrice())
+                .discountPrice(responseDto.getDiscountPrice())
                 .imageUrl(responseDto.getImageUrl())
                 .category(responseDto.getCategory())
                 .options(responseDto.getOptions())
@@ -123,6 +123,7 @@ public class ItemServiceImpl implements ItemService {
                 .itemName(item.getItemName())
                 .description(item.getDescription())
                 .price(item.getPrice())
+                .discountPrice(item.getDiscountPrice())
                 .imageUrl("/images/" + item.getImageUrl())
                 .category(item.getCategory())
                 .averageRating(null) // TODO: 평균 별점 계산 연동 예정
@@ -144,6 +145,10 @@ public class ItemServiceImpl implements ItemService {
         ItemCategory updatedCategory = dto.getCategory() != null ? dto.getCategory() : item.getCategory();
 
         item.updateItemDetails(updatedName, updatedDescription, updatedPrice, updatedCategory);
+
+        if (dto.getDiscountPrice() != null) {
+            item.applyDiscountPrice(dto.getDiscountPrice());
+        }
     }
 
     /**

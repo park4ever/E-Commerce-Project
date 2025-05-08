@@ -96,7 +96,7 @@ public class ItemController {
     public String update(@PathVariable("id") Long id,
                          @Valid @ModelAttribute("item") ItemUpdateDto itemUpdateDto, BindingResult bindingResult) {
         if (bindingResult.hasErrors()) {
-            return "/pages/item/itemEditForm";
+            return "/pages/item/item-edit";
         }
 
         itemService.updateItem(id, itemUpdateDto);

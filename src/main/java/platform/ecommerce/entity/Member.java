@@ -52,9 +52,6 @@ public class Member extends BaseTimeEntity {
     @Column
     private LocalDate dateOfBirth;
 
-    @Column
-    private String defaultShippingAddress; //TODO 제거할 생각중..
-
     @OneToMany(mappedBy = "member", cascade = REMOVE, orphanRemoval = true)
     private List<Review> reviews = new ArrayList<>();
 

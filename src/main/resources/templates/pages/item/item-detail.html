@@ -18,7 +18,14 @@
         <p><strong>상품명:</strong> <span th:text="${viewModel.item.itemName}"></span></p>
         <p><strong>카테고리:</strong> <span th:text="${viewModel.item.category}"></span></p>
         <p><strong>설명:</strong> <span th:text="${viewModel.item.description}"></span></p>
-        <p><strong>가격:</strong> <span th:text="${viewModel.item.price}"></span> 원</p>
+        <p>
+            <strong>가격:</strong>
+            <span th:if="${viewModel.item.discountPrice != null}">
+                <span style="text-decoration: line-through;" th:text="${viewModel.item.price} + ' 원'"></span>
+                <span class="text-danger fw-bold ms-2" th:text="${viewModel.item.discountPrice} + ' 원'"></span>
+            </span>
+            <span th:if="${viewModel.item.discountPrice == null}" th:text="${viewModel.item.price} + ' 원'"></span>
+        </p>
     </div>
 
     <div class="form-group mt-3">

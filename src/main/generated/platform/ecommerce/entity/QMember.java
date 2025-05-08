@@ -31,8 +31,6 @@ public class QMember extends EntityPathBase<Member> {
 
     public final DatePath<java.time.LocalDate> dateOfBirth = createDate("dateOfBirth", java.time.LocalDate.class);
 
-    public final StringPath defaultShippingAddress = createString("defaultShippingAddress");
-
     public final StringPath email = createString("email");
 
     public final NumberPath<Long> id = createNumber("id", Long.class);

@@ -44,7 +44,7 @@ public class OrderItemDto {
 
     public static OrderItemDto from(ItemOption option, int count) {
         Item item = option.getItem();
-        int price = item.getPrice();
+        int price = item.getFinalPrice();
 
         return OrderItemDto.builder()
                 .itemOptionId(option.getId())

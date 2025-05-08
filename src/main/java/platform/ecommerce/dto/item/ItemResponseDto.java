@@ -1,9 +1,7 @@
 package platform.ecommerce.dto.item;
 
-import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
-import org.springframework.web.multipart.MultipartFile;
 import platform.ecommerce.entity.ItemCategory;
 
 import java.util.List;
@@ -15,6 +13,7 @@ public class ItemResponseDto {
     private String itemName;
     private String description;
     private Integer price;
+    private Integer discountPrice;
     private String imageUrl;
     private Double averageRating;
     private List<ItemOptionDto> options;
@@ -22,15 +21,18 @@ public class ItemResponseDto {
 
     @Builder
     public ItemResponseDto(Long id, String itemName, String description, Integer price,
-                           String imageUrl, Double averageRating, List<ItemOptionDto> options,
-                           ItemCategory category) {
+                           Integer discountPrice, String imageUrl, Double averageRating,
+                           List<ItemOptionDto> options, ItemCategory category) {
         this.id = id;
         this.itemName = itemName;
         this.description = description;
         this.price = price;
+        this.discountPrice = discountPrice;
         this.imageUrl = imageUrl;
         this.averageRating = averageRating;
         this.options = options;
         this.category = category;
     }
+
+
 }

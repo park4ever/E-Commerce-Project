@@ -31,20 +31,13 @@ public class CartItem extends BaseTimeEntity {
     @Column(nullable = false)
     private int priceSnapshot;
 
-    @Builder
-    public CartItem(Cart cart, ItemOption itemOption, int quantity, int priceSnapshot) {
-        this.cart = cart;
-        this.itemOption = itemOption;
-        this.quantity = quantity;
-        this.priceSnapshot = priceSnapshot;
-    }
-
     public static CartItem create(Cart cart, ItemOption option, int quantity) {
+        int finalPrice = option.getItem().getFinalPrice();
         return CartItem.builder()
                 .cart(cart)
                 .itemOption(option)
                 .quantity(quantity)
-                .priceSnapshot(option.getItem().getPrice())
+                .priceSnapshot(finalPrice)
                 .build();
     }
 

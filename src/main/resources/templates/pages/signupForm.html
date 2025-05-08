@@ -134,12 +134,6 @@
                 <input type="date" class="form-control" id="dateOfBirth" th:field="*{dateOfBirth}" th:classappend="${#fields.hasErrors('dateOfBirth')} ? 'error' : ''">
                 <div class="text-danger" th:if="${#fields.hasErrors('dateOfBirth')}" th:errors="*{dateOfBirth}"></div>
             </div>
-            <!-- 기본 배송지 -->
-            <div class="mb-4">
-                <label for="defaultShippingAddress" class="form-label">기본배송지</label>
-                <input type="text" class="form-control" id="defaultShippingAddress" th:field="*{defaultShippingAddress}" placeholder="기본 배송지를 입력하세요" th:classappend="${#fields.hasErrors('defaultShippingAddress')} ? 'error' : ''">
-                <div class="text-danger" th:if="${#fields.hasErrors('defaultShippingAddress')}" th:errors="*{defaultShippingAddress}"></div>
-            </div>
             <!-- 제출 버튼 -->
             <div class="d-grid">
                 <button type="submit" class="btn btn-primary">회원가입</button>

@@ -26,6 +26,8 @@ public class ItemUpdateDto {
     @Min(value = 0, message = "가격은 0보다 커야 합니다.")
     private Integer price;
 
+    private Integer discountPrice;
+
     private String imageUrl; //이미지 URL
 
     private MultipartFile image; //업로드할 새 이미지 파일

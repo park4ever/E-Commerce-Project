@@ -5,60 +5,63 @@
 <head>
     <meta charset="UTF-8">
     <title>상품 수정</title>
-    <script src="/js/item/item-edit.js" defer></script>
 </head>
 <body>
 
 <div layout:fragment="content" class="container mt-5">
-    <h2 class="mb-4">상품 수정</h2>
+    <h2>상품 수정</h2>
 
-    <div class="mb-3">
-        <img th:src="@{${item.imageUrl}}" alt="상품 이미지" style="max-width: 200px; height: auto;"/>
-    </div>
-
-    <form th:action="@{/item/edit/{id}(id=${id})}" th:object="${item}" method="post" enctype="multipart/form-data">
-        <input type="hidden" th:field="*{id}" />
+    <form th:action="@{'/item/edit/' + ${id}}" method="post" th:object="${item}" enctype="multipart/form-data">
 
         <div class="form-group mb-3">
             <label for="itemName">상품명</label>
-            <input type="text" th:field="*{itemName}" class="form-control" id="itemName">
+            <input type="text" th:field="*{itemName}" class="form-control" id="itemName" placeholder="상품명을 입력하세요">
         </div>
 
         <div class="form-group mb-3">
-            <label for="description">설명</label>
+            <label for="description">상품 설명</label>
             <textarea th:field="*{description}" class="form-control" id="description" rows="3"></textarea>
         </div>
 
         <div class="form-group mb-3">
             <label for="price">가격</label>
-            <input type="number" th:field="*{price}" class="form-control" id="price">
+            <input type="number" th:field="*{price}" class="form-control" id="price" placeholder="가격을 입력하세요">
+        </div>
+
+        <div class="form-group mb-3">
+            <label for="discountPrice">할인 가격</label>
+            <input type="number" th:field="*{discountPrice}" class="form-control" id="discountPrice" placeholder="할인 가격을 입력하세요 (없으면 비워두세요)">
         </div>
 
         <div class="form-group mb-3">
             <label for="category">카테고리</label>
-            <select th:field="*{category}" class="form-select" id="category">
-                <option th:each="category : ${T(platform.ecommerce.domain.item.ItemCategory).values()}"
-                        th:value="${category}" th:text="${category}">카테고리</option>
+            <select th:field="*{category}" class="form-control" id="category">
+                <option th:each="cat : ${T(platform.ecommerce.domain.item.ItemCategory).values()}"
+                        th:value="${cat}" th:text="${cat}"></option>
             </select>
         </div>
 
-        <div class="mb-3">
-            <label>옵션 목록 (사이즈/재고)</label>
-            <ul class="list-group">
-                <li class="list-group-item d-flex justify-content-between align-items-center"
-                    th:each="option : ${item.options}">
-                    <span th:text="${option.sizeLabel} + ' / ' + ${option.stockQuantity} + '개'"></span>
-                </li>
-            </ul>
+        <div class="form-group mb-3">
+            <label for="image">상품 이미지</label>
+            <input type="file" th:field="*{image}" class="form-control" id="image">
         </div>
 
-        <div class="mb-3">
-            <label for="image">새 이미지 업로드</label>
-            <input type="file" name="image" class="form-control" id="image" accept="image/*">
+        <div class="form-group mb-3">
+            <label>옵션</label>
+            <div th:each="opt, iterStat : *{options}" class="mb-2">
+                <div class="row">
+                    <div class="col">
+                        <input type="text" th:field="*{options[__${iterStat.index}__].sizeLabel}" class="form-control" placeholder="사이즈">
+                    </div>
+                    <div class="col">
+                        <input type="number" th:field="*{options[__${iterStat.index}__].stockQuantity}" class="form-control" placeholder="재고 수량">
+                    </div>
+                </div>
+            </div>
         </div>
 
-        <button type="submit" class="btn btn-primary">수정하기</button>
-        <a th:href="@{/item/list}" class="btn btn-secondary ms-2">목록으로 돌아가기</a>
+        <button type="submit" class="btn btn-primary">수정 완료</button>
+        <a th:href="@{/item/list}" class="btn btn-secondary">취소</a>
     </form>
 </div>
 

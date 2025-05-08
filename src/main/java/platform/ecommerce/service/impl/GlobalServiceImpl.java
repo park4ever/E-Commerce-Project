@@ -34,7 +34,6 @@ public class GlobalServiceImpl implements GlobalService {
                 .phoneNumber(dto.getPhoneNumber())
                 .address(dto.getAddress())
                 .dateOfBirth(dto.getDateOfBirth())
-                .defaultShippingAddress(dto.getDefaultShippingAddress())
                 .role(USER)
                 .isActive(true)
                 .build();

@@ -14,14 +14,8 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import platform.ecommerce.dto.item.ItemResponseDto;
 import platform.ecommerce.dto.member.MemberSaveRequestDto;
 import platform.ecommerce.service.GlobalService;
-import platform.ecommerce.service.ItemService;
-import platform.ecommerce.service.ReviewService;
-
-import java.util.List;
 
 @Slf4j
 @Controller

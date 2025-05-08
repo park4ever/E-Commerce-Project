@@ -14,16 +14,13 @@ public class MemberProfileDto {
     private String phoneNumber;
     private Address address;
     private LocalDate dateOfBirth;
-    private String defaultShippingAddress;
 
     @Builder
-
-    public MemberProfileDto(String email, String username, String phoneNumber, Address address, LocalDate dateOfBirth, String defaultShippingAddress) {
+    public MemberProfileDto(String email, String username, String phoneNumber, Address address, LocalDate dateOfBirth) {
         this.email = email;
         this.username = username;
         this.phoneNumber = phoneNumber;
         this.address = address;
         this.dateOfBirth = dateOfBirth;
-        this.defaultShippingAddress = defaultShippingAddress;
     }
 }

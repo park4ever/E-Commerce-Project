@@ -109,11 +109,12 @@ public class AdminServiceImpl implements AdminService {
     public void updateItem(Long itemId, AdminItemDto updatedItemDto) {
         Item item = findEntityById(itemRepository, itemId, "상품");
 
-        item.updateItemDetails(
+        /*item.updateItemDetails(
                 updatedItemDto.getItemName(),
                 updatedItemDto.getDescription(),
                 updatedItemDto.getPrice(),
-        );
+                updatedItemDto.getCategory() //TODO
+        );*/
     }
 
     //상품 활성/비활성화

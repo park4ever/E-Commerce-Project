@@ -1,5 +1,6 @@
 package platform.ecommerce.entity;
 
+import jakarta.annotation.Nullable;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.BatchSize;
@@ -31,6 +32,9 @@ public class Item extends BaseTimeEntity {
     @Column(nullable = false)
     private int price;
 
+    @Column(name = "discount_price")
+    private Integer discountPrice;
+
     @Column(name = "image_url")
     private String imageUrl;
 
@@ -48,6 +52,14 @@ public class Item extends BaseTimeEntity {
     @Column(nullable = false)
     private boolean isAvailable = true; //상품 활성화 여부
 
+    public int getFinalPrice() {
+        return discountPrice != null ? discountPrice : price;
+    }
+
+    public boolean isDiscounted() {
+        return discountPrice != null && discountPrice < price;
+    }
+
     public void addItemOption(ItemOption option) {
         itemOptions.add(option);
         option.associateItem(this);
@@ -62,6 +74,10 @@ public class Item extends BaseTimeEntity {
         this.description = description;
         this.price = price;
         this.category = category;
+    }
+
+    public void applyDiscountPrice(@Nullable Integer discountPrice) {
+        this.discountPrice = discountPrice;
     }
 
     public void deactivate() {

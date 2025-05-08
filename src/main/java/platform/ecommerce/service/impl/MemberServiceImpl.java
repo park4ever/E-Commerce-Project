@@ -110,7 +110,6 @@ public class MemberServiceImpl implements MemberService {
                 .phoneNumber(member.getPhoneNumber())
                 .address(member.getAddress())
                 .dateOfBirth(member.getDateOfBirth())
-                .defaultShippingAddress(member.getDefaultShippingAddress())
                 .build();
     }
 
