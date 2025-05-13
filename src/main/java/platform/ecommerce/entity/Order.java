@@ -50,6 +50,12 @@ public class Order extends BaseTimeEntity {
 
     private boolean isPaid = false;
 
+    @ManyToOne(fetch = LAZY)
+    @JoinColumn(name = "member_coupon_id")
+    private MemberCoupon memberCoupon;
+
+    private int discountAmount;
+
     @Builder
     public Order(Member member, LocalDateTime orderDate, OrderStatus orderStatus, List<OrderItem> orderItems, Address shippingAddress, PaymentMethod paymentMethod, String modificationReason) {
         this.member = member;
@@ -65,6 +71,10 @@ public class Order extends BaseTimeEntity {
                 this.addOrderItem(orderItem);
             }
         }
+    }
+
+    public int getFinalPrice() {
+        return getTotalPrice() - discountAmount;
     }
 
     public void updateStatus(OrderStatus status) {

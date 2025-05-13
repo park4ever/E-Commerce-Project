@@ -27,6 +27,8 @@ public class QOrder extends EntityPathBase<Order> {
     //inherited
     public final DateTimePath<java.time.LocalDateTime> createdDate = _super.createdDate;
 
+    public final NumberPath<Integer> discountAmount = createNumber("discountAmount", Integer.class);
+
     public final NumberPath<Long> id = createNumber("id", Long.class);
 
     public final BooleanPath isPaid = createBoolean("isPaid");
@@ -35,6 +37,8 @@ public class QOrder extends EntityPathBase<Order> {
     public final DateTimePath<java.time.LocalDateTime> lastModifiedDate = _super.lastModifiedDate;
 
     public final QMember member;
+
+    public final QMemberCoupon memberCoupon;
 
     public final StringPath modificationReason = createString("modificationReason");
 
@@ -67,6 +71,7 @@ public class QOrder extends EntityPathBase<Order> {
     public QOrder(Class<? extends Order> type, PathMetadata metadata, PathInits inits) {
         super(type, metadata, inits);
         this.member = inits.isInitialized("member") ? new QMember(forProperty("member"), inits.get("member")) : null;
+        this.memberCoupon = inits.isInitialized("memberCoupon") ? new QMemberCoupon(forProperty("memberCoupon"), inits.get("memberCoupon")) : null;
         this.shippingAddress = inits.isInitialized("shippingAddress") ? new QAddress(forProperty("shippingAddress")) : null;
     }
 
