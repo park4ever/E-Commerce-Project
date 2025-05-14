@@ -1,4 +1,4 @@
-package platform.ecommerce.service;
+package platform.ecommerce.service.impl;
 
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -11,6 +11,7 @@ import platform.ecommerce.dto.coupon.CouponResponseDto;
 import platform.ecommerce.dto.coupon.CouponUpdateRequestDto;
 import platform.ecommerce.entity.Coupon;
 import platform.ecommerce.repository.CouponRepository;
+import platform.ecommerce.service.CouponService;
 
 @Service
 @RequiredArgsConstructor
