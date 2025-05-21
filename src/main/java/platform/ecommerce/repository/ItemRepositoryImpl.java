@@ -4,6 +4,7 @@ import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.types.Order;
 import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.core.types.dsl.PathBuilder;
+import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import jakarta.persistence.EntityManager;
@@ -12,6 +13,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.security.core.parameters.P;
 import org.springframework.util.StringUtils;
 import platform.ecommerce.dto.item.ItemPageRequestDto;
 import platform.ecommerce.entity.*;
@@ -76,33 +78,59 @@ public class ItemRepositoryImpl implements ItemRepositoryCustom {
         List<OrderSpecifier<?>> orderSpecifiers = new ArrayList<>();
         String sortBy = requestDto.getSortField();
         String direction = String.valueOf(requestDto.getSortDirection());
-
-        PathBuilder<Item> pathBuilder = new PathBuilder<>(Item.class, item.getMetadata());
         Order order = "asc".equalsIgnoreCase(direction) ? Order.ASC : Order.DESC;
 
-        try {
-            orderSpecifiers.add(new OrderSpecifier<>(order, pathBuilder.getComparable(sortBy, Comparable.class)));
-        } catch (IllegalArgumentException e) {
-            log.warn("잘못된 정렬 필드명 : {}, 기본값으로 ID 기준 정렬", sortBy);
-            orderSpecifiers.add(item.id.asc());
+        //stockQuantity일 경우 별도 서브쿼리 정렬 처리
+        if ("stockQuantity".equals(sortBy)) {
+            QItemOption subOption = new QItemOption("subOption");
+
+            orderSpecifiers.add(new OrderSpecifier<>(order,
+                    JPAExpressions.select(subOption.stockQuantity.sum())
+                            .from(subOption)
+                            .where(subOption.item.eq(item))
+            ));
+        } else {
+            //기본 필드 정렬 처리
+            PathBuilder<Item> pathBuilder = new PathBuilder<>(Item.class, item.getMetadata());
+            try {
+                orderSpecifiers.add(new OrderSpecifier<>(order, pathBuilder.getComparable(sortBy, Comparable.class)));
+            } catch (IllegalArgumentException e) {
+                log.warn("잘못된 정렬 필드명 : {}, 기본값으로 ID 기준 정렬", sortBy);
+                orderSpecifiers.add(item.id.asc());
+            }
+        }
+
+        //재고 범위 조건 처리
+        Integer stockMin = requestDto.getStockMin();
+        Integer stockMax = requestDto.getStockMax();
+        BooleanBuilder havingBuilder = new BooleanBuilder();
+        if (stockMin != null && stockMax != null && stockMin <= stockMax) {
+            havingBuilder.and(itemOption.stockQuantity.sum().goe(stockMin)
+                    .and(itemOption.stockQuantity.sum().loe(stockMax)));
         }
 
         // 메인 쿼리
         List<Item> items = queryFactory
-                .selectFrom(item)
+                .select(item)
+                .from(item)
+                .leftJoin(item.itemOptions, itemOption)
                 .where(builder)
+                .groupBy(item.id)
+                .having(havingBuilder)
                 .orderBy(orderSpecifiers.toArray(new OrderSpecifier[0]))
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())
                 .fetch();
 
         // 카운트 쿼리
-        Long total = Optional.ofNullable(queryFactory
-                        .select(item.id.count())
-                        .from(item)
-                        .where(builder)
-                        .fetchOne())
-                .orElse(0L);
+        int total = queryFactory
+                .select(item.id)
+                .from(item)
+                .leftJoin(item.itemOptions, itemOption)
+                .where(builder)
+                .groupBy(item.id)
+                .having(havingBuilder)
+                .fetch().size();
 
         return new PageImpl<>(items, pageable, total);
     }

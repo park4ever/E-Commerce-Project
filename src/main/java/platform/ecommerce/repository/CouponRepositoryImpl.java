@@ -5,6 +5,7 @@ import com.querydsl.core.types.Order;
 import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.core.types.dsl.PathBuilder;
 import com.querydsl.jpa.impl.JPAQueryFactory;
+import jakarta.persistence.EntityManager;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -24,8 +25,8 @@ public class CouponRepositoryImpl implements CouponRepositoryCustom {
 
     private final JPAQueryFactory queryFactory;
 
-    public CouponRepositoryImpl(JPAQueryFactory queryFactory) {
-        this.queryFactory = queryFactory;
+    public CouponRepositoryImpl(EntityManager em) {
+        this.queryFactory = new JPAQueryFactory(em);
     }
 
     @Override

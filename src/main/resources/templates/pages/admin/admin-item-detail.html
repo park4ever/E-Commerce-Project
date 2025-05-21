@@ -42,8 +42,22 @@
                             <input type="number" id="edit-price" class="form-control" required min="0">
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">재고</label>
-                            <input type="number" id="edit-stock" class="form-control" required min="0">
+                            <label class="form-label">할인 가격</label>
+                            <input type="number" id="edit-discount" class="form-control" min="0" placeholder="할인 가격 없음은 비워두세요">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">카테고리</label>
+                            <input type="text" id="edit-category" class="form-control" disabled>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">총 재고 수량</label>
+                            <input type="number" id="edit-stock" class="form-control" readonly>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">옵션별 재고</label>
+                            <div id="option-input-list" class="row g-2">
+                                <!-- JS에서 옵션별 재고 입력 필드 렌더링 -->
+                            </div>
                         </div>
                     </form>
                 </div>

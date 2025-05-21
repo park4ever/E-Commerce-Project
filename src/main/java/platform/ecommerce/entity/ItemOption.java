@@ -43,6 +43,12 @@ public class ItemOption extends BaseTimeEntity {
         return option;
     }
 
+    public void updateStockQuantity(int quantity) {
+        if (this.stockQuantity != quantity) {
+            this.stockQuantity = quantity;
+        }
+    }
+
     public void removeStock(int quantity) {
         int remain = this.stockQuantity - quantity;
         if (remain < 0) {

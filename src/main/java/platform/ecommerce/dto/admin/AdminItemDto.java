@@ -1,8 +1,11 @@
 package platform.ecommerce.dto.admin;
 
 import lombok.*;
+import platform.ecommerce.dto.item.ItemOptionDto;
+import platform.ecommerce.entity.ItemCategory;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Getter
 @Setter
@@ -16,6 +19,7 @@ public class AdminItemDto {
     private String description;
     private int price;
     private int stockQuantity;
+    private ItemCategory category;
     private String imageUrl;
 
     private LocalDateTime createdDate;
@@ -24,4 +28,7 @@ public class AdminItemDto {
     private int totalSales = 0;
 
     private Boolean isAvailable;
+
+    private Integer discountPrice;
+    private List<ItemOptionDto> options;
 }

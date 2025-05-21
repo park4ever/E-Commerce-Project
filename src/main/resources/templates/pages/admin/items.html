@@ -15,6 +15,21 @@
         <!-- 검색 & 정렬 -->
         <form th:action="@{/api/admin/items}" method="get">
             <div class="row mb-3 align-items-center">
+
+                <!-- 카테고리 필터 -->
+                <div class="col-md-2">
+                    <select id="categoryFilter" name="category" class="form-select">
+                        <option value="">전체 카테고리</option>
+                        <option value="TOP">상의</option>
+                        <option value="BOTTOM">하의</option>
+                        <option value="OUTER">아우터</option>
+                        <option value="SHOES">신발</option>
+                        <option value="BAG">가방</option>
+                        <option value="ACCESSORY">액세서리</option>
+                        <option value="ETC">기타</option>
+                    </select>
+                </div>
+
                 <!-- 검색 필드 드롭다운 -->
                 <div class="col-md-2">
                     <select id="searchField" name="searchField" class="form-select">
@@ -23,29 +38,33 @@
                         <option value="description">설명</option>
                         <option value="price">가격</option>
                         <option value="stockQuantity">재고</option>
+                        <option value="category">카테고리</option>
                     </select>
                 </div>
+
                 <div class="col-md-4">
                     <input type="text" id="searchKeyword" name="searchKeyword" class="form-control" placeholder="검색어를 입력하세요.">
                 </div>
+
                 <div class="col-md-3">
                     <select id="sortSelect" name="sortBy" class="form-select">
                         <option value="createdDate,desc">최신 등록순</option>
                         <option value="createdDate,asc">오래된순</option>
                         <option value="itemName,asc">이름순</option>
                         <option value="itemName,desc">이름역순</option>
+                        <option value="category,asc">카테고리순</option>
+                        <option value="category,desc">카테고리역순</option>
+                        <option value="stockQuantity,desc">재고 많은순</option>
+                        <option value="stockQuantity,asc">재고 적은순</option>
                     </select>
                 </div>
 
-                <!-- 가격 범위 -->
                 <div class="col-md-2">
                     <input type="number" id="priceMin" name="priceMin" class="form-control" placeholder="최소 가격">
                 </div>
                 <div class="col-md-2">
                     <input type="number" id="priceMax" name="priceMax" class="form-control" placeholder="최대 가격">
                 </div>
-
-                <!-- 재고 범위 -->
                 <div class="col-md-2">
                     <input type="number" id="stockMin" name="stockMin" class="form-control" placeholder="최소 재고">
                 </div>
@@ -66,8 +85,10 @@
                 <th>상품 이미지</th>
                 <th data-sort="id" style="cursor:pointer">ID</th>
                 <th data-sort="itemName" style="cursor:pointer">상품명</th>
-                <th data-sort="price" style="cursor:pointer">가격</th>
-                <th data-sort="stockQuantity" style="cursor:pointer">재고</th>
+                <th data-sort="category" style="cursor:pointer">카테고리</th>
+                <th data-sort="price" style="cursor:pointer">발매가</th>
+                <th data-sort="discountPrice" style="cursor:pointer">할인가</th>
+                <th data-sort="totalStockQuantity" style="cursor:pointer">총 재고</th>
                 <th data-sort="createdDate" style="cursor:pointer">생성일</th>
                 <th>총 판매량</th>
                 <th>상태</th>

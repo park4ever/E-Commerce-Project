@@ -86,8 +86,7 @@ public class SecurityConfig {
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.ALWAYS)
                         .sessionFixation().changeSessionId()
-                )
-                .httpBasic(Customizer.withDefaults());
+                );
 
         return http.build();
     }

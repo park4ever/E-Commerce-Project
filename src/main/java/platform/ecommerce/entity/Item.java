@@ -46,6 +46,7 @@ public class Item extends BaseTimeEntity {
     @BatchSize(size = 100)
     private List<Review> reviews = new ArrayList<>();
 
+    @Builder.Default
     @OneToMany(mappedBy = "item", cascade = ALL, orphanRemoval = true)
     private List<ItemOption> itemOptions = new ArrayList<>();
 

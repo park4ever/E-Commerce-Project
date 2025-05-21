@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 import platform.ecommerce.dto.admin.*;
+import platform.ecommerce.dto.item.ItemOptionDto;
 import platform.ecommerce.dto.item.ItemPageRequestDto;
 import platform.ecommerce.dto.member.MemberPageRequestDto;
 import platform.ecommerce.dto.order.OrderPageRequestDto;
@@ -109,12 +110,27 @@ public class AdminServiceImpl implements AdminService {
     public void updateItem(Long itemId, AdminItemDto updatedItemDto) {
         Item item = findEntityById(itemRepository, itemId, "상품");
 
-        /*item.updateItemDetails(
+        //기본 정보 업데이트
+        item.updateItemDetails(
                 updatedItemDto.getItemName(),
                 updatedItemDto.getDescription(),
                 updatedItemDto.getPrice(),
-                updatedItemDto.getCategory() //TODO
-        );*/
+                updatedItemDto.getCategory()
+        );
+
+        //할인 가격 적용
+        item.applyDiscountPrice(updatedItemDto.getDiscountPrice());
+
+        //옵션 재고 업데이트
+        if (updatedItemDto.getOptions() != null) {
+            for (ItemOptionDto dto : updatedItemDto.getOptions()) {
+                ItemOption option = item.getItemOptions().stream()
+                        .filter(o -> o.getId().equals(dto.getId()))
+                        .findFirst()
+                        .orElseThrow(() -> new IllegalArgumentException("ItemOption ID 불일치 : " + dto.getId()));
+                option.updateStockQuantity(dto.getStockQuantity());
+            }
+        }
     }
 
     //상품 활성/비활성화
@@ -403,31 +419,51 @@ public class AdminServiceImpl implements AdminService {
             imageUrl = "/images/" + imageUrl;
         }
 
+        int totalStock = item.getItemOptions().stream()
+                .mapToInt(ItemOption::getStockQuantity)
+                .sum();
+
+        List<ItemOptionDto> optionDtos = item.getItemOptions().stream()
+                .map(opt -> ItemOptionDto.builder()
+                        .id(opt.getId())
+                        .sizeLabel(opt.getSizeLabel())
+                        .stockQuantity(opt.getStockQuantity())
+                        .build())
+                .toList();
+
         return AdminItemDto.builder()
                 .id(item.getId())
                 .itemName(item.getItemName())
                 .description(item.getDescription())
                 .price(item.getPrice())
-                .stockQuantity(item.getStockQuantity())
+                .stockQuantity(totalStock)
+                .category(item.getCategory())
                 .imageUrl(imageUrl)
                 .createdDate(item.getCreatedDate())
                 .lastModifiedDate(item.getLastModifiedDate())
                 .totalSales(itemRepository.getTotalSalesByItemId(item.getId()))
                 .isAvailable(item.isAvailable())
+                .discountPrice(item.getDiscountPrice())
+                .options(optionDtos)
                 .build();
     }
 
     //AdminOrderDto 변환
     private AdminOrderDto convertToAdminOrderDto(Order order) {
         List<AdminOrderItemDto> orderItems = order.getOrderItems().stream()
-                .map(orderItem -> new AdminOrderItemDto(
-                        orderItem.getId(),
-                        orderItem.getItem().getId(),
-                        orderItem.getItem().getItemName(),
-                        orderItem.getOrderPrice(),
-                        orderItem.getCount(),
-                        orderItem.getItem().getImageUrl()
-                ))
+                .map(orderItem -> {
+                    ItemOption option = orderItem.getItemOption();
+                    Item item = option.getItem();
+
+                    return new AdminOrderItemDto(
+                            orderItem.getId(),
+                            item.getId(),
+                            item.getItemName(),
+                            orderItem.getOrderPrice(),
+                            orderItem.getCount(),
+                            item.getImageUrl()
+                    );
+                })
                 .collect(toList());
 
         Address address = order.getShippingAddress();
