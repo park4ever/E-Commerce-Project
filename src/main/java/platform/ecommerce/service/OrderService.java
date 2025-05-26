@@ -10,7 +10,7 @@ import java.util.List;
 
 public interface OrderService {
 
-    Long placeOrder(OrderSaveRequestDto requestDto);
+    Long placeOrder(OrderSaveRequestDto requestDto, int discountAmount);
 
     List<OrderResponseDto> findOrdersByMemberId(Long memberId);
 

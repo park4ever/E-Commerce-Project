@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.BatchSize;
-import platform.ecommerce.dto.order.OrderSaveRequestDto;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -71,6 +70,11 @@ public class Order extends BaseTimeEntity {
                 this.addOrderItem(orderItem);
             }
         }
+    }
+
+    public void applyDiscount(MemberCoupon coupon, int discountAmount) {
+        this.memberCoupon = coupon;
+        this.discountAmount = discountAmount;
     }
 
     public int getFinalPrice() {

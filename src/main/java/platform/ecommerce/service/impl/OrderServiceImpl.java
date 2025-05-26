@@ -10,6 +10,7 @@ import platform.ecommerce.dto.member.MemberDetailsDto;
 import platform.ecommerce.dto.order.*;
 import platform.ecommerce.entity.*;
 import platform.ecommerce.repository.ItemOptionRepository;
+import platform.ecommerce.repository.MemberCouponRepository;
 import platform.ecommerce.repository.MemberRepository;
 import platform.ecommerce.repository.OrderRepository;
 import platform.ecommerce.service.OrderService;
@@ -17,6 +18,7 @@ import platform.ecommerce.service.OrderService;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static platform.ecommerce.entity.OrderStatus.*;
@@ -29,15 +31,39 @@ public class OrderServiceImpl implements OrderService {
     private final OrderRepository orderRepository;
     private final MemberRepository memberRepository;
     private final ItemOptionRepository itemOptionRepository;
+    private final MemberCouponRepository memberCouponRepository;
 
     @Override
-    public Long placeOrder(OrderSaveRequestDto requestDto) {
+    public Long placeOrder(OrderSaveRequestDto requestDto, int discountAmount) {
         if (requestDto.getOrderItemDto() == null || requestDto.getOrderItemDto().isEmpty()) {
             throw new IllegalArgumentException("주문 상품이 비어 있습니다.");
         }
 
-        Order order = toOrderEntity(requestDto);
-        appendOrderItems(order, requestDto.getOrderItemDto());
+        Order order = Order.builder()
+                .member(getMemberInfo(requestDto.getMemberId()))
+                .orderDate(LocalDateTime.now())
+                .orderStatus(PROCESSED)
+                .shippingAddress(requestDto.convertToShippingAddress())
+                .paymentMethod(requestDto.getPaymentMethod())
+                .build();
+
+        MemberCoupon coupon = memberCouponRepository.findById(requestDto.getMemberCouponId())
+                .orElseThrow(() -> new IllegalArgumentException("쿠폰을 찾을 수 없습니다."));
+
+        order.applyDiscount(coupon, discountAmount);
+
+        for (OrderItemDto dto : requestDto.getOrderItemDto()) {
+            ItemOption option = itemOptionRepository.findById(dto.getItemOptionId())
+                    .orElseThrow(() -> new IllegalArgumentException("상품 옵션을 찾을 수 없습니다."));
+
+            if (option.isSoldOut() || option.getStockQuantity() < dto.getCount()) {
+                throw new IllegalArgumentException("해당 옵션의 재고가 부족합니다.");
+            }
+
+            OrderItem orderItem = dto.toOrderItem(option, order);
+            order.addOrderItem(orderItem);
+            option.removeStock(dto.getCount());
+        }
 
         return orderRepository.save(order).getId();
     }
@@ -128,35 +154,6 @@ public class OrderServiceImpl implements OrderService {
         Page<Order> orders = orderRepository.searchOrders(requestDto, pageable);
 
         return orders.map(OrderResponseDto::new);
-    }
-
-    private Order toOrderEntity(OrderSaveRequestDto orderSaveRequestDto) {
-        Member member = getMemberInfo(orderSaveRequestDto.getMemberId());
-
-        return Order.builder()
-                .member(member)
-                .orderDate(LocalDateTime.now())
-                .orderStatus(PROCESSED)
-                .shippingAddress(orderSaveRequestDto.convertToShippingAddress())
-                .paymentMethod(orderSaveRequestDto.getPaymentMethod())
-                .build();
-    }
-
-    private void appendOrderItems(Order order, List<OrderItemDto> orderItemDtos) {
-
-        for (OrderItemDto dto : orderItemDtos) {
-            ItemOption option = itemOptionRepository.findById(dto.getItemOptionId())
-                    .orElseThrow(() -> new IllegalArgumentException("상품 옵션을 찾을 수 없습니다."));
-
-            if (option.isSoldOut() || option.getStockQuantity() < dto.getCount()) {
-                throw new IllegalArgumentException("해당 옵션의 재고가 부족합니다.");
-            }
-
-            OrderItem orderItem = dto.toOrderItem(option, order);
-            order.addOrderItem(orderItem);
-
-            option.removeStock(dto.getCount());
-        }
     }
 
     private Order getOrderInfo(Long orderId) {

@@ -25,6 +25,8 @@ public class OrderSaveRequestDto {
 
     private boolean fromCart;
 
+    private Long memberCouponId;
+
     public List<OrderItemDto> getOrderItemDto() {
         return orderItems;
     }

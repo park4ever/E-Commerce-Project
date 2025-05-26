@@ -15,6 +15,7 @@ import platform.ecommerce.dto.item.ItemResponseDto;
 import platform.ecommerce.dto.member.MemberDetailsDto;
 import platform.ecommerce.dto.member.MemberResponseDto;
 import platform.ecommerce.dto.order.*;
+import platform.ecommerce.entity.MemberCoupon;
 import platform.ecommerce.entity.OrderStatus;
 import platform.ecommerce.service.*;
 
@@ -30,6 +31,7 @@ public class OrderController {
     private final MemberService memberService;
     private final ItemService itemService;
     private final CartService cartService;
+    private final MemberCouponService memberCouponService;
 
     @GetMapping("/new")
     public String orderForm(@RequestParam(value = "itemId", required = false) Long itemId,
@@ -80,7 +82,25 @@ public class OrderController {
             }
         }
 
-        Long orderId = orderService.placeOrder(orderSaveRequestDto);
+        Long memberCouponId = orderSaveRequestDto.getMemberCouponId();
+        int discountAmount = 0;
+
+        if (memberCouponId != null) {
+            MemberCoupon memberCoupon = memberCouponService.getOwnedCouponOrThrow(memberCouponId, member.getMemberId());
+
+            int orderTotal = orderSaveRequestDto.getOrderItemDto().stream()
+                    .mapToInt(OrderItemDto::getTotalPrice)
+                    .sum();
+
+            if (!memberCoupon.isUsable(orderTotal)) {
+                throw new IllegalStateException("쿠폰을 사용할 수 없습니다.");
+            }
+
+            discountAmount = memberCoupon.getDiscountAmount(orderTotal);
+            memberCouponService.useCoupon(memberCouponId, member.getMemberId());
+        }
+
+        Long orderId = orderService.placeOrder(orderSaveRequestDto, discountAmount);
 
         //주문한 상품만 장바구니에서 제거
         if (orderSaveRequestDto.isFromCart()) {
@@ -91,7 +111,7 @@ public class OrderController {
             cartService.removeOrderedItemsFromCart(member.getMemberId(), orderedItemIds);
         }
 
-        return "redirect:/order/success";
+        return "redirect:/order/success?orderId=" + orderId;
     }
 
     @GetMapping("/history")
