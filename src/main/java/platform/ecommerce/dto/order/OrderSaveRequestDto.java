@@ -34,4 +34,10 @@ public class OrderSaveRequestDto {
     public Address convertToShippingAddress() {
         return this.shippingAddress;
     }
+
+    public int getOrderTotal() {
+        return this.orderItems.stream()
+                .mapToInt(OrderItemDto::getTotalPrice)
+                .sum();
+    }
 }

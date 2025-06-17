@@ -20,11 +20,10 @@ public class ReviewRequestDto {
     private Integer rating;
     private MultipartFile image;
 
-    public void updateItemId(Long itemId) {
-        this.itemOptionId = itemId;
-    }
-
-    public void updateOrderId(Long orderId) {
-        this.orderId = orderId;
+    public static ReviewRequestDto forForm(Long itemOptionId, Long orderId) {
+        return ReviewRequestDto.builder()
+                .itemOptionId(itemOptionId)
+                .orderId(orderId)
+                .build();
     }
 }

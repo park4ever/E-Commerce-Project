@@ -13,7 +13,7 @@ import java.util.Set;
 
 import static platform.ecommerce.entity.ItemCategory.*;
 
-@Configuration
+//@Configuration
 @RequiredArgsConstructor
 public class TestItemInitializer implements CommandLineRunner {
 

@@ -2,7 +2,6 @@ package platform.ecommerce.controller;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
@@ -11,14 +10,12 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import platform.ecommerce.dto.item.ItemResponseDto;
 import platform.ecommerce.dto.member.MemberResponseDto;
-import platform.ecommerce.dto.review.ReviewParametersDto;
 import platform.ecommerce.dto.review.ReviewRequestDto;
 import platform.ecommerce.dto.review.ReviewResponseDto;
 import platform.ecommerce.service.ItemService;
 import platform.ecommerce.service.MemberService;
 import platform.ecommerce.service.ReviewService;
 
-@Slf4j
 @Controller
 @RequestMapping("/review")
 @RequiredArgsConstructor
@@ -29,12 +26,10 @@ public class ReviewController {
     private final ItemService itemService;
 
     @GetMapping("/new")
-    public String createReviewForm(ReviewParametersDto param, Model model) {
-        ReviewRequestDto dto = new ReviewRequestDto();
-        dto.updateItemId(param.getItemId());
-        dto.updateOrderId(param.getOrderId());
-
-        ItemResponseDto item = itemService.findItem(param.getItemId());
+    public String createReviewForm(@RequestParam("itemOptionId") Long itemOptionId,
+            @RequestParam("orderId") Long orderId, @RequestParam("itemId") Long itemId , Model model) {
+        ReviewRequestDto dto = ReviewRequestDto.forForm(itemOptionId, orderId);
+        ItemResponseDto item = itemService.findItem(itemId);
 
         model.addAttribute("reviewRequestDto", dto);
         model.addAttribute("item", item);

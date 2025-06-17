@@ -2,26 +2,19 @@ package platform.ecommerce.service.impl;
 
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.multipart.MultipartFile;
 import platform.ecommerce.dto.review.ReviewPageRequestDto;
 import platform.ecommerce.dto.review.ReviewRequestDto;
 import platform.ecommerce.dto.review.ReviewResponseDto;
 import platform.ecommerce.entity.*;
 import platform.ecommerce.repository.*;
 import platform.ecommerce.service.ReviewService;
+import platform.ecommerce.service.upload.FileStorageService;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
 import java.util.List;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 import static platform.ecommerce.entity.OrderStatus.*;
@@ -35,9 +28,7 @@ public class ReviewServiceImpl implements ReviewService {
     private final ItemOptionRepository itemOptionRepository;
     private final MemberRepository memberRepository;
     private final OrderItemRepository orderItemRepository;
-
-    @Value("${file.upload-dir}")
-    private String uploadDir;
+    private final FileStorageService fileStorageService;
 
     @Override
     public Long writeReview(Long memberId, ReviewRequestDto dto) {
@@ -52,7 +43,7 @@ public class ReviewServiceImpl implements ReviewService {
         Review review = Review.createReview(item, member, dto.getContent(), dto.getRating());
 
         if (dto.getImage() != null && !dto.getImage().isEmpty()) {
-            String imageUrl = saveImage(dto.getImage());
+            String imageUrl = fileStorageService.store(dto.getImage(), "review");
             review.updateImageUrl(imageUrl);
         }
 
@@ -102,7 +93,7 @@ public class ReviewServiceImpl implements ReviewService {
         review.updateReview(dto.getContent(), dto.getRating());
 
         if (dto.getImage() != null && !dto.getImage().isEmpty()) {
-            String imageUrl = saveImage(dto.getImage());
+            String imageUrl = fileStorageService.store(dto.getImage(), "review");
             review.updateImageUrl(imageUrl);
         }
 
@@ -144,21 +135,7 @@ public class ReviewServiceImpl implements ReviewService {
                 .memberName(review.getMember().getUsername())
                 .content(review.getContent())
                 .rating(review.getRating())
-                .imageUrl("/images/review/" + review.getImageUrl())
+                .imageUrl(review.getImageUrl())
                 .build();
-    }
-
-    private String saveImage(MultipartFile imageFile) {
-        try {
-            //UUID와 원래 이미지 파일 이름을 결합한 파일명 생성
-            String fileName = UUID.randomUUID() + "_" + imageFile.getOriginalFilename();
-            //파일 경로 저장
-            Path filePath = Paths.get(uploadDir + "/review", fileName);
-            //이미지 파일을 저장된 경로에 저장
-            Files.copy(imageFile.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
-            return fileName; //파일명을 반환
-        } catch (IOException e) {
-            throw new RuntimeException("리뷰 이미지 저장에 실패하였습니다.", e);
-        }
     }
 }

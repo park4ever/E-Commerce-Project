@@ -1,6 +1,8 @@
 package platform.ecommerce.dto.item;
 
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -32,6 +34,8 @@ public class ItemUpdateDto {
 
     private MultipartFile image; //업로드할 새 이미지 파일
 
+    @Valid
+    @NotEmpty(message = "최소 하나 이상의 옵션을 등록해야 합니다.")
     private List<ItemOptionDto> options;
 
     private ItemCategory category;

@@ -11,6 +11,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
+import platform.ecommerce.dto.coupon.MemberCouponResponseDto;
 import platform.ecommerce.dto.item.ItemResponseDto;
 import platform.ecommerce.dto.member.MemberDetailsDto;
 import platform.ecommerce.dto.member.MemberResponseDto;
@@ -43,20 +44,23 @@ public class OrderController {
         MemberResponseDto member = memberService.findMember(userDetails.getUsername());
         MemberDetailsDto memberDetails = memberService.findMemberDetails(userDetails.getUsername());
 
-        OrderSaveRequestDto orderSaveRequestDto;
+        OrderSaveRequestDto dto;
 
         if (fromCart) {
             //장바구니 주문인 경우, prepareOrderFromCart() 호출
-            orderSaveRequestDto = cartService.prepareOrderFromCart(member.getMemberId());
+            dto = cartService.prepareOrderFromCart(member.getMemberId());
         } else {
             //단일 상품 주문인 경우
             ItemResponseDto item = itemService.findItem(itemId);
             model.addAttribute("item", item);
-            orderSaveRequestDto = orderService.buildSingleOrderDto(memberDetails, itemId, quantity);
+            dto = orderService.buildSingleOrderDto(memberDetails, itemId, quantity);
         }
 
-        model.addAttribute("orderSaveRequestDto", orderSaveRequestDto);
+        List<MemberCouponResponseDto> coupons = memberCouponService.getAllCouponsWithUsability(member.getMemberId(), dto.getOrderTotal());
+
+        model.addAttribute("orderSaveRequestDto", dto);
         model.addAttribute("memberDetails", memberDetails);
+        model.addAttribute("coupons", coupons);
 
         return "/pages/order/orderForm";
     }

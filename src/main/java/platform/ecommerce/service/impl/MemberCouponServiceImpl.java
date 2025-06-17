@@ -78,6 +78,15 @@ public class MemberCouponServiceImpl implements MemberCouponService {
     }
 
     @Override
+    public List<MemberCouponResponseDto> getAllCouponsWithUsability(Long memberId, int orderTotal) {
+        List<MemberCoupon> coupons = memberCouponRepository.findByMemberId(memberId);
+
+        return coupons.stream()
+                .map(mc -> MemberCouponResponseDto.from(mc, orderTotal))
+                .toList();
+    }
+
+    @Override
     public MemberCoupon getOwnedCouponOrThrow(Long memberCouponId, Long memberId) {
         return memberCouponRepository.findByIdAndMemberId(memberCouponId, memberId)
                 .orElseThrow(() -> new EntityNotFoundException("해당 쿠폰을 사용할 수 없습니다."));

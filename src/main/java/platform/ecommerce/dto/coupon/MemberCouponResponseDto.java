@@ -29,6 +29,8 @@ public class MemberCouponResponseDto {
     private boolean used;
     private LocalDateTime usedAt;
 
+    private boolean usable;
+
     public static MemberCouponResponseDto from(MemberCoupon mc) {
         Coupon c = mc.getCoupon();
 
@@ -44,6 +46,26 @@ public class MemberCouponResponseDto {
                 .validTo(c.getValidTo())
                 .used(mc.isUsed())
                 .usedAt(mc.getUsedAt())
+                .usable(false)  //사용하지 않음. null 대신 처리하기 쉬운 false로 처리.
+                .build();
+    }
+
+    public static MemberCouponResponseDto from(MemberCoupon mc, int orderTotal) {
+        Coupon c = mc.getCoupon();
+
+        return MemberCouponResponseDto.builder()
+                .memberCouponId(mc.getId())
+                .couponId(c.getId())
+                .name(c.getName())
+                .discountType(c.getDiscountType())
+                .discountValue(c.getDiscountValue())
+                .minOrderAmount(c.getMinOrderAmount())
+                .maxDiscountAmount(c.getMaxDiscountAmount())
+                .validFrom(c.getValidFrom())
+                .validTo(c.getValidTo())
+                .used(mc.isUsed())
+                .usedAt(mc.getUsedAt())
+                .usable(mc.isUsable(orderTotal))
                 .build();
     }
 }

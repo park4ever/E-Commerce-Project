@@ -1,27 +1,21 @@
 package platform.ecommerce.service.impl;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
+import platform.ecommerce.config.FileUploadProperties;
 import platform.ecommerce.dto.item.*;
 import platform.ecommerce.entity.Item;
 import platform.ecommerce.entity.ItemCategory;
 import platform.ecommerce.entity.ItemOption;
 import platform.ecommerce.repository.ItemRepository;
 import platform.ecommerce.service.ItemService;
+import platform.ecommerce.service.upload.FileStorageService;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
 import java.util.List;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -30,14 +24,14 @@ import java.util.stream.Collectors;
 public class ItemServiceImpl implements ItemService {
 
     private final ItemRepository itemRepository;
+    private final FileStorageService fileStorageService;
+    private final FileUploadProperties properties;
 
-    @Value("${file.upload-dir}")
-    private String uploadDir;
+    private static final String DEFAULT_IMAGE_NAME = "default.png";
 
     @Override
     @Transactional
     public Long saveItem(ItemSaveRequestDto saveRequestDto) {
-
         String imageUrl = saveImage(saveRequestDto.getImage());
 
         Item item = Item.builder()
@@ -124,7 +118,7 @@ public class ItemServiceImpl implements ItemService {
                 .description(item.getDescription())
                 .price(item.getPrice())
                 .discountPrice(item.getDiscountPrice())
-                .imageUrl("/images/" + item.getImageUrl())
+                .imageUrl(item.getImageUrl())
                 .category(item.getCategory())
                 .averageRating(null) // TODO: 평균 별점 계산 연동 예정
                 .options(options)
@@ -167,30 +161,9 @@ public class ItemServiceImpl implements ItemService {
     }
 
     private String saveImage(MultipartFile imageFile) {
-        //상품 이미지 파일이 없으면 기본 이미지로 처리
         if (imageFile == null || imageFile.isEmpty()) {
-            //기본 이미지 파일명을 UUID와 결합하여 생성
-            String defaultImageName = UUID.randomUUID() + "_" + "default.png";
-            Path defaultImagePath = Paths.get(uploadDir, defaultImageName);
-
-            //기본 이미지를 지정된 경로에 복사
-            try (InputStream inputStream = getClass().getResourceAsStream("/static/item/default.png")) {
-                Files.copy(inputStream, defaultImagePath, StandardCopyOption.REPLACE_EXISTING);
-            } catch (IOException e) {
-                throw new RuntimeException("기본 이미지 생성에 실패하였습니다. ", e);
-            }
-
-            return defaultImageName;
+            return properties.getUrlPrefix() + "item/" + DEFAULT_IMAGE_NAME;
         }
-
-        //상품 이미지 파일이 입력되어있을 경우, 원래의 저장 로직 수행
-        try {
-            String fileName = UUID.randomUUID() + "_" + imageFile.getOriginalFilename();
-            Path filePath = Paths.get(uploadDir, fileName);
-            Files.copy(imageFile.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
-            return fileName; //파일명 저장
-        } catch (IOException e) {
-            throw new RuntimeException("상품 이미지 저장에 실패하였습니다. ", e);
-        }
+        return fileStorageService.store(imageFile, "item");
     }
 }

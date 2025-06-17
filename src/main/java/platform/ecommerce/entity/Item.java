@@ -23,10 +23,10 @@ public class Item extends BaseTimeEntity {
     @Column(name = "item_id")
     private Long id;
 
-    @Column(nullable = false)
+    @Column(nullable = false, length = 30)
     private String itemName;
 
-    @Column(nullable = false)
+    @Column(nullable = false, length = 100)
     private String description;
 
     @Column(nullable = false)
@@ -35,7 +35,7 @@ public class Item extends BaseTimeEntity {
     @Column(name = "discount_price")
     private Integer discountPrice;
 
-    @Column(name = "image_url")
+    @Column(name = "image_url", nullable = false)
     private String imageUrl;
 
     @Enumerated(EnumType.STRING)

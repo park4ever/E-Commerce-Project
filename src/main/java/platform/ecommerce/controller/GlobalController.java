@@ -39,7 +39,7 @@ public class GlobalController {
             log.info("🏠 홈 - 세션 유지 중, ID: {}", session.getId());
         }
 
-        return "home";
+        return "pages/home/home";
     }
 
     @GetMapping("/signup")
@@ -79,4 +79,3 @@ public class GlobalController {
         return "pages/loginForm";
     }
 }
-

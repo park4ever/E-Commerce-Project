@@ -1,5 +1,6 @@
 package platform.ecommerce.dto.item;
 
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
@@ -31,7 +32,8 @@ public class ItemSaveRequestDto {
 
     private MultipartFile image; //이미지 파일
 
-    @NotEmpty(message = "최소 하나 이상의 옵션을 입력해야 합니다.")
+    @Valid
+    @NotEmpty(message = "최소 하나 이상의 옵션을 등록해야 합니다.")
     private List<ItemOptionDto> options;
 
     @NotNull(message = "상품 카테고리는 필수 입력 항목입니다.")

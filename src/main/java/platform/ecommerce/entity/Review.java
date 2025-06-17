@@ -1,9 +1,7 @@
 package platform.ecommerce.entity;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
-import org.hibernate.annotations.BatchSize;
 
 import static jakarta.persistence.FetchType.*;
 
@@ -19,17 +17,15 @@ public class Review extends BaseTimeEntity {
     @Column(name = "review_id")
     private Long id;
 
-    @JsonIgnore
     @ManyToOne(fetch = LAZY)
     @JoinColumn(name = "item_id")
     private Item item;
 
-    @JsonIgnore
     @ManyToOne(fetch = LAZY)
     @JoinColumn(name = "member_id")
     private Member member;
 
-    @Column(nullable = false)
+    @Column(nullable = false, length = 500)
     private String content;
 
     @Column(nullable = false)

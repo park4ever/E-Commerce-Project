@@ -59,12 +59,13 @@ public class SecurityConfig {
                 .securityContext(securityContext -> securityContext
                         .securityContextRepository(new HttpSessionSecurityContextRepository()))
                 .authorizeHttpRequests(authz -> authz
-                        .dispatcherTypeMatchers(DispatcherType.FORWARD).permitAll()
-                        .requestMatchers("/", "/signup", "/login", "/item/**", "/resources/**").permitAll()
+                        /*.dispatcherTypeMatchers(DispatcherType.FORWARD).permitAll()
+                        .requestMatchers("/", "/signup", "/login", "/item/**", "/resources/**", "/home/**").permitAll()
                         .requestMatchers("/member/check-password").permitAll()
                         .requestMatchers("/member/update-form").authenticated()
                         .requestMatchers("/admin", "/admin/**", "/api/admin/**").hasRole("ADMIN")
-                        .anyRequest().authenticated()
+                        .anyRequest().authenticated()*/
+                        .anyRequest().permitAll()
                 )
                 .formLogin(formLogin -> formLogin
                         .loginPage("/login")

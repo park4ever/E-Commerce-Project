@@ -14,6 +14,8 @@ public interface MemberCouponService {
 
     List<MemberCouponResponseDto> getAllCoupons(Long memberId);
 
+    List<MemberCouponResponseDto> getAllCouponsWithUsability(Long memberId, int orderTotal);
+
     MemberCoupon getOwnedCouponOrThrow(Long memberCouponId, Long memberId);
 
     void useCoupon(Long memberCouponId, Long memberId);

@@ -43,6 +43,6 @@ public class CustomAuthenticationSuccessHandler extends SimpleUrlAuthenticationS
         }
 
         // ✅ 로그인 성공 후 홈으로 리다이렉트
-        redirectStrategy.sendRedirect(request, response, "/home");
+        redirectStrategy.sendRedirect(request, response, "/");
     }
 }
