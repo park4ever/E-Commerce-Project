@@ -4,7 +4,6 @@ import jakarta.annotation.Nullable;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.BatchSize;
-import platform.ecommerce.exception.NotEnoughStockException;
 
 import java.util.ArrayList;
 import java.util.List;

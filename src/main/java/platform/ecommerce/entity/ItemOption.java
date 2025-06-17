@@ -2,7 +2,7 @@ package platform.ecommerce.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
-import platform.ecommerce.exception.NotEnoughStockException;
+import platform.ecommerce.exception.item.NotEnoughStockException;
 
 import static jakarta.persistence.FetchType.*;
 
