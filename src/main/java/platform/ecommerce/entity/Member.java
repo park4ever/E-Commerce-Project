@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import lombok.*;
+import platform.ecommerce.exception.member.PasswordRequiredException;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -78,7 +79,7 @@ public class Member extends BaseTimeEntity {
 
     public void changePassword(String encodedPassword) {
         if (encodedPassword == null || encodedPassword.isBlank()) {
-            throw new IllegalArgumentException("비밀번호는 공백일 수 없습니다.");
+            throw new PasswordRequiredException();
         }
         this.password = encodedPassword;
     }

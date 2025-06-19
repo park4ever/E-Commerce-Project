@@ -10,6 +10,11 @@ import platform.ecommerce.dto.review.ReviewPageRequestDto;
 import platform.ecommerce.dto.review.ReviewRequestDto;
 import platform.ecommerce.dto.review.ReviewResponseDto;
 import platform.ecommerce.entity.*;
+import platform.ecommerce.exception.item.ItemOptionNotFoundException;
+import platform.ecommerce.exception.member.MemberNotFoundException;
+import platform.ecommerce.exception.order.OrderItemNotFoundException;
+import platform.ecommerce.exception.review.ReviewForbiddenException;
+import platform.ecommerce.exception.review.ReviewNotFoundException;
 import platform.ecommerce.repository.*;
 import platform.ecommerce.service.ReviewService;
 import platform.ecommerce.service.upload.FileStorageService;
@@ -33,11 +38,11 @@ public class ReviewServiceImpl implements ReviewService {
     @Override
     public Long writeReview(Long memberId, ReviewRequestDto dto) {
         ItemOption option = itemOptionRepository.findById(dto.getItemOptionId())
-                .orElseThrow(() -> new EntityNotFoundException("상품 옵션을 찾을 수 없습니다."));
+                .orElseThrow(ItemOptionNotFoundException::new);
         Item item = option.getItem();
 
         Member member = memberRepository.findById(memberId)
-                .orElseThrow(() -> new EntityNotFoundException("회원을 찾을 수 없습니다."));
+                .orElseThrow(MemberNotFoundException::new);
 
         //createReview 메서드로 리뷰 생성
         Review review = Review.createReview(item, member, dto.getContent(), dto.getRating());
@@ -48,7 +53,7 @@ public class ReviewServiceImpl implements ReviewService {
         }
 
         OrderItem orderItem = orderItemRepository.findByOrderIdAndItemOptionId(dto.getOrderId(), dto.getItemOptionId())
-                .orElseThrow(() -> new EntityNotFoundException("주문 상품을 찾을 수 없습니다."));
+                .orElseThrow(OrderItemNotFoundException::new);
         orderItem.getOrder().updateStatus(COMPLETED);
 
         return reviewRepository.save(review).getId();
@@ -58,7 +63,7 @@ public class ReviewServiceImpl implements ReviewService {
     @Transactional(readOnly = true)
     public ReviewResponseDto findReview(Long reviewId) {
         Review review = reviewRepository.findById(reviewId)
-                .orElseThrow(() -> new EntityNotFoundException("리뷰를 찾을 수 없습니다."));
+                .orElseThrow(ReviewNotFoundException::new);
 
         return toDto(review);
     }
@@ -83,10 +88,10 @@ public class ReviewServiceImpl implements ReviewService {
     @Override
     public ReviewResponseDto updateReview(Long reviewId, Long memberId, ReviewRequestDto dto) {
         Review review = reviewRepository.findById(reviewId)
-                .orElseThrow(() -> new EntityNotFoundException("리뷰를 찾을 수 없습니다."));
+                .orElseThrow(ReviewNotFoundException::new);
 
         if (!memberId.equals(review.getMember().getId())) {
-            throw new IllegalArgumentException("다른 회원이 작성한 리뷰는 수정할 수 없습니다.");
+            throw new ReviewForbiddenException();
         }
 
         //리뷰 내용과 평점 업데이트
@@ -103,7 +108,7 @@ public class ReviewServiceImpl implements ReviewService {
     @Override
     public Long deleteReview(Long reviewId) {
         Review review = reviewRepository.findById(reviewId)
-                .orElseThrow(() -> new EntityNotFoundException("리뷰를 찾을 수 없습니다."));
+                .orElseThrow(ReviewNotFoundException::new);
 
         Long itemId = review.getItem().getId();
         reviewRepository.delete(review);

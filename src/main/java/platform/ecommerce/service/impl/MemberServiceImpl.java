@@ -12,13 +12,14 @@ import platform.ecommerce.dto.member.MemberResponseDto;
 import platform.ecommerce.dto.member.UpdateMemberRequestDto;
 import platform.ecommerce.entity.Address;
 import platform.ecommerce.entity.Member;
+import platform.ecommerce.exception.member.MemberNotFoundException;
+import platform.ecommerce.exception.member.MemberPasswordMismatchException;
 import platform.ecommerce.repository.MemberRepository;
 import platform.ecommerce.service.MemberService;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 
-@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional
@@ -42,15 +43,10 @@ public class MemberServiceImpl implements MemberService {
     @Override
     @Transactional(readOnly = true)
     public MemberDetailsDto findMemberDetails(String email) {
-        log.info("✅ findMemberDetails() 호출 - email: {}", email);
-
         Member member = findMemberByEmail(email);
         if (member == null) {
-            log.warn("🚨 이메일 '{}'에 해당하는 회원을 찾을 수 없음!", email);
             return null;
         }
-
-        log.info("✅ 회원 정보 로드 완료: {}", member);
 
         return MemberDetailsDto.builder()
                 .memberId(member.getId())
@@ -66,7 +62,6 @@ public class MemberServiceImpl implements MemberService {
         Member member = findMemberByEmail(email);
 
         if (member == null) {
-            log.warn("🚨 Member not found for email: {}. Returning default values.", email);
             return MemberDetailsDto.builder()
                     .memberId(0L)
                     .username("")
@@ -81,7 +76,6 @@ public class MemberServiceImpl implements MemberService {
     @Override
     public void deleteMember(Long memberId) {
         memberRepository.delete(findMemberById(memberId));
-        log.info("Member [{}] deleted successfully", memberId);
     }
 
     @Override
@@ -128,7 +122,7 @@ public class MemberServiceImpl implements MemberService {
         //새 비밀번호가 입력된 경우에만 비밀번호 변경
         if (dto.getNewPassword() != null && !dto.getNewPassword().isEmpty()) {
             if (!dto.getNewPassword().equalsIgnoreCase(dto.getConfirmNewPassword())) {
-                throw new IllegalArgumentException("새 비밀번호가 일치하지 않습니다.");
+                throw new MemberPasswordMismatchException();
             }
 
             String encodedPassword = passwordEncoder.encode(dto.getNewPassword());
@@ -136,16 +130,15 @@ public class MemberServiceImpl implements MemberService {
         }
 
         memberRepository.save(member);
-        log.info("Member [{}] updated successfully!", member.getId());
     }
 
     private Member findMemberById(Long memberId) {
         return memberRepository.findById(memberId)
-                .orElseThrow(() -> new UsernameNotFoundException("회원을 찾을 수 없습니다."));
+                .orElseThrow(MemberNotFoundException::new);
     }
 
     private Member findMemberByEmail(String email) {
         return memberRepository.findByEmail(email)
-                .orElseThrow(() -> new UsernameNotFoundException("회원을 찾을 수 없습니다."));
+                .orElseThrow(MemberNotFoundException::new);
     }
 }

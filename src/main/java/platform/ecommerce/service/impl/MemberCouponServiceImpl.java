@@ -9,6 +9,8 @@ import platform.ecommerce.dto.coupon.MemberCouponResponseDto;
 import platform.ecommerce.entity.Coupon;
 import platform.ecommerce.entity.Member;
 import platform.ecommerce.entity.MemberCoupon;
+import platform.ecommerce.exception.coupon.*;
+import platform.ecommerce.exception.member.MemberNotFoundException;
 import platform.ecommerce.repository.CouponRepository;
 import platform.ecommerce.repository.MemberCouponRepository;
 import platform.ecommerce.repository.MemberRepository;
@@ -30,22 +32,22 @@ public class MemberCouponServiceImpl implements MemberCouponService {
     @Transactional
     public Long issueCoupon(MemberCouponIssueRequestDto dto) {
         if (memberCouponRepository.existsByMemberIdAndCouponId(dto.getMemberId(), dto.getCouponId())) {
-            throw new IllegalStateException("이미 발급된 쿠폰입니다.");
+            throw new CouponDuplicateIssueException();
         }
 
         Coupon coupon = couponRepository.findById(dto.getCouponId())
-                .orElseThrow(() -> new EntityNotFoundException("존재하지 않는 쿠폰입니다."));
+                .orElseThrow(CouponNotFoundException::new);
 
         if (!coupon.isEnabled()) {
-            throw new IllegalStateException("사용할 수 없는 쿠폰입니다.");
+            throw new CouponNotUsableException();
         }
 
         if (!coupon.isValidNow()) {
-            throw new IllegalStateException("유효하지 않는 쿠폰입니다.");
+            throw new InvalidCouponException();
         }
 
         Member member = memberRepository.findById(dto.getMemberId())
-                .orElseThrow(() -> new EntityNotFoundException("회원 정보가 유효하지 않습니다."));
+                .orElseThrow(MemberNotFoundException::new);
 
         MemberCoupon memberCoupon = MemberCoupon.builder()
                 .member(member)
@@ -89,7 +91,7 @@ public class MemberCouponServiceImpl implements MemberCouponService {
     @Override
     public MemberCoupon getOwnedCouponOrThrow(Long memberCouponId, Long memberId) {
         return memberCouponRepository.findByIdAndMemberId(memberCouponId, memberId)
-                .orElseThrow(() -> new EntityNotFoundException("해당 쿠폰을 사용할 수 없습니다."));
+                .orElseThrow(CouponNotUsableException::new);
     }
 
     @Override
@@ -98,7 +100,7 @@ public class MemberCouponServiceImpl implements MemberCouponService {
         MemberCoupon memberCoupon = getOwnedCouponOrThrow(memberCouponId, memberId);
 
         if (memberCoupon.isUsed()) {
-            throw new IllegalStateException("이미 사용된 쿠폰입니다.");
+            throw new CouponAlreadyUsedException();
         }
 
         memberCoupon.markAsUsed();

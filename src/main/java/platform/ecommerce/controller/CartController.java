@@ -12,6 +12,8 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import platform.ecommerce.dto.cart.CartItemDto;
 import platform.ecommerce.dto.cart.CartUpdateRequest;
 import platform.ecommerce.dto.member.MemberResponseDto;
+import platform.ecommerce.exception.cart.InvalidCartItemException;
+import platform.ecommerce.exception.common.InvalidRequestException;
 import platform.ecommerce.service.CartService;
 import platform.ecommerce.service.MemberService;
 
@@ -47,7 +49,7 @@ public class CartController {
     public String addItemToCart(@ModelAttribute("cartItemDto") CartItemDto cartItemDto,
                                 Authentication authentication) {
         if (cartItemDto.getItemOptionId() == null || cartItemDto.getQuantity() <= 0) {
-            throw new IllegalArgumentException("유효하지 않은 상품 ID 또는 수량입니다.");
+            throw new InvalidCartItemException();
         }
 
         UserDetails userDetails = (UserDetails) authentication.getPrincipal();
@@ -79,7 +81,7 @@ public class CartController {
     public String removeItemFromCart(@RequestParam("cartItemId") Long cartItemId,
                                      Authentication authentication) {
         if (cartItemId == null) {
-            throw new IllegalArgumentException("유효하지 않은 상품 ID입니다.");
+            throw new InvalidCartItemException();
         }
 
         UserDetails userDetails = (UserDetails) authentication.getPrincipal();

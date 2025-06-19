@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import platform.ecommerce.dto.member.MemberDto;
 import platform.ecommerce.entity.Member;
+import platform.ecommerce.exception.member.MemberNotFoundException;
 import platform.ecommerce.repository.MemberRepository;
 import platform.ecommerce.security.CustomUserDetails;
 
@@ -22,7 +23,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
     @Override
     @Transactional(readOnly = true)
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-        Member member = memberRepository.findByEmail(email).orElseThrow(() -> new UsernameNotFoundException("회원을 찾을 수 없습니다."));
+        Member member = memberRepository.findByEmail(email).orElseThrow(MemberNotFoundException::new);
 
 //        return toUserDetails(member);
         MemberDto memberDto = new MemberDto(member);

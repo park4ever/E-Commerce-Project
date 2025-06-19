@@ -5,6 +5,6 @@ import platform.ecommerce.exception.error.ErrorCode;
 
 public class ReviewForbiddenException extends BusinessException {
     public ReviewForbiddenException() {
-        super(ErrorCode.REVIEW_FORBIDDEN);
+        super(ErrorCode.REVIEW_ACCESS_DENIED);
     }
 }

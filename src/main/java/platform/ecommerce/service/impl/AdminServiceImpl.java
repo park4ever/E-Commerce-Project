@@ -5,7 +5,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -17,6 +16,16 @@ import platform.ecommerce.dto.member.MemberPageRequestDto;
 import platform.ecommerce.dto.order.OrderPageRequestDto;
 import platform.ecommerce.dto.review.ReviewPageRequestDto;
 import platform.ecommerce.entity.*;
+import platform.ecommerce.exception.item.InvalidItemOptionException;
+import platform.ecommerce.exception.item.ItemPriceUnchangedException;
+import platform.ecommerce.exception.order.OrderCannotBeCanceledException;
+import platform.ecommerce.exception.order.OrderItemShippedException;
+import platform.ecommerce.exception.order.OrderPriceInvalidException;
+import platform.ecommerce.exception.order.OrderQuantityInvalidException;
+import platform.ecommerce.exception.review.ReviewNotFoundException;
+import platform.ecommerce.exception.review.ReviewReplyEmptyException;
+import platform.ecommerce.exception.review.ReviewReplyNotFoundException;
+import platform.ecommerce.exception.review.ReviewStatusAlreadySetException;
 import platform.ecommerce.repository.*;
 import platform.ecommerce.service.AdminService;
 
@@ -24,7 +33,6 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import static java.util.stream.Collectors.toList;
-import static org.springframework.data.domain.Sort.Direction.*;
 
 @Slf4j
 @Service
@@ -127,7 +135,7 @@ public class AdminServiceImpl implements AdminService {
                 ItemOption option = item.getItemOptions().stream()
                         .filter(o -> o.getId().equals(dto.getId()))
                         .findFirst()
-                        .orElseThrow(() -> new IllegalArgumentException("ItemOption ID 불일치 : " + dto.getId()));
+                        .orElseThrow(InvalidItemOptionException::new);
                 option.updateStockQuantity(dto.getStockQuantity());
             }
         }
@@ -199,7 +207,7 @@ public class AdminServiceImpl implements AdminService {
         Order order = findEntityById(orderRepository, orderId, "주문");
 
         if (!order.isCancelable()) {
-            throw new IllegalStateException("현재 상태에서는 주문을 취소할 수 없습니다.");
+            throw new OrderCannotBeCanceledException();
         }
 
         order.cancel();
@@ -211,7 +219,7 @@ public class AdminServiceImpl implements AdminService {
         OrderItem orderItem = findEntityById(orderItemRepository, orderItemId, "주문 상품");
 
         if (newQuantity <= 0) {
-            throw new IllegalArgumentException("주문 수량은 1 이상이어야 합니다.");
+            throw new OrderQuantityInvalidException();
         }
 
         orderItem.updateQuantity(newQuantity);
@@ -223,11 +231,11 @@ public class AdminServiceImpl implements AdminService {
         OrderItem orderItem = findEntityById(orderItemRepository, orderItemId, "주문 상품");
 
         if (newPrice < 0) {
-            throw new IllegalArgumentException("가격은 0 이상이어야 합니다.");
+            throw new OrderPriceInvalidException();
         }
 
         if (orderItem.getOrderPrice() == newPrice) {
-            throw new IllegalStateException("변경할 값이 현재 가격과 동일합니다.");
+            throw new ItemPriceUnchangedException();
         }
 
         orderItem.updateOrderPrice(newPrice);
@@ -240,7 +248,7 @@ public class AdminServiceImpl implements AdminService {
 
         if (orderItem.getOrder().getOrderStatus() == OrderStatus.SHIPPED ||
             orderItem.getOrder().getOrderStatus() == OrderStatus.DELIVERED) {
-            throw new IllegalStateException("배송된 상품은 삭제할 수 없습니다.");
+            throw new OrderItemShippedException();
         }
 
         orderItem.cancel();
@@ -274,7 +282,7 @@ public class AdminServiceImpl implements AdminService {
         Review review = findEntityById(reviewRepository, reviewId, "리뷰");
 
         if (review == null) {
-            throw new EntityNotFoundException("삭제할 리뷰가 존재하지 않습니다.");
+            throw new ReviewNotFoundException();
         }
 
         reviewRepository.delete(review);
@@ -286,7 +294,7 @@ public class AdminServiceImpl implements AdminService {
         Review review = findEntityById(reviewRepository, reviewId, "리뷰");
 
         if (review.isVisible() == isVisible) {
-            throw new IllegalStateException("이미 해당 상태로 설정되어 있습니다.");
+            throw new ReviewStatusAlreadySetException();
         }
 
         review.toggleVisibility(isVisible);
@@ -298,7 +306,7 @@ public class AdminServiceImpl implements AdminService {
         Review review = findEntityById(reviewRepository, reviewId, "리뷰");
 
         if (reply == null || reply.trim().isEmpty()) {
-            throw new IllegalArgumentException("관리자 답변은 비어 있을 수 없습니다.");
+            throw new ReviewReplyEmptyException();
         }
 
         review.addAdminReply(reply);
@@ -310,7 +318,7 @@ public class AdminServiceImpl implements AdminService {
         Review review = findEntityById(reviewRepository, reviewId, "리뷰");
 
         if (review.getAdminReply() == null) {
-            throw new IllegalStateException("삭제할 관리자 답변이 존재하지 않습니다.");
+            throw new ReviewReplyNotFoundException();
         }
 
         review.removeAdminReply();

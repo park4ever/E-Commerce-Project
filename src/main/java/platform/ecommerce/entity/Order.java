@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.BatchSize;
+import platform.ecommerce.exception.order.*;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -83,7 +84,7 @@ public class Order extends BaseTimeEntity {
 
     public void updateStatus(OrderStatus status) {
         if (status == null) {
-            throw new IllegalArgumentException("주문 상태가 null 값일 수 없습니다.");
+            throw new OrderStatusRequiredException();
         }
         this.orderStatus = status;
     }
@@ -106,7 +107,7 @@ public class Order extends BaseTimeEntity {
     //배송 전 상태에서 취소
     public void cancel() {
         if (!isCancelable()) {
-            throw new IllegalStateException("배송 준비 중인 경우에만 주문 취소가 가능합니다.");
+            throw new OrderCannotBeCanceledException();
         }
         this.orderStatus = CANCELLED;
         for (OrderItem orderItem : orderItems) {
@@ -119,7 +120,7 @@ public class Order extends BaseTimeEntity {
         if (isCancelable()) {
             this.shippingAddress = newAddress;
         } else {
-            throw new IllegalStateException("배송 준비 중인 경우에만 주소 변경이 가능합니다.");
+            throw new AddressChangeNotAllowedException();
         }
     }
 
@@ -138,7 +139,7 @@ public class Order extends BaseTimeEntity {
             this.modificationReason = reason;
             this.orderStatus = REFUND_REQUESTED;
         } else {
-            throw new IllegalStateException("배송 완료 후에만 환불 요청이 가능합니다.");
+            throw new OrderCannotBeRefundedException();
         }
     }
 
@@ -147,7 +148,7 @@ public class Order extends BaseTimeEntity {
             this.modificationReason = reason;
             this.orderStatus = EXCHANGE_REQUESTED;
         } else {
-            throw new IllegalStateException("배송 완료 후에만 교환 요청이 가능합니다.");
+            throw new OrderCannotBeExchangedException();
         }
     }
 

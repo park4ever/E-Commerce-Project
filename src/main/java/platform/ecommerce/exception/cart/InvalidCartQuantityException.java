@@ -5,6 +5,6 @@ import platform.ecommerce.exception.error.ErrorCode;
 
 public class InvalidCartQuantityException extends BusinessException {
     public InvalidCartQuantityException() {
-        super(ErrorCode.CART_INVALID_QUANTITY);
+        super(ErrorCode.CART_QUANTITY_INVALID);
     }
 }

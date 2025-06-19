@@ -11,6 +11,8 @@ import platform.ecommerce.dto.item.*;
 import platform.ecommerce.entity.Item;
 import platform.ecommerce.entity.ItemCategory;
 import platform.ecommerce.entity.ItemOption;
+import platform.ecommerce.exception.item.ItemNotFoundException;
+import platform.ecommerce.exception.item.ItemOptionRequiredException;
 import platform.ecommerce.repository.ItemRepository;
 import platform.ecommerce.service.ItemService;
 import platform.ecommerce.service.upload.FileStorageService;
@@ -45,7 +47,7 @@ public class ItemServiceImpl implements ItemService {
 
         List<ItemOptionDto> options = saveRequestDto.getOptions();
         if (options == null || options.isEmpty()) {
-            throw new IllegalArgumentException("최소 하나 이상의 상품 옵션이 필요합니다.");
+            throw new ItemOptionRequiredException();
         }
         for (ItemOptionDto optionDto : options) {
             ItemOption option = ItemOption.create(
@@ -75,7 +77,7 @@ public class ItemServiceImpl implements ItemService {
     @Override
     public ItemResponseDto findItem(Long id) {
         Item item = itemRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("상품을 찾을 수 없습니다."));
+                .orElseThrow(ItemNotFoundException::new);
         return mapToResponse(item);
     }
 
@@ -83,7 +85,7 @@ public class ItemServiceImpl implements ItemService {
     @Transactional
     public void updateItem(Long id, ItemUpdateDto updateDto) {
         Item item = itemRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("상품을 찾을 수 없습니다."));
+                .orElseThrow(ItemNotFoundException::new);
 
         updateImageIfPresent(item, updateDto.getImage());
         updateItemFields(item, updateDto);

@@ -4,6 +4,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import platform.ecommerce.config.FileUploadProperties;
+import platform.ecommerce.exception.file.FileDeleteFailedException;
+import platform.ecommerce.exception.file.FileUploadFailedException;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -33,7 +35,7 @@ public class LocalFileStorageService implements FileStorageService {
             // ex) /images/item/uuid.jpg
             return properties.getUrlPrefix() + subDirectory + "/" + fileName;
         } catch (IOException e) {
-            throw new RuntimeException("파일 업로드 실패 : " + e.getMessage(), e);
+            throw new FileUploadFailedException();
         }
     }
 
@@ -43,7 +45,7 @@ public class LocalFileStorageService implements FileStorageService {
             Path filePath = Paths.get(properties.getPath()).resolve(relativePath);
             Files.deleteIfExists(filePath);
         } catch (IOException e) {
-            throw new RuntimeException("파일 삭제 실패 : " + e.getMessage(), e);
+            throw new FileDeleteFailedException();
         }
     }
 

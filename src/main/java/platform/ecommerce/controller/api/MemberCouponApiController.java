@@ -7,6 +7,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 import platform.ecommerce.dto.coupon.MemberCouponResponseDto;
 import platform.ecommerce.dto.member.MemberResponseDto;
+import platform.ecommerce.exception.unsupported.FeatureNotAvailableException;
 import platform.ecommerce.service.MemberCouponService;
 import platform.ecommerce.service.MemberService;
 
@@ -33,16 +34,16 @@ public class MemberCouponApiController {
 
     @GetMapping
     public ResponseEntity<List<MemberCouponResponseDto>> getAllCoupons(Authentication authentication) {
-        throw new UnsupportedOperationException("추후 구현 예정");
+        throw new FeatureNotAvailableException();
     }
 
     @PostMapping("/{couponId}/issue")
     public ResponseEntity<Long> issueCoupon(@PathVariable("couponId") Long couponId, Authentication authentication) {
-        throw new UnsupportedOperationException("추후 구현 예정");
+        throw new FeatureNotAvailableException();
     }
 
     @PatchMapping("/{memberCouponId}/use")
     public ResponseEntity<Void> useCoupon(@PathVariable("memberCouponId") Long memberCouponId, Authentication authentication) {
-        throw new UnsupportedOperationException("추후 구현 예정");
+        throw new FeatureNotAvailableException();
     }
 }

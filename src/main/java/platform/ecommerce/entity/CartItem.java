@@ -2,6 +2,7 @@ package platform.ecommerce.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import platform.ecommerce.exception.cart.InvalidCartQuantityException;
 
 import static jakarta.persistence.FetchType.*;
 
@@ -49,7 +50,7 @@ public class CartItem extends BaseTimeEntity {
     //장바구니에서 수량 증가
     public void increaseQuantity(int amount) {
         if (amount <= 0) {
-            throw new IllegalArgumentException("수량은 0보다 커야 합니다.");
+            throw new InvalidCartQuantityException();
         }
         this.quantity += amount;
     }
@@ -57,7 +58,7 @@ public class CartItem extends BaseTimeEntity {
     //장바구니에서 수량 설정
     public void updateQuantity(int newQuantity) {
         if (newQuantity <= 0) {
-            throw new IllegalArgumentException("수량은 0보다 커야 합니다.");
+            throw new InvalidCartQuantityException();
         }
         this.quantity = newQuantity;
     }

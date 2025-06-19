@@ -3,6 +3,7 @@ package platform.ecommerce.entity;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
+import platform.ecommerce.exception.order.OrderItemShippedException;
 
 import static jakarta.persistence.FetchType.*;
 import static platform.ecommerce.entity.OrderStatus.*;
@@ -54,7 +55,7 @@ public class OrderItem extends  BaseTimeEntity {
 
     public void cancel() {
         if (order.getOrderStatus() == SHIPPED || order.getOrderStatus() == DELIVERED) {
-            throw new IllegalStateException("이미 배송된 상품은 취소할 수 없습니다.");
+            throw new OrderItemShippedException();
         }
 
         itemOption.addStock(count);

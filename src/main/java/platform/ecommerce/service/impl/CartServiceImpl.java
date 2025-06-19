@@ -1,13 +1,15 @@
 package platform.ecommerce.service.impl;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import platform.ecommerce.dto.cart.CartItemDto;
 import platform.ecommerce.dto.order.OrderItemDto;
 import platform.ecommerce.dto.order.OrderSaveRequestDto;
 import platform.ecommerce.entity.*;
+import platform.ecommerce.exception.cart.*;
+import platform.ecommerce.exception.item.ItemOptionNotFoundException;
+import platform.ecommerce.exception.member.MemberNotFoundException;
 import platform.ecommerce.repository.*;
 import platform.ecommerce.service.CartService;
 
@@ -32,7 +34,7 @@ public class CartServiceImpl implements CartService {
     public void addToCart(Long memberId, Long itemOptionId, int quantity) {
         //회원 조회
         Member member = memberRepository.findById(memberId)
-                .orElseThrow(() -> new UsernameNotFoundException("회원을 찾을 수 없습니다."));
+                .orElseThrow(MemberNotFoundException::new);
 
         //장바구니 조회 or 생성
         Cart cart = cartRepository.findByMemberId(memberId)
@@ -40,7 +42,7 @@ public class CartServiceImpl implements CartService {
 
         //상품 옵션 조회
         ItemOption option = itemOptionRepository.findById(itemOptionId)
-                .orElseThrow(() -> new IllegalArgumentException("상품 옵션을 찾을 수 없습니다."));
+                .orElseThrow(ItemOptionNotFoundException::new);
 
         //해당 옵션으로 이미 담긴 CartItem이 있는지 확인
         CartItem cartItem = cartItemRepository.findByCartIdAndItemOptionId(cart.getId(), itemOptionId);
@@ -91,7 +93,7 @@ public class CartServiceImpl implements CartService {
     @Override
     public void updateQuantity(Long memberId, Long cartItemId, int quantity) {
         if (quantity <= 0) {
-            throw new IllegalArgumentException("수량은 0보다 커야 합니다.");
+            throw new InvalidCartQuantityException();
         }
 
         CartItem cartItem = getCartItem(memberId, cartItemId);
@@ -145,7 +147,7 @@ public class CartServiceImpl implements CartService {
         }
 
         Member member = memberRepository.findById(memberId)
-                .orElseThrow(() -> new UsernameNotFoundException("회원을 찾을 수 없습니다."));
+                .orElseThrow(MemberNotFoundException::new);
 
         return createOrderFromCart(cart, member);
     }
@@ -213,24 +215,24 @@ public class CartServiceImpl implements CartService {
 
     private Cart getCartByMemberId(Long memberId) {
         return cartRepository.findByMemberId(memberId)
-                .orElseThrow(() -> new IllegalStateException("장바구니를 찾을 수 없습니다. 먼저 상품을 추가하세요."));
+                .orElseThrow(CartNotFoundException::new);
     }
 
     private void validateQuantity(ItemOption option, int requestedQuantity) {
         if (requestedQuantity <= 0) {
-            throw new IllegalArgumentException("수량은 0보다 커야 합니다.");
+            throw new InvalidCartQuantityException();
         }
         if (option.getStockQuantity() < requestedQuantity) {
-            throw new IllegalArgumentException("해당 옵션의 재고가 부족합니다.");
+            throw new CartOptionOutOfStockException();
         }
     }
 
     private CartItem getCartItem(Long memberId, Long cartItemId) {
         CartItem cartItem = cartItemRepository.findById(cartItemId)
-                .orElseThrow(() -> new IllegalArgumentException("장바구니 항목을 찾을 수 없습니다."));
+                .orElseThrow(CartItemNotFoundException::new);
 
         if (!cartItem.getCart().getMember().getId().equals(memberId)) {
-            throw new IllegalArgumentException("해당 장바구니 항목에 대한 권한이 없습니다.");
+            throw new CartAccessDeniedException();
         }
 
         return cartItem;

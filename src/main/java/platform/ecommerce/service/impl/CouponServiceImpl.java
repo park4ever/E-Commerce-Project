@@ -10,6 +10,7 @@ import platform.ecommerce.dto.coupon.CouponPageRequestDto;
 import platform.ecommerce.dto.coupon.CouponResponseDto;
 import platform.ecommerce.dto.coupon.CouponUpdateRequestDto;
 import platform.ecommerce.entity.Coupon;
+import platform.ecommerce.exception.coupon.CouponNotFoundException;
 import platform.ecommerce.repository.CouponRepository;
 import platform.ecommerce.service.CouponService;
 
@@ -82,6 +83,6 @@ public class CouponServiceImpl implements CouponService {
 
     private Coupon findByIdOrThrow(Long id) {
         return couponRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("쿠폰을 찾을 수 없습니다. ID: " + id));
+                .orElseThrow(CouponNotFoundException::new);
     }
 }

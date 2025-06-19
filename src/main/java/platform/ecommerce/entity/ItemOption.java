@@ -52,7 +52,7 @@ public class ItemOption extends BaseTimeEntity {
     public void removeStock(int quantity) {
         int remain = this.stockQuantity - quantity;
         if (remain < 0) {
-            throw new NotEnoughStockException("상품의 재고가 부족합니다.");
+            throw new NotEnoughStockException();
         }
         this.stockQuantity = remain;
         this.isAvailable = remain > 0;

@@ -30,7 +30,6 @@ public class GlobalController {
         HttpSession session = request.getSession(false);
 
         if (authentication != null && authentication.isAuthenticated() && !(authentication instanceof AnonymousAuthenticationToken)) {
-            log.info("🏠 홈 - 인증된 사용자 : {}", authentication.getName());
         } else {
             log.info("🏠 홈 - 인증되지 않은 사용자");
         }

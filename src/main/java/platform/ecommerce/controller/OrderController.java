@@ -18,6 +18,7 @@ import platform.ecommerce.dto.member.MemberResponseDto;
 import platform.ecommerce.dto.order.*;
 import platform.ecommerce.entity.MemberCoupon;
 import platform.ecommerce.entity.OrderStatus;
+import platform.ecommerce.exception.coupon.CouponNotUsableException;
 import platform.ecommerce.service.*;
 
 import java.util.List;
@@ -97,7 +98,7 @@ public class OrderController {
                     .sum();
 
             if (!memberCoupon.isUsable(orderTotal)) {
-                throw new IllegalStateException("쿠폰을 사용할 수 없습니다.");
+                throw new CouponNotUsableException();
             }
 
             discountAmount = memberCoupon.getDiscountAmount(orderTotal);
@@ -152,14 +153,12 @@ public class OrderController {
     @PostMapping("/updateStatus")
     public String updateOrderStatus(@RequestParam("orderId") Long orderId,
                                     @RequestParam("status") OrderStatus status) {
-        log.info("Updating order status : orderId = {}, status = {}", orderId, status);
         orderService.updateOrderStatus(orderId, status);
         return "redirect:/order/history";
     }
 
     @PostMapping("/cancel")
     public String cancelOrder(@RequestParam("orderId") Long orderId) {
-        log.info("Cancelling order : orderId = {}", orderId);
         orderService.cancelOrder(orderId);
         return "redirect:/order/history";
     }
