@@ -6,10 +6,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import platform.ecommerce.dto.member.MemberDetailsDto;
-import platform.ecommerce.dto.member.MemberProfileDto;
-import platform.ecommerce.dto.member.MemberResponseDto;
-import platform.ecommerce.dto.member.UpdateMemberRequestDto;
+import platform.ecommerce.dto.member.*;
 import platform.ecommerce.entity.Address;
 import platform.ecommerce.entity.Member;
 import platform.ecommerce.exception.member.MemberNotFoundException;
@@ -22,14 +19,13 @@ import java.time.format.DateTimeFormatter;
 
 @Service
 @RequiredArgsConstructor
-@Transactional
+@Transactional(readOnly = true)
 public class MemberServiceImpl implements MemberService {
 
     private final MemberRepository memberRepository;
     private final PasswordEncoder passwordEncoder;
 
     @Override
-    @Transactional(readOnly = true)
     public MemberResponseDto findMember(String email) {
         Member member = findMemberByEmail(email);
 
@@ -41,11 +37,10 @@ public class MemberServiceImpl implements MemberService {
     }
 
     @Override
-    @Transactional(readOnly = true)
     public MemberDetailsDto findMemberDetails(String email) {
         Member member = findMemberByEmail(email);
         if (member == null) {
-            return null;
+            throw new MemberNotFoundException();
         }
 
         return MemberDetailsDto.builder()
@@ -57,7 +52,18 @@ public class MemberServiceImpl implements MemberService {
     }
 
     @Override
-    @Transactional(readOnly = true)
+    public LoginMemberDto findLoginMember(String email) {
+        Member member = findMemberByEmail(email);
+
+        return new LoginMemberDto(
+                member.getId(),
+                member.getUsername(),
+                member.getEmail(),
+                member.getRole().name()
+        );
+    }
+
+    @Override
     public MemberDetailsDto findMemberDetailsOrDefault(String email) {
         Member member = findMemberByEmail(email);
 
@@ -74,12 +80,12 @@ public class MemberServiceImpl implements MemberService {
     }
 
     @Override
+    @Transactional
     public void deleteMember(Long memberId) {
         memberRepository.delete(findMemberById(memberId));
     }
 
     @Override
-    @Transactional(readOnly = true)
     public UpdateMemberRequestDto toUpdateDto(Long memberId) {
         Member member = findMemberById(memberId);
 
@@ -94,7 +100,6 @@ public class MemberServiceImpl implements MemberService {
     }
 
     @Override
-    @Transactional(readOnly = true)
     public MemberProfileDto toProfileDto(Long memberId) {
         Member member = findMemberById(memberId);
 
@@ -108,12 +113,12 @@ public class MemberServiceImpl implements MemberService {
     }
 
     @Override
-    @Transactional(readOnly = true)
     public boolean checkPassword(Long memberId, String inputPassword) {
         return passwordEncoder.matches(inputPassword, findMemberById(memberId).getPassword());
     }
 
     @Override
+    @Transactional
     public void updateMember(Long memberId, UpdateMemberRequestDto dto) {
         Member member = findMemberById(memberId);
 

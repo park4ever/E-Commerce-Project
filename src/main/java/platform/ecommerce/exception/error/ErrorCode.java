@@ -65,6 +65,7 @@ public enum ErrorCode {
     MEMBER_NOT_FOUND("MEMBER_001", "회원을 찾을 수 없습니다."),
     MEMBER_PASSWORD_MISMATCH("MEMBER_002", "새 비밀번호가 일치하지 않습니다."),
     MEMBER_PASSWORD_REQUIRED("MEMBER_003", "비밀번호를 입력해주세요."),
+    MEMBER_ACCESS_DENIED("MEMBER_004", "로그인이 필요한 요청입니다."),
 
     //UNSUPPORTED
     NOT_IMPLEMENTED("SYSTEM_001", "추후 구현 예정입니다."); 

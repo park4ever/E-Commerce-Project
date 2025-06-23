@@ -1,15 +1,14 @@
 package platform.ecommerce.service;
 
-import platform.ecommerce.dto.member.MemberDetailsDto;
-import platform.ecommerce.dto.member.MemberProfileDto;
-import platform.ecommerce.dto.member.MemberResponseDto;
-import platform.ecommerce.dto.member.UpdateMemberRequestDto;
+import platform.ecommerce.dto.member.*;
 
 public interface MemberService {
 
     MemberResponseDto findMember(String email);
 
     MemberDetailsDto findMemberDetails(String email);
+
+    LoginMemberDto findLoginMember(String username);
 
     MemberDetailsDto findMemberDetailsOrDefault(String email);
 
