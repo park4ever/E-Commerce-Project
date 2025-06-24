@@ -1,33 +1,18 @@
 package platform.ecommerce.controller;
 
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.bind.support.SessionStatus;
-import platform.ecommerce.dto.member.ConfirmPasswordDto;
-import platform.ecommerce.dto.member.MemberProfileDto;
-import platform.ecommerce.dto.member.MemberResponseDto;
-import platform.ecommerce.dto.member.UpdateMemberRequestDto;
+import platform.ecommerce.config.auth.LoginMember;
+import platform.ecommerce.dto.member.*;
 import platform.ecommerce.service.MemberService;
-
-import java.time.format.DateTimeFormatter;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.Map;
 
 @Controller
 @RequiredArgsConstructor
@@ -37,11 +22,8 @@ public class MemberController {
     private final MemberService memberService;
 
     @GetMapping("/profile")
-    public String viewProfile(Model model, Authentication authentication) {
-        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
-        MemberResponseDto member = memberService.findMember(userDetails.getUsername());
-
-        MemberProfileDto profileDto = memberService.toProfileDto(member.getMemberId());
+    public String viewProfile(@LoginMember LoginMemberDto member, Model model) {
+        MemberProfileDto profileDto = memberService.toProfileDto(member.id());
         model.addAttribute("member", profileDto);
 
         return "/pages/member/profile";
@@ -60,36 +42,26 @@ public class MemberController {
 
     @PostMapping("/check-password")
     public String verifyPassword(@Valid @ModelAttribute("confirmPasswordDto") ConfirmPasswordDto passwordDto,
-                                 BindingResult bindingResult, Authentication authentication, HttpSession session, Model model) {
+                                 @LoginMember LoginMemberDto member, BindingResult bindingResult,
+                                 HttpSession session, Model model) {
         if (bindingResult.hasErrors() || passwordDto.getCurrentPassword() == null) {
             model.addAttribute("passwordError", "비밀번호를 입력하세요.");
             return "/pages/member/checkPassword";
         }
 
-        if (authentication == null || !authentication.isAuthenticated()) {
-            return "redirect:/login";
-        }
-
-        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
-        MemberResponseDto member = memberService.findMember(userDetails.getUsername());
-
-        boolean isPasswordValid = memberService.checkPassword(member.getMemberId(), passwordDto.getCurrentPassword());
+        boolean isPasswordValid = memberService.checkPassword(member.id(), passwordDto.getCurrentPassword());
         if (!isPasswordValid) {
             model.addAttribute("passwordError", "비밀번호가 일치하지 않습니다.");
             return "/pages/member/checkPassword";
         }
 
-        UsernamePasswordAuthenticationToken newAuth =
-                new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
-        SecurityContextHolder.getContext().setAuthentication(newAuth);
-        session.setAttribute("SPRING_SECURITY_CONTEXT", SecurityContextHolder.getContext());
         session.setAttribute("passwordVerified", true);
 
         return "redirect:/member/update-form";
     }
 
     @GetMapping("/update-form")
-    public String profileForm(HttpSession session, Model model, Authentication authentication) {
+    public String profileForm(@LoginMember LoginMemberDto member, HttpSession session, Model model) {
         Boolean isVerified = (Boolean) session.getAttribute("passwordVerified");
         if (isVerified == null || !isVerified) {
             session.removeAttribute("passwordVerified");
@@ -97,10 +69,7 @@ public class MemberController {
             return "redirect:/member/check-password";
         }
 
-        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
-        MemberResponseDto member = memberService.findMember(userDetails.getUsername());
-
-        UpdateMemberRequestDto memberDto = memberService.toUpdateDto(member.getMemberId());
+        UpdateMemberRequestDto memberDto = memberService.toUpdateDto(member.id());
         model.addAttribute("updateMemberRequestDto", memberDto);
 
         return "/pages/member/profileForm";
@@ -109,16 +78,13 @@ public class MemberController {
     @PostMapping("/update")
     public String submitProfileUpdate(
             @Valid @ModelAttribute("updateMemberRequestDto") UpdateMemberRequestDto memberDto,
-            BindingResult bindingResult, HttpSession session, Model model, Authentication authentication) {
+            @LoginMember LoginMemberDto member, BindingResult bindingResult, HttpSession session, Model model) {
         if (bindingResult.hasErrors()) {
             return "/pages/member/profileForm";
         }
 
         try {
-            UserDetails userDetails = (UserDetails) authentication.getPrincipal();
-            MemberResponseDto member = memberService.findMember(userDetails.getUsername());
-
-            memberService.updateMember(member.getMemberId(), memberDto);
+            memberService.updateMember(member.id(), memberDto);
             session.removeAttribute("passwordVerified");
         } catch (IllegalArgumentException e) {
             model.addAttribute("passwordError", e.getMessage());
@@ -129,11 +95,8 @@ public class MemberController {
     }
 
     @PostMapping("/delete")
-    public ResponseEntity<?> deleteMember(@RequestParam("memberId") Long memberId, Authentication authentication) {
-        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
-        MemberResponseDto member = memberService.findMember(userDetails.getUsername());
-
-        if (!member.getMemberId().equals(memberId)) {
+    public ResponseEntity<?> deleteMember(@RequestParam("memberId") Long memberId, @LoginMember LoginMemberDto member) {
+        if (!member.id().equals(memberId)) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("권한이 없습니다.");
         }
 

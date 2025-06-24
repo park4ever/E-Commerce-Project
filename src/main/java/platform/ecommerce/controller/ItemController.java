@@ -10,7 +10,9 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
+import platform.ecommerce.config.auth.LoginMember;
 import platform.ecommerce.dto.item.*;
+import platform.ecommerce.dto.member.LoginMemberDto;
 import platform.ecommerce.dto.member.MemberDetailsDto;
 import platform.ecommerce.dto.review.ReviewPageRequestDto;
 import platform.ecommerce.dto.review.ReviewResponseDto;
@@ -58,13 +60,16 @@ public class ItemController {
     @GetMapping("/{itemId}")
     public String viewItem(@PathVariable("itemId") Long itemId,
                            @ModelAttribute("reviewPageRequestDto") ReviewPageRequestDto requestDto, Pageable pageable,
-                           Model model, Authentication authentication) {
+                           @LoginMember LoginMemberDto member, Model model) {
         model.addAttribute("title", "상품 상세 정보");
 
         //기본 정보 조회
         ItemResponseDto item = itemService.findItem(itemId);
-        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
-        MemberDetailsDto member = memberService.findMemberDetails(userDetails.getUsername());
+
+        //nullable 구조니까 로그인하지 않았을 경우 분기
+        MemberDetailsDto memberDetails = (member != null)
+                ? memberService.findMemberDetails(member.email())
+                : null;
 
         //리뷰 관련 데이터
         Page<ReviewResponseDto> reviews = reviewService.searchReviews(requestDto, pageable);
@@ -72,7 +77,7 @@ public class ItemController {
         long reviewCount = reviewService.countReviewsByItemId(itemId);
 
         //ViewModel 생성 및 모델에 추가
-        ItemDetailViewModel viewModel = ItemDetailViewModel.of(item, member, reviews, ratingAvg, reviewCount);
+        ItemDetailViewModel viewModel = ItemDetailViewModel.of(item, memberDetails, reviews, ratingAvg, reviewCount);
         model.addAttribute("viewModel", viewModel);
 
         //리뷰 조건 다시 넣어줌(페이징 등 이슈)

@@ -24,7 +24,7 @@ public class ItemDetailViewModel {
                                          long reviewCount) {
         return ItemDetailViewModel.builder()
                 .item(item)
-                .member(member)
+                .member(member != null ? member : MemberDetailsDto.guest())
                 .reviews(reviews)
                 .ratingAverage(avgRating)
                 .reviewCount(reviewCount)

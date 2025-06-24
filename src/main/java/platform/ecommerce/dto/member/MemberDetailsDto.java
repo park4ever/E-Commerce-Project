@@ -29,6 +29,16 @@ public class MemberDetailsDto {
         }
     }
 
+    public static MemberDetailsDto guest() {
+        Address emptyAddress = new Address("", "", "", "");
+        return MemberDetailsDto.builder()
+                .memberId(null)
+                .username("비회원")
+                .phoneNumber(null)
+                .address(emptyAddress)
+                .build();
+    }
+
     public String getFullAddress() {
         return String.format("%s, %s, %s",
                 city != null ? city : "",
