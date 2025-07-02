@@ -11,6 +11,7 @@ import platform.ecommerce.entity.*;
 import platform.ecommerce.exception.cart.CartOptionOutOfStockException;
 import platform.ecommerce.exception.common.InvalidRequestException;
 import platform.ecommerce.exception.coupon.CouponNotFoundException;
+import platform.ecommerce.exception.coupon.CouponNotUsableException;
 import platform.ecommerce.exception.item.ItemOptionNotFoundException;
 import platform.ecommerce.exception.member.MemberNotFoundException;
 import platform.ecommerce.exception.order.*;
@@ -18,6 +19,8 @@ import platform.ecommerce.repository.ItemOptionRepository;
 import platform.ecommerce.repository.MemberCouponRepository;
 import platform.ecommerce.repository.MemberRepository;
 import platform.ecommerce.repository.OrderRepository;
+import platform.ecommerce.service.CartService;
+import platform.ecommerce.service.MemberCouponService;
 import platform.ecommerce.service.OrderService;
 
 import java.time.LocalDateTime;
@@ -37,70 +40,120 @@ public class OrderServiceImpl implements OrderService {
     private final ItemOptionRepository itemOptionRepository;
     private final MemberCouponRepository memberCouponRepository;
 
+    private final CartService cartService;  //단방향 주입이라 순환참조 X.
+    private final MemberCouponService memberCouponService;  //위와 동일.
+
     @Override
-    public Long placeOrder(OrderSaveRequestDto requestDto, int discountAmount) {
-        if (requestDto.getOrderItemDto() == null || requestDto.getOrderItemDto().isEmpty()) {
+    public Long placeOrder(OrderSaveRequestDto dto) {
+        if (dto == null || dto.getOrderItemDto() == null || dto.getOrderItemDto().isEmpty()) {
             throw new OrderItemListEmptyException();
         }
 
+        //주문 엔티티 생성
         Order order = Order.builder()
-                .member(getMemberInfo(requestDto.getMemberId()))
+                .member(findMemberByIdOrThrow(dto.getMemberId()))
                 .orderDate(LocalDateTime.now())
                 .orderStatus(PROCESSED)
-                .shippingAddress(requestDto.convertToShippingAddress())
-                .paymentMethod(requestDto.getPaymentMethod())
+                .shippingAddress(dto.convertToShippingAddress())
+                .paymentMethod(dto.getPaymentMethod())
                 .build();
 
-        MemberCoupon coupon = memberCouponRepository.findById(requestDto.getMemberCouponId())
-                .orElseThrow(CouponNotFoundException::new);
-
-        order.applyDiscount(coupon, discountAmount);
-
-        for (OrderItemDto dto : requestDto.getOrderItemDto()) {
-            ItemOption option = itemOptionRepository.findById(dto.getItemOptionId())
+        //주문 상품 생성 및 재고 차감
+        for (OrderItemDto itemDto : dto.getOrderItemDto()) {
+            ItemOption option = itemOptionRepository.findById(itemDto.getItemOptionId())
                     .orElseThrow(ItemOptionNotFoundException::new);
 
-            if (option.isSoldOut() || option.getStockQuantity() < dto.getCount()) {
+            if (option.isSoldOut() || option.getStockQuantity() < itemDto.getCount()) {
                 throw new CartOptionOutOfStockException();
             }
 
-            OrderItem orderItem = dto.toOrderItem(option, order);
-            order.addOrderItem(orderItem);
-            option.removeStock(dto.getCount());
+            order.addOrderItem(itemDto.toOrderItem(option, order));
+            option.removeStock(itemDto.getCount());
+        }
+
+        //할인 적용 (옵션)
+        if (dto.getMemberCouponId() != null) {
+            MemberCoupon coupon = memberCouponRepository.findById(dto.getMemberCouponId())
+                    .orElseThrow(CouponNotFoundException::new);
+
+            int orderTotal = order.getTotalPrice();
+            if (!coupon.isUsable(orderTotal)) {
+                throw new CouponNotUsableException();
+            }
+
+            order.applyDiscount(coupon, coupon.getDiscountAmount(orderTotal));
+            coupon.markAsUsed();
         }
 
         return orderRepository.save(order).getId();
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public List<OrderResponseDto> findOrdersByMemberId(Long memberId) {
-        Member member = getMemberInfo(memberId);
+    public Long processOrder(OrderSaveRequestDto dto, Long memberId) {
+        //장바구니에서 주문한 경우 DTO 가공
+        if (dto.isFromCart()) {
+            dto = cartService.prepareOrderFromCart(memberId);
+        } else {
+            if (dto.getMemberId() == null) {
+                dto.setMemberId(memberId);
+            }
+        }
 
-        List<Order> orders = orderRepository.findByMember(member);
+        //쿠폰 사용 가능 여부 검증 및 할인 정보 반영
+        if (dto.getMemberCouponId() != null) {
+            MemberCoupon coupon = memberCouponService.getOwnedCouponOrThrow(dto.getMemberCouponId(), memberId);
 
-        return orders.stream()
-                .map(OrderResponseDto::new)
-                .collect(Collectors.toList());
+            int orderTotal = dto.getOrderItemDto().stream()
+                    .mapToInt(OrderItemDto::getTotalPrice)
+                    .sum();
+
+            if (!coupon.isUsable(orderTotal)) {
+                throw new CouponNotUsableException();
+            }
+
+            //쿠폰 사용 처리 (서비스에 위임)
+            memberCouponService.useCoupon(dto.getMemberCouponId(), memberId);
+        }
+
+        //주문 처리
+        Long orderId = placeOrder(dto);
+
+        //장바구니 주문이라면 해당 상품 삭제
+        if (dto.isFromCart()) {
+            List<Long> orderedItemIds = dto.getOrderItems().stream()
+                    .map(OrderItemDto::getItemOptionId)
+                    .toList();
+
+            cartService.removeOrderedItemsFromCart(memberId, orderedItemIds);
+        }
+
+        return orderId;
     }
 
     @Override
     @Transactional(readOnly = true)
-    public OrderResponseDto findOrderById(Long orderId) {
-        Order order = getOrderInfo(orderId);
+    public Page<OrderResponseDto> findMyOrders(Long memberId, OrderPageRequestDto dto) {
+        Pageable pageable = dto.toPageable();
+        Page<Order> orders = orderRepository.searchMyOrders(memberId, dto, pageable);
+
+        return orders.map(OrderResponseDto::new);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public OrderResponseDto findOrderById(Long orderId, Long memberId) {
+        Order order = findOrderByIdOrThrow(orderId);
+
+        if (!order.getMember().getId().equals(memberId)) {
+            throw new OrderAccessDeniedException();
+        }
 
         return new OrderResponseDto(order);
     }
 
     @Override
-    public void updateOrderStatus(Long orderId, OrderStatus status) {
-        Order order = getOrderInfo(orderId);
-        order.updateStatus(status);
-    }
-
-    @Override
     public void cancelOrder(Long orderId) {
-        Order order = getOrderInfo(orderId);
+        Order order = findOrderByIdOrThrow(orderId);
         order.cancel();
     }
 
@@ -128,7 +181,7 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     public void updateShippingAddress(OrderModificationDto dto) {
-        Order order = getOrderInfo(dto.getOrderId());
+        Order order = findOrderByIdOrThrow(dto.getOrderId());
 
         if (order.getOrderStatus() == PENDING || order.getOrderStatus() == PROCESSED) {
             order.updateShippingAddress(dto.getNewAddress());
@@ -139,7 +192,7 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     public void applyRefundOrExchange(OrderModificationDto dto) {
-        Order order = getOrderInfo(dto.getOrderId());
+        Order order = findOrderByIdOrThrow(dto.getOrderId());
 
         switch (dto.getRequestType()) {
             case REFUND_REQUEST -> {
@@ -158,20 +211,12 @@ public class OrderServiceImpl implements OrderService {
         }
     }
 
-    @Override
-    @Transactional(readOnly = true)
-    public Page<OrderResponseDto> searchOrders(OrderPageRequestDto requestDto, Pageable pageable) {
-        Page<Order> orders = orderRepository.searchOrders(requestDto, pageable);
-
-        return orders.map(OrderResponseDto::new);
-    }
-
-    private Order getOrderInfo(Long orderId) {
+    private Order findOrderByIdOrThrow(Long orderId) {
         return orderRepository.findById(orderId)
                 .orElseThrow(OrderNotFoundException::new);
     }
 
-    private Member getMemberInfo(Long memberId) {
+    private Member findMemberByIdOrThrow(Long memberId) {
         return memberRepository.findById(memberId)
                 .orElseThrow(MemberNotFoundException::new);
     }

@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.BatchSize;
+import platform.ecommerce.exception.coupon.CouponNotUsableException;
 import platform.ecommerce.exception.order.*;
 
 import java.time.LocalDateTime;
@@ -73,9 +74,17 @@ public class Order extends BaseTimeEntity {
         }
     }
 
-    public void applyDiscount(MemberCoupon coupon, int discountAmount) {
+    public int calculateTotalAmountBeforeDiscount() {
+        return getTotalPrice(); //alias 역할
+    }
+
+    public void applyDiscount(MemberCoupon coupon, int totalAmount) {
+        if (!coupon.isUsable(totalAmount)) {
+            throw new CouponNotUsableException();
+        }
+
         this.memberCoupon = coupon;
-        this.discountAmount = discountAmount;
+        this.discountAmount = coupon.getDiscountAmount(totalAmount);
     }
 
     public int getFinalPrice() {

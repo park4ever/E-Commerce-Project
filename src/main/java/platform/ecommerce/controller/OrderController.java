@@ -5,20 +5,17 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
+import platform.ecommerce.config.auth.LoginMember;
 import platform.ecommerce.dto.coupon.MemberCouponResponseDto;
 import platform.ecommerce.dto.item.ItemResponseDto;
+import platform.ecommerce.dto.member.LoginMemberDto;
 import platform.ecommerce.dto.member.MemberDetailsDto;
-import platform.ecommerce.dto.member.MemberResponseDto;
 import platform.ecommerce.dto.order.*;
-import platform.ecommerce.entity.MemberCoupon;
 import platform.ecommerce.entity.OrderStatus;
-import platform.ecommerce.exception.coupon.CouponNotUsableException;
 import platform.ecommerce.service.*;
 
 import java.util.List;
@@ -39,17 +36,15 @@ public class OrderController {
     public String orderForm(@RequestParam(value = "itemId", required = false) Long itemId,
                             @RequestParam(value = "quantity", required = false) Integer quantity,
                             @RequestParam(value = "fromCart", required = false, defaultValue = "false") boolean fromCart,
-                            Model model, Authentication authentication) {
+                            @LoginMember LoginMemberDto member, Model model) {
         //사용자 정보 가져오기
-        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
-        MemberResponseDto member = memberService.findMember(userDetails.getUsername());
-        MemberDetailsDto memberDetails = memberService.findMemberDetails(userDetails.getUsername());
+        MemberDetailsDto memberDetails = memberService.findMemberDetails(member.email());
 
         OrderSaveRequestDto dto;
 
         if (fromCart) {
             //장바구니 주문인 경우, prepareOrderFromCart() 호출
-            dto = cartService.prepareOrderFromCart(member.getMemberId());
+            dto = cartService.prepareOrderFromCart(member.id());
         } else {
             //단일 상품 주문인 경우
             ItemResponseDto item = itemService.findItem(itemId);
@@ -57,7 +52,7 @@ public class OrderController {
             dto = orderService.buildSingleOrderDto(memberDetails, itemId, quantity);
         }
 
-        List<MemberCouponResponseDto> coupons = memberCouponService.getAllCouponsWithUsability(member.getMemberId(), dto.getOrderTotal());
+        List<MemberCouponResponseDto> coupons = memberCouponService.getAllCouponsWithUsability(member.id(), dto.getOrderTotal());
 
         model.addAttribute("orderSaveRequestDto", dto);
         model.addAttribute("memberDetails", memberDetails);
@@ -67,105 +62,60 @@ public class OrderController {
     }
 
     @PostMapping("/new")
-    public String createOrder(@Valid @ModelAttribute("orderSaveRequestDto") OrderSaveRequestDto orderSaveRequestDto,
-                              BindingResult bindingResult, Authentication authentication) {
+    public String createOrder(@Valid @ModelAttribute("orderSaveRequestDto") OrderSaveRequestDto dto,
+                              BindingResult bindingResult, @LoginMember LoginMemberDto member) {
         if (bindingResult.hasErrors()) {
             log.error("주문 데이터 검증 실패: {}", bindingResult.getAllErrors());
             return "/pages/order/orderForm";
         }
 
-        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
-        MemberResponseDto member = memberService.findMember(userDetails.getUsername());
-
-        //장바구니에서의 주문인지 확인
-        if (orderSaveRequestDto.isFromCart()) {
-            orderSaveRequestDto = cartService.prepareOrderFromCart(member.getMemberId());
-        } else {
-            //단일 상품 주문의 경우 'memberId'가 없으면 추가
-            if (orderSaveRequestDto.getMemberId() == null) {
-                orderSaveRequestDto.setMemberId(member.getMemberId());
-            }
-        }
-
-        Long memberCouponId = orderSaveRequestDto.getMemberCouponId();
-        int discountAmount = 0;
-
-        if (memberCouponId != null) {
-            MemberCoupon memberCoupon = memberCouponService.getOwnedCouponOrThrow(memberCouponId, member.getMemberId());
-
-            int orderTotal = orderSaveRequestDto.getOrderItemDto().stream()
-                    .mapToInt(OrderItemDto::getTotalPrice)
-                    .sum();
-
-            if (!memberCoupon.isUsable(orderTotal)) {
-                throw new CouponNotUsableException();
-            }
-
-            discountAmount = memberCoupon.getDiscountAmount(orderTotal);
-            memberCouponService.useCoupon(memberCouponId, member.getMemberId());
-        }
-
-        Long orderId = orderService.placeOrder(orderSaveRequestDto, discountAmount);
-
-        //주문한 상품만 장바구니에서 제거
-        if (orderSaveRequestDto.isFromCart()) {
-            List<Long> orderedItemIds = orderSaveRequestDto.getOrderItems().stream()
-                    .map(OrderItemDto::getItemOptionId)
-                    .toList();
-
-            cartService.removeOrderedItemsFromCart(member.getMemberId(), orderedItemIds);
-        }
+        Long orderId = orderService.processOrder(dto, member.id());
 
         return "redirect:/order/success?orderId=" + orderId;
     }
 
-    @GetMapping("/history")
-    public String findOrders(
-            @ModelAttribute("orderPageRequestDto") OrderPageRequestDto requestDto, Pageable pageable,
-            Model model, Authentication authentication) {
+    @GetMapping("/my")
+    public String findMyOrders(@ModelAttribute("orderPageRequestDto") OrderPageRequestDto dto,
+            @LoginMember LoginMemberDto member, Model model) {
 
-        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
-        MemberResponseDto member = memberService.findMember(userDetails.getUsername());
-
-        Page<OrderResponseDto> orders = orderService.searchOrders(requestDto, pageable);
+        Page<OrderResponseDto> orders = orderService.findMyOrders(member.id(), dto);
 
         model.addAttribute("orders", orders);
-        model.addAttribute("orderPageRequestDto", requestDto);
-        return "/pages/order/orderHistory";
+        model.addAttribute("requestDto", dto);
+
+        return "/pages/order/my-orders";
     }
 
     @GetMapping("/detail/{orderId}")
-    public String orderDetails(@PathVariable("orderId") Long orderId, Model model) {
-        OrderResponseDto order = orderService.findOrderById(orderId);
+    public String orderDetails(@PathVariable("orderId") Long orderId,
+            @LoginMember LoginMemberDto member, Model model) {
+        OrderResponseDto order = orderService.findOrderById(orderId, member.id());
         model.addAttribute("order", order);
+
         return "/pages/order/orderDetails";
     }
 
     @GetMapping("/success")
-    public String orderSuccess(@RequestParam(value = "orderId", required = false) Long orderId, Model model) {
+    public String orderSuccess(@RequestParam(value = "orderId", required = false) Long orderId,
+                               @LoginMember LoginMemberDto member, Model model) {
         if (orderId != null) {
-            OrderResponseDto order = orderService.findOrderById(orderId);
+            OrderResponseDto order = orderService.findOrderById(orderId, member.id());
             model.addAttribute("order", order);
         }
         return "/pages/order/success";
     }
 
-    @PostMapping("/updateStatus")
-    public String updateOrderStatus(@RequestParam("orderId") Long orderId,
-                                    @RequestParam("status") OrderStatus status) {
-        orderService.updateOrderStatus(orderId, status);
-        return "redirect:/order/history";
-    }
-
     @PostMapping("/cancel")
     public String cancelOrder(@RequestParam("orderId") Long orderId) {
         orderService.cancelOrder(orderId);
+
         return "redirect:/order/history";
     }
 
     @GetMapping("/updateShippingAddress/{orderId}")
-    public String updateShippingAddressForm(@PathVariable("orderId") Long orderId, Model model) {
-        OrderResponseDto order = orderService.findOrderById(orderId);
+    public String updateShippingAddressForm(@PathVariable("orderId") Long orderId,
+                                            @LoginMember LoginMemberDto member, Model model) {
+        OrderResponseDto order = orderService.findOrderById(orderId, member.id());
 
         OrderModificationDto dto = new OrderModificationDto();
         dto.setOrderId(orderId);
@@ -173,6 +123,7 @@ public class OrderController {
         model.addAttribute("order", order);
         model.addAttribute("orderItems", order.getOrderItems());
         model.addAttribute("orderModificationDto", dto);
+
         return "/pages/order/updateShippingAddressForm";
     }
 
@@ -184,12 +135,14 @@ public class OrderController {
         }
 
         orderService.updateShippingAddress(dto);
+
         return "redirect:/order/detail/" + dto.getOrderId();
     }
 
     @GetMapping("/requestRefundOrExchange/{orderId}")
-    public String requestRefundOrExchangeForm(@PathVariable("orderId") Long orderId, Model model) {
-        OrderResponseDto order = orderService.findOrderById(orderId);
+    public String requestRefundOrExchangeForm(@PathVariable("orderId") Long orderId,
+            @LoginMember LoginMemberDto member, Model model) {
+        OrderResponseDto order = orderService.findOrderById(orderId, member.id());
 
         OrderModificationDto dto = new OrderModificationDto();
         dto.setOrderId(orderId);
@@ -197,6 +150,7 @@ public class OrderController {
         model.addAttribute("order", order);
         model.addAttribute("orderItems", order.getOrderItems());
         model.addAttribute("orderModificationDto", dto);
+
         return "/pages/order/requestRefundOrExchangeForm";
     }
 
@@ -208,6 +162,7 @@ public class OrderController {
         }
 
         orderService.applyRefundOrExchange(dto);
+
         return "redirect:/order/detail/" + dto.getOrderId();
     }
 }

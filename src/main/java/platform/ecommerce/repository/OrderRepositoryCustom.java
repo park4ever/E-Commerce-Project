@@ -9,4 +9,6 @@ import java.util.List;
 
 public interface OrderRepositoryCustom {
     Page<Order> searchOrders(OrderPageRequestDto requestDto, Pageable pageable);
+
+    Page<Order> searchMyOrders(Long memberId, OrderPageRequestDto requestDto, Pageable pageable);
 }

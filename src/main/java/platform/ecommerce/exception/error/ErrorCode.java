@@ -43,6 +43,7 @@ public enum ErrorCode {
     ORDER_STATUS_REQUIRED("ORDER_013", "주문 상태가 비어 있을 수 없습니다."),
     ORDER_ITEM_INVALID("ORDER_014", "유효하지 않은 상품 옵션 또는 수량입니다."),
     ORDER_ITEM_NOT_FOUND("ORDER_015", "주문 상품을 찾을 수 없습니다."),
+    ORDER_ACCESS_DENIED("ORDER_016", "해당 주문에 접근할 수 있는 권한이 없습니다."),
     //REVIEW
     REVIEW_NOT_FOUND("REVIEW_001", "해당 리뷰를 찾을 수 없습니다."), 
     REVIEW_ACCESS_DENIED("REVIEW_002", "다른 회원이 작성한 리뷰는 수정할 수 없습니다."),
