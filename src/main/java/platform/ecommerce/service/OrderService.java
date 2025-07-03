@@ -17,11 +17,11 @@ public interface OrderService {
 
     OrderResponseDto findOrderById(Long orderId, Long memberId);
 
-    void cancelOrder(Long orderId);
+    void cancelOrder(Long orderId, Long memberId);
 
     OrderSaveRequestDto buildSingleOrderDto(MemberDetailsDto member, Long itemOptionId, Integer quantity);
 
-    void updateShippingAddress(OrderModificationDto dto);
+    void updateShippingAddress(OrderModificationDto dto, Long memberId);
 
-    void applyRefundOrExchange(OrderModificationDto dto);
+    void applyRefundOrExchange(OrderModificationDto dto, Long memberId);
 }

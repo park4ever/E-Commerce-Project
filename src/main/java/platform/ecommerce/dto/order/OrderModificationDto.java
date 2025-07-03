@@ -20,5 +20,15 @@ public class OrderModificationDto {
         REFUND_REQUEST,     //환불요청
         EXCHANGE_REQUEST    //교환요청
     }
+
+    public static OrderModificationDto addressChange(Long orderId) {
+        return new OrderModificationDto(orderId, null, null, RequestType.ADDRESS_CHANGE);
+    }
+
+    public static OrderModificationDto withOrderId(Long orderId) {
+        OrderModificationDto dto = new OrderModificationDto();
+        dto.setOrderId(orderId);
+        return dto;
+    }
 }
 

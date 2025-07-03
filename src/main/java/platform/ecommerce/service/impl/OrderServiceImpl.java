@@ -26,7 +26,6 @@ import platform.ecommerce.service.OrderService;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import static platform.ecommerce.entity.OrderStatus.*;
 
@@ -144,16 +143,17 @@ public class OrderServiceImpl implements OrderService {
     public OrderResponseDto findOrderById(Long orderId, Long memberId) {
         Order order = findOrderByIdOrThrow(orderId);
 
-        if (!order.getMember().getId().equals(memberId)) {
-            throw new OrderAccessDeniedException();
-        }
+        validateOwnership(memberId, order);
 
         return new OrderResponseDto(order);
     }
 
     @Override
-    public void cancelOrder(Long orderId) {
+    public void cancelOrder(Long orderId, Long memberId) {
         Order order = findOrderByIdOrThrow(orderId);
+
+        validateOwnership(memberId, order);
+
         order.cancel();
     }
 
@@ -180,34 +180,34 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    public void updateShippingAddress(OrderModificationDto dto) {
+    public void updateShippingAddress(OrderModificationDto dto, Long memberId) {
+        if (dto.getRequestType() != OrderModificationDto.RequestType.ADDRESS_CHANGE) {
+            throw new InvalidRequestException();
+        }
+
         Order order = findOrderByIdOrThrow(dto.getOrderId());
 
-        if (order.getOrderStatus() == PENDING || order.getOrderStatus() == PROCESSED) {
-            order.updateShippingAddress(dto.getNewAddress());
-        } else {
-            throw new AddressChangeNotAllowedException();
-        }
+        validateOwnership(memberId, order);
+
+        order.updateShippingAddress(dto.getNewAddress());
     }
 
     @Override
-    public void applyRefundOrExchange(OrderModificationDto dto) {
+    public void applyRefundOrExchange(OrderModificationDto dto, Long memberId) {
         Order order = findOrderByIdOrThrow(dto.getOrderId());
 
+        validateOwnership(memberId, order);
+
         switch (dto.getRequestType()) {
-            case REFUND_REQUEST -> {
-                if (order.getOrderStatus() != DELIVERED) {
-                    throw new OrderCannotBeRefundedException();
-                }
-                order.requestRefund(dto.getReason());
-            }
-            case EXCHANGE_REQUEST -> {
-                if (order.getOrderStatus() != DELIVERED) {
-                    throw new OrderCannotBeExchangedException();
-                }
-                order.requestExchange(dto.getReason());
-            }
+            case REFUND_REQUEST -> order.requestRefund(dto.getReason());
+            case EXCHANGE_REQUEST -> order.requestExchange(dto.getReason());
             default -> throw new InvalidRequestException();
+        }
+    }
+
+    private static void validateOwnership(Long memberId, Order order) {
+        if (!order.getMember().getId().equals(memberId)) {
+            throw new OrderAccessDeniedException();
         }
     }
 

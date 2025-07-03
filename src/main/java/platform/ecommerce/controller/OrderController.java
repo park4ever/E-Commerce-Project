@@ -106,8 +106,9 @@ public class OrderController {
     }
 
     @PostMapping("/cancel")
-    public String cancelOrder(@RequestParam("orderId") Long orderId) {
-        orderService.cancelOrder(orderId);
+    public String cancelOrder(@RequestParam("orderId") Long orderId,
+                              @LoginMember LoginMemberDto member) {
+        orderService.cancelOrder(orderId, member.id());
 
         return "redirect:/order/history";
     }
@@ -117,8 +118,7 @@ public class OrderController {
                                             @LoginMember LoginMemberDto member, Model model) {
         OrderResponseDto order = orderService.findOrderById(orderId, member.id());
 
-        OrderModificationDto dto = new OrderModificationDto();
-        dto.setOrderId(orderId);
+        OrderModificationDto dto = OrderModificationDto.addressChange(orderId);
 
         model.addAttribute("order", order);
         model.addAttribute("orderItems", order.getOrderItems());
@@ -128,13 +128,14 @@ public class OrderController {
     }
 
     @PostMapping("/updateShippingAddress")
-    public String updateShippingAddress(@Valid @ModelAttribute("orderModificationDto") OrderModificationDto dto, BindingResult bindingResult) {
+    public String updateShippingAddress(@Valid @ModelAttribute("orderModificationDto") OrderModificationDto dto, BindingResult bindingResult,
+                                        @LoginMember LoginMemberDto member) {
         if (bindingResult.hasErrors()) {
             log.error("OrderModificationDto binding errors : {}", bindingResult.getAllErrors());
             return "/pages/order/updateShippingAddressForm";
         }
 
-        orderService.updateShippingAddress(dto);
+        orderService.updateShippingAddress(dto, member.id());
 
         return "redirect:/order/detail/" + dto.getOrderId();
     }
@@ -144,8 +145,7 @@ public class OrderController {
             @LoginMember LoginMemberDto member, Model model) {
         OrderResponseDto order = orderService.findOrderById(orderId, member.id());
 
-        OrderModificationDto dto = new OrderModificationDto();
-        dto.setOrderId(orderId);
+        OrderModificationDto dto = OrderModificationDto.withOrderId(orderId);
 
         model.addAttribute("order", order);
         model.addAttribute("orderItems", order.getOrderItems());
@@ -155,13 +155,14 @@ public class OrderController {
     }
 
     @PostMapping("/requestRefundOrExchange")
-    public String requestRefundOrExchange(@Valid @ModelAttribute("orderModificationDto") OrderModificationDto dto, BindingResult bindingResult) {
+    public String requestRefundOrExchange(@Valid @ModelAttribute("orderModificationDto") OrderModificationDto dto, BindingResult bindingResult,
+                                          @LoginMember LoginMemberDto member) {
         if (bindingResult.hasErrors()) {
             log.error("OrderModificationDto biding errors : {}", bindingResult.getAllErrors());
             return "/pages/order/requestRefundOrExchangeForm";
         }
 
-        orderService.applyRefundOrExchange(dto);
+        orderService.applyRefundOrExchange(dto, member.id());
 
         return "redirect:/order/detail/" + dto.getOrderId();
     }

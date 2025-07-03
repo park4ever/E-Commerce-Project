@@ -144,21 +144,19 @@ public class Order extends BaseTimeEntity {
 
     //교환 및 환불 요청
     public void requestRefund(String reason) {
-        if (orderStatus == DELIVERED) {
-            this.modificationReason = reason;
-            this.orderStatus = REFUND_REQUESTED;
-        } else {
+        if (orderStatus != DELIVERED) {
             throw new OrderCannotBeRefundedException();
         }
+        this.modificationReason = reason;
+        this.orderStatus = REFUND_REQUESTED;
     }
 
     public void requestExchange(String reason) {
-        if (orderStatus == DELIVERED) {
-            this.modificationReason = reason;
-            this.orderStatus = EXCHANGE_REQUESTED;
-        } else {
+        if (orderStatus != DELIVERED) {
             throw new OrderCannotBeExchangedException();
         }
+        this.modificationReason = reason;
+        this.orderStatus = EXCHANGE_REQUESTED;
     }
 
     public int getTotalPrice() {
