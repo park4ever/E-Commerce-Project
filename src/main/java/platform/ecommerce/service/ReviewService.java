@@ -1,12 +1,10 @@
 package platform.ecommerce.service;
 
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import platform.ecommerce.dto.review.ReviewPageRequestDto;
-import platform.ecommerce.dto.review.ReviewRequestDto;
-import platform.ecommerce.dto.review.ReviewResponseDto;
+import platform.ecommerce.dto.review.*;
 
 import java.util.List;
+import java.util.Map;
 
 public interface ReviewService {
 
@@ -14,15 +12,17 @@ public interface ReviewService {
 
     ReviewResponseDto findReview(Long reviewId);
 
-    List<ReviewResponseDto> getReviewsForItem(Long itemId);
+    Page<ReviewResponseDto> searchReviewsForItem(ReviewQueryDto queryDto);
 
-    Page<ReviewResponseDto> searchReviews(ReviewPageRequestDto requestDto, Pageable pageable);
+    Page<ReviewResponseDto> searchMyReviews(Long memberId, MyReviewQueryDto queryDto);
 
     ReviewResponseDto updateReview(Long reviewId, Long memberId, ReviewRequestDto dto);
 
-    Long deleteReview(Long reviewId);
+    Long deleteReview(Long reviewId, Long memberId);
 
-    double calculateAverageRating(Long itemId);
+    double getAverageRating(Long itemId);
+
+    Map<Long, Double> getAverageRatingMap(List<Long> itemIds);
 
     long countReviewsByItemId(Long itemId);
 }

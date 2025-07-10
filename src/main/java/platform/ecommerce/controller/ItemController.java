@@ -4,8 +4,6 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -14,7 +12,7 @@ import platform.ecommerce.config.auth.LoginMember;
 import platform.ecommerce.dto.item.*;
 import platform.ecommerce.dto.member.LoginMemberDto;
 import platform.ecommerce.dto.member.MemberDetailsDto;
-import platform.ecommerce.dto.review.ReviewPageRequestDto;
+import platform.ecommerce.dto.review.ReviewQueryDto;
 import platform.ecommerce.dto.review.ReviewResponseDto;
 import platform.ecommerce.service.ItemService;
 import platform.ecommerce.service.MemberService;
@@ -31,8 +29,8 @@ public class ItemController {
 
     @GetMapping("/new")
     public String itemForm(Model model) {
-        model.addAttribute("title", "상품 등록");
         model.addAttribute("itemSaveRequestDto", new ItemSaveRequestDto());
+
         return "/pages/item/item-create";
     }
 
@@ -49,7 +47,6 @@ public class ItemController {
     @GetMapping("/list")
     public String itemList(@ModelAttribute("itemPageRequestDto") ItemPageRequestDto requestDto,
                            Pageable pageable, Model model) {
-        model.addAttribute("title", "상품 목록");
         Page<ItemResponseDto> items = itemService.findItemsWithPageable(requestDto, pageable);
         model.addAttribute("items", items);
         model.addAttribute("itemPageRequestDto", requestDto);
@@ -59,10 +56,8 @@ public class ItemController {
 
     @GetMapping("/{itemId}")
     public String viewItem(@PathVariable("itemId") Long itemId,
-                           @ModelAttribute("reviewPageRequestDto") ReviewPageRequestDto requestDto, Pageable pageable,
+                           @ModelAttribute("reviewQueryDto") ReviewQueryDto queryDto,
                            @LoginMember LoginMemberDto member, Model model) {
-        model.addAttribute("title", "상품 상세 정보");
-
         //기본 정보 조회
         ItemResponseDto item = itemService.findItem(itemId);
 
@@ -72,8 +67,8 @@ public class ItemController {
                 : null;
 
         //리뷰 관련 데이터
-        Page<ReviewResponseDto> reviews = reviewService.searchReviews(requestDto, pageable);
-        double ratingAvg = reviewService.calculateAverageRating(itemId);
+        Page<ReviewResponseDto> reviews = reviewService.searchReviewsForItem(queryDto);
+        double ratingAvg = reviewService.getAverageRating(itemId);
         long reviewCount = reviewService.countReviewsByItemId(itemId);
 
         //ViewModel 생성 및 모델에 추가
@@ -81,14 +76,13 @@ public class ItemController {
         model.addAttribute("viewModel", viewModel);
 
         //리뷰 조건 다시 넣어줌(페이징 등 이슈)
-        model.addAttribute("reviewPageRequestDto", requestDto);
+        model.addAttribute("reviewQueryDto", queryDto);
 
         return "/pages/item/item-detail";
     }
 
     @GetMapping("/edit/{id}")
     public String editForm(@PathVariable("id") Long id, Model model) {
-        model.addAttribute("title", "상품 수정");
         ItemResponseDto itemResponseDto = itemService.findItem(id);
         ItemUpdateDto itemUpdateDto = itemService.convertToUpdateDto(itemResponseDto);
         model.addAttribute("item", itemUpdateDto);

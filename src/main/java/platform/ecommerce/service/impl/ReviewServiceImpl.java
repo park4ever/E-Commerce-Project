@@ -1,15 +1,13 @@
 package platform.ecommerce.service.impl;
 
-import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import platform.ecommerce.dto.review.ReviewPageRequestDto;
-import platform.ecommerce.dto.review.ReviewRequestDto;
-import platform.ecommerce.dto.review.ReviewResponseDto;
+import platform.ecommerce.dto.review.*;
 import platform.ecommerce.entity.*;
+import platform.ecommerce.exception.file.FileDeleteFailedException;
 import platform.ecommerce.exception.item.ItemOptionNotFoundException;
 import platform.ecommerce.exception.member.MemberNotFoundException;
 import platform.ecommerce.exception.order.OrderItemNotFoundException;
@@ -20,10 +18,13 @@ import platform.ecommerce.service.ReviewService;
 import platform.ecommerce.service.upload.FileStorageService;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static platform.ecommerce.entity.OrderStatus.*;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional
@@ -44,7 +45,6 @@ public class ReviewServiceImpl implements ReviewService {
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(MemberNotFoundException::new);
 
-        //createReview 메서드로 리뷰 생성
         Review review = Review.createReview(item, member, dto.getContent(), dto.getRating());
 
         if (dto.getImage() != null && !dto.getImage().isEmpty()) {
@@ -62,68 +62,81 @@ public class ReviewServiceImpl implements ReviewService {
     @Override
     @Transactional(readOnly = true)
     public ReviewResponseDto findReview(Long reviewId) {
-        Review review = reviewRepository.findById(reviewId)
-                .orElseThrow(ReviewNotFoundException::new);
+        Review review = findReviewById(reviewId);
 
-        return toDto(review);
+        return ReviewResponseDto.from(review);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<ReviewResponseDto> getReviewsForItem(Long itemId) {
-        List<Review> reviews = reviewRepository.findByItemId(itemId);
-        return reviews.stream()
-                .map(this::toDto)
-                .collect(Collectors.toList());
+    public Page<ReviewResponseDto> searchReviewsForItem(ReviewQueryDto queryDto) {
+        return reviewRepository.searchReviewsForItem(queryDto)
+                .map(ReviewResponseDto::from);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Page<ReviewResponseDto> searchReviews(ReviewPageRequestDto requestDto, Pageable pageable) {
-        Page<Review> sortedReviews = reviewRepository.searchReviews(requestDto, pageable);
+    public Page<ReviewResponseDto> searchMyReviews(Long memberId, MyReviewQueryDto queryDto) {
+        Page<Review> reviews = reviewRepository.searchMyReviews(memberId, queryDto);
 
-        return sortedReviews.map(this::toDto);
+        return reviews.map(ReviewResponseDto::from);
     }
 
     @Override
     public ReviewResponseDto updateReview(Long reviewId, Long memberId, ReviewRequestDto dto) {
-        Review review = reviewRepository.findById(reviewId)
-                .orElseThrow(ReviewNotFoundException::new);
+        Review review = findReviewById(reviewId);
 
-        if (!memberId.equals(review.getMember().getId())) {
-            throw new ReviewForbiddenException();
-        }
+        validateOwnership(review, memberId);
 
-        //리뷰 내용과 평점 업데이트
         review.updateReview(dto.getContent(), dto.getRating());
 
         if (dto.getImage() != null && !dto.getImage().isEmpty()) {
+            //기존에 이미지가 있다면 삭제
+            if (review.getImageUrl() != null) {
+                try {
+                    fileStorageService.delete(review.getImageUrl());
+                } catch (FileDeleteFailedException e) {
+                    log.warn("리뷰 이미지 삭제 실패 : {}", review.getImageUrl(), e);
+                }
+            }
+
             String imageUrl = fileStorageService.store(dto.getImage(), "review");
             review.updateImageUrl(imageUrl);
         }
 
-        return toDto(review);
+        return ReviewResponseDto.from(review);
     }
 
     @Override
-    public Long deleteReview(Long reviewId) {
-        Review review = reviewRepository.findById(reviewId)
-                .orElseThrow(ReviewNotFoundException::new);
+    public Long deleteReview(Long reviewId, Long memberId) {
+        Review review = findReviewById(reviewId);
 
-        Long itemId = review.getItem().getId();
+        validateOwnership(review, memberId);
+
+        if (review.getImageUrl() != null) {
+            try {
+                fileStorageService.delete(review.getImageUrl());
+            } catch (FileDeleteFailedException e) {
+                log.warn("리뷰 이미지 삭제 실패 : {}", review.getImageUrl(), e);
+            }
+        }
         reviewRepository.delete(review);
 
-        return itemId;
+        return review.getItem().getId();
     }
 
     @Override
     @Transactional(readOnly = true)
-    public double calculateAverageRating(Long itemId) {
-        List<Review> reviews = reviewRepository.findByItemId(itemId);
-        return reviews.stream()
-                .mapToInt(Review::getRating)
-                .average()
-                .orElse(0.0);
+    public double getAverageRating(Long itemId) {
+        Double avg = reviewRepository.getAverageRatingByItemId(itemId);
+
+        return Optional.ofNullable(avg).orElse(0.0);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Map<Long, Double> getAverageRatingMap(List<Long> itemIds) {
+        return reviewRepository.getAverageRatingMapByItemIds(itemIds);
     }
 
     @Override
@@ -132,15 +145,14 @@ public class ReviewServiceImpl implements ReviewService {
         return reviewRepository.countByItemId(itemId);
     }
 
-    private ReviewResponseDto toDto(Review review) {
-        return ReviewResponseDto.builder()
-                .reviewId(review.getId())
-                .itemId(review.getItem().getId())
-                .memberId(review.getMember().getId())
-                .memberName(review.getMember().getUsername())
-                .content(review.getContent())
-                .rating(review.getRating())
-                .imageUrl(review.getImageUrl())
-                .build();
+    private void validateOwnership(Review review, Long memberId) {
+        if (!memberId.equals(review.getMember().getId())) {
+            throw new ReviewForbiddenException();
+        }
+    }
+
+    private Review findReviewById(Long reviewId) {
+        return reviewRepository.findById(reviewId)
+                .orElseThrow(ReviewNotFoundException::new);
     }
 }

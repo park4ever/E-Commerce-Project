@@ -20,6 +20,15 @@ public class ReviewRequestDto {
     private Integer rating;
     private MultipartFile image;
 
+    public static ReviewRequestDto from(ReviewResponseDto review) {
+        ReviewRequestDto dto = new ReviewRequestDto();
+        dto.setReviewId(review.getReviewId());
+        dto.setContent(review.getContent());
+        dto.setRating(review.getRating());
+        dto.setItemOptionId(review.getItemId());
+        return dto;
+    }
+
     public static ReviewRequestDto forForm(Long itemOptionId, Long orderId) {
         return ReviewRequestDto.builder()
                 .itemOptionId(itemOptionId)
