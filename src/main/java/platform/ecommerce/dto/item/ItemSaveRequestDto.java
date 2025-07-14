@@ -1,41 +1,58 @@
 package platform.ecommerce.dto.item;
 
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotEmpty;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
-import lombok.AllArgsConstructor;
-import lombok.Data;
+import jakarta.validation.constraints.*;
+import lombok.AccessLevel;
+import lombok.Builder;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.springframework.web.multipart.MultipartFile;
 import platform.ecommerce.entity.ItemCategory;
 
 import java.util.List;
 
-@Data
-@AllArgsConstructor
-@NoArgsConstructor
+import static lombok.AccessLevel.*;
+
+@Getter
+@NoArgsConstructor(access = PROTECTED)
 public class ItemSaveRequestDto {
 
-    @NotNull(message = "상품명은 필수 입력 항목입니다.")
-    @Size(min = 1, max = 30, message = "상품명은 1 ~ 30자로 입력하셔야 합니다.")
+    @NotNull(message = "상품명을 입력해주세요.")
+    @Size(min = 1, max = 30, message = "상품명은 30자 이내여야 합니다.")
     private String itemName;
 
-    @NotNull(message = "상품 설명은 필수 입력 항목입니다.")
-    @Size(min = 1, max = 100, message = "상품 설명은 1 ~ 100자로 입력하셔야 합니다.")
+    @NotNull(message = "상품 설명을 입력해주세요.")
+    @Size(min = 1, max = 100, message = "상품 설명은 100자 이내여야 합니다.")
     private String description;
 
-    @NotNull(message = "상품 가격은 필수 입력 항목입니다.")
-    @Min(value = 0, message = "가격은 0보다 커야 합니다.")
+    @NotNull(message = "카테고리를 선택해주세요.")
+    private ItemCategory category;
+
+    @NotNull(message = "상품 가격을 입력해주세요.")
+    @Min(value = 0, message = "가격은 0원 이상이어야 합니다.")
     private int price;
+
+    @NotBlank(message = "브랜드명을 입력해주세요.")
+    @Size(max = 20, message = "브랜드명은 20자 이내여야 합니다.")
+    private String brand;
+
+    private boolean isSelling = true;
 
     private MultipartFile image; //이미지 파일
 
     @Valid
-    @NotEmpty(message = "최소 하나 이상의 옵션을 등록해야 합니다.")
+    @NotEmpty(message = "최소 하나 이상의 옵션을 등록해주세요.")
     private List<ItemOptionDto> options;
 
-    @NotNull(message = "상품 카테고리는 필수 입력 항목입니다.")
-    private ItemCategory category;
+    @Builder
+    public ItemSaveRequestDto(String itemName, String description, ItemCategory category,
+                              int price, String brand, MultipartFile image, List<ItemOptionDto> options) {
+        this.itemName = itemName;
+        this.description = description;
+        this.category = category;
+        this.price = price;
+        this.brand = brand;
+        this.image = image;
+        this.options = options;
+    }
 }

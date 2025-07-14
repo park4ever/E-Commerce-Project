@@ -46,6 +46,7 @@ public class ReviewServiceImpl implements ReviewService {
                 .orElseThrow(MemberNotFoundException::new);
 
         Review review = Review.createReview(item, member, dto.getContent(), dto.getRating());
+        item.addReview(review);
 
         if (dto.getImage() != null && !dto.getImage().isEmpty()) {
             String imageUrl = fileStorageService.store(dto.getImage(), "review");
@@ -120,6 +121,7 @@ public class ReviewServiceImpl implements ReviewService {
                 log.warn("리뷰 이미지 삭제 실패 : {}", review.getImageUrl(), e);
             }
         }
+        review.getItem().removeReview(review);
         reviewRepository.delete(review);
 
         return review.getItem().getId();

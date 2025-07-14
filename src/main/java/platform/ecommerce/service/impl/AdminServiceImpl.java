@@ -147,9 +147,9 @@ public class AdminServiceImpl implements AdminService {
         Item item = findEntityById(itemRepository, itemId, "상품");
 
         if (isAvailable) {
-            item.activate(); //활성화
+            item.makeAvailable(); //활성화
         } else {
-            item.deactivate(); //비활성화
+            item.makeUnavailable(); //비활성화
         }
 
         itemRepository.save(item);
