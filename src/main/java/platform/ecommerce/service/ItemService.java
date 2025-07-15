@@ -16,6 +16,8 @@ public interface ItemService {
 
     ItemResponseDto findItem(Long id);
 
+    ItemResponseDto findItemWithViewCount(Long id);
+
     void updateItem(Long id, ItemUpdateDto updateDto);
 
     ItemUpdateDto convertToUpdateDto(ItemResponseDto responseDto);

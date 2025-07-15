@@ -30,5 +30,9 @@ public class AdminItemDto {
     private Boolean isAvailable;
 
     private Integer discountPrice;
+
+    private String brand;
+    private Boolean isSelling;
+
     private List<ItemOptionDto> options;
 }

@@ -123,7 +123,9 @@ public class AdminServiceImpl implements AdminService {
                 updatedItemDto.getItemName(),
                 updatedItemDto.getDescription(),
                 updatedItemDto.getPrice(),
-                updatedItemDto.getCategory()
+                updatedItemDto.getCategory(),
+                updatedItemDto.getBrand(),
+                updatedItemDto.getIsSelling()
         );
 
         //할인 가격 적용

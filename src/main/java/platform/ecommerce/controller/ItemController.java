@@ -28,9 +28,7 @@ public class ItemController {
     private final ReviewService reviewService;
 
     @GetMapping("/new")
-    public String itemForm(Model model) {
-        model.addAttribute("itemSaveRequestDto", new ItemSaveRequestDto());
-
+    public String itemForm(@ModelAttribute("itemSaveRequestDto") ItemSaveRequestDto dto) {
         return "/pages/item/item-create";
     }
 
@@ -58,8 +56,8 @@ public class ItemController {
     public String viewItem(@PathVariable("itemId") Long itemId,
                            @ModelAttribute("reviewQueryDto") ReviewQueryDto queryDto,
                            @LoginMember LoginMemberDto member, Model model) {
-        //기본 정보 조회
-        ItemResponseDto item = itemService.findItem(itemId);
+        //기본 정보 조회 및 방문 수 증가
+        ItemResponseDto item = itemService.findItemWithViewCount(itemId);
 
         //nullable 구조니까 로그인하지 않았을 경우 분기
         MemberDetailsDto memberDetails = (member != null)

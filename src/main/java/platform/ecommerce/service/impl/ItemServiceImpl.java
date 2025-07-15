@@ -33,31 +33,37 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
     @Transactional
-    public Long saveItem(ItemSaveRequestDto saveRequestDto) {
-        String imageUrl = saveImage(saveRequestDto.getImage());
+    public Long saveItem(ItemSaveRequestDto requestDto) {
+        if (requestDto.getOptions() == null || requestDto.getOptions().isEmpty()) {
+            throw new ItemOptionRequiredException();
+        }
 
+        //이미지 저장
+        String imageUrl = saveImage(requestDto.getImage());
+
+        //Item 엔티티 생성
         Item item = Item.builder()
-                .itemName(saveRequestDto.getItemName())
-                .description(saveRequestDto.getDescription())
-                .price(saveRequestDto.getPrice())
+                .itemName(requestDto.getItemName())
+                .description(requestDto.getDescription())
+                .price(requestDto.getPrice())
                 .imageUrl(imageUrl)
-                .category(saveRequestDto.getCategory())
+                .category(requestDto.getCategory())
+                .brand(requestDto.getBrand())
+                .isSelling(requestDto.isSelling())
                 .isAvailable(true)
                 .build();
 
-        List<ItemOptionDto> options = saveRequestDto.getOptions();
-        if (options == null || options.isEmpty()) {
-            throw new ItemOptionRequiredException();
-        }
-        for (ItemOptionDto optionDto : options) {
+        //옵션 생성 및 연관관계 설정
+        requestDto.getOptions().forEach(optionDto -> {
             ItemOption option = ItemOption.create(
                     item,
                     optionDto.getSizeLabel(),
                     optionDto.getStockQuantity()
             );
             item.addItemOption(option);
-        }
+        });
 
+        //저장
         return itemRepository.save(item).getId();
     }
 
@@ -82,13 +88,26 @@ public class ItemServiceImpl implements ItemService {
     }
 
     @Override
+    public ItemResponseDto findItemWithViewCount(Long id) {
+        Item item = itemRepository.findById(id)
+                .orElseThrow(ItemNotFoundException::new);
+
+        item.increaseViewCount();
+
+        return mapToResponse(item);
+    }
+
+    @Override
     @Transactional
     public void updateItem(Long id, ItemUpdateDto updateDto) {
         Item item = itemRepository.findById(id)
                 .orElseThrow(ItemNotFoundException::new);
 
+        //이미지 수정
         updateImageIfPresent(item, updateDto.getImage());
+        //기본 필드 수정
         updateItemFields(item, updateDto);
+        //옵션 전체 교체
         replaceItemOptions(item, updateDto.getOptions());
     }
 
@@ -101,6 +120,8 @@ public class ItemServiceImpl implements ItemService {
                 .discountPrice(responseDto.getDiscountPrice())
                 .imageUrl(responseDto.getImageUrl())
                 .category(responseDto.getCategory())
+                .brand(responseDto.getBrand())
+                .isSelling(responseDto.getIsSelling())
                 .options(responseDto.getOptions())
                 .build();
     }
@@ -120,6 +141,9 @@ public class ItemServiceImpl implements ItemService {
                 .description(item.getDescription())
                 .price(item.getPrice())
                 .discountPrice(item.getDiscountPrice())
+                .brand(item.getBrand())
+                .isSelling(item.isSelling())
+                .viewCount(item.getViewCount())
                 .imageUrl(item.getImageUrl())
                 .category(item.getCategory())
                 .averageRating(null) // TODO: 평균 별점 계산 연동 예정
@@ -139,8 +163,10 @@ public class ItemServiceImpl implements ItemService {
         String updatedDescription = dto.getDescription() != null ? dto.getDescription() : item.getDescription();
         int updatedPrice = dto.getPrice() != null ? dto.getPrice() : item.getPrice();
         ItemCategory updatedCategory = dto.getCategory() != null ? dto.getCategory() : item.getCategory();
+        String updatedBrand = dto.getBrand() != null ? dto.getBrand() : item.getBrand();
+        boolean updatedIsSelling = dto.getIsSelling() != null ? dto.getIsSelling() : item.isSelling();
 
-        item.updateItemDetails(updatedName, updatedDescription, updatedPrice, updatedCategory);
+        item.updateItemDetails(updatedName, updatedDescription, updatedPrice, updatedCategory, updatedBrand, updatedIsSelling);
 
         if (dto.getDiscountPrice() != null) {
             item.applyDiscountPrice(dto.getDiscountPrice());
